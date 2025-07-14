@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:typed_data';
+import '../services/firestore_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MyLibraryScreen extends StatefulWidget {
   const MyLibraryScreen({Key? key}) : super(key: key);
@@ -12,6 +17,127 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
   final List<String> _pdfs = [];
   final List<String> _notes = [];
   final List<String> _links = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLibrary();
+  }
+
+  Future<void> _loadLibrary() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final pdfsSnap = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('library_pdfs')
+          .get();
+      final notesSnap = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('library_notes')
+          .get();
+      final linksSnap = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('library_links')
+          .get();
+      setState(() {
+        _pdfs.clear();
+        _pdfs.addAll(pdfsSnap.docs.map((d) => d['fileName'] as String));
+        _notes.clear();
+        _notes.addAll(notesSnap.docs.map((d) => d['note'] as String));
+        _links.clear();
+        _links.addAll(linksSnap.docs.map((d) => d['link'] as String));
+      });
+    }
+  }
+
+  Future<void> _uploadPdf() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+    );
+    if (result != null && result.files.single.bytes != null) {
+      final file = result.files.single;
+      final url = await FirestoreService.uploadFile(
+        user.uid,
+        'pdfs',
+        file.name,
+        file.bytes!,
+      );
+      await FirestoreService.savePdf(user.uid, file.name, url);
+      _loadLibrary();
+    }
+  }
+
+  Future<void> _addNote() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    String? note = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        String temp = '';
+        return AlertDialog(
+          title: const Text('Add Note'),
+          content: TextField(
+            autofocus: true,
+            onChanged: (v) => temp = v,
+            decoration: const InputDecoration(hintText: 'Enter note...'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, temp),
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+    if (note != null && note.trim().isNotEmpty) {
+      await FirestoreService.saveNote(user.uid, note.trim());
+      _loadLibrary();
+    }
+  }
+
+  Future<void> _addLink() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    String? link = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        String temp = '';
+        return AlertDialog(
+          title: const Text('Add Link'),
+          content: TextField(
+            autofocus: true,
+            onChanged: (v) => temp = v,
+            decoration: const InputDecoration(hintText: 'Paste link...'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, temp),
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+    if (link != null && link.trim().isNotEmpty) {
+      await FirestoreService.saveLink(user.uid, link.trim());
+      _loadLibrary();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,9 +167,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                   Icons.upload_file,
                   color: AppColors.dominantPurple,
                 ),
-                onPressed: () {
-                  // TODO: Implement PDF upload
-                },
+                onPressed: _uploadPdf,
               ),
             ],
           ),
@@ -79,9 +203,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                   Icons.note_add,
                   color: AppColors.dominantPurple,
                 ),
-                onPressed: () {
-                  // TODO: Implement add note
-                },
+                onPressed: _addNote,
               ),
             ],
           ),
@@ -114,9 +236,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
               ),
               IconButton(
                 icon: const Icon(Icons.link, color: AppColors.dominantPurple),
-                onPressed: () {
-                  // TODO: Implement add link
-                },
+                onPressed: _addLink,
               ),
             ],
           ),

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:typed_data';
+import '../services/firestore_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({Key? key}) : super(key: key);
@@ -21,6 +25,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String? _university3;
   // TODO: Replace with actual avatar logic
   String _avatarUrl = '';
+  String? _avatarDownloadUrl;
+  bool _saving = false;
 
   final List<String> _genders = ['Male', 'Female', 'Other'];
   final List<String> _nigerianInstitutions = [
@@ -57,6 +63,55 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (picked != null) {
       setState(() => _birthday = picked);
     }
+  }
+
+  Future<void> _pickAvatar() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
+    if (picked != null) {
+      final bytes = await picked.readAsBytes();
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final url = await FirestoreService.uploadFile(
+          user.uid,
+          'avatar',
+          'avatar.jpg',
+          bytes,
+        );
+        setState(() {
+          _avatarDownloadUrl = url;
+          _avatarUrl = url;
+        });
+      }
+    }
+  }
+
+  void _saveProfile() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    _formKey.currentState?.save();
+    setState(() => _saving = true);
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      await FirestoreService.saveFullUserProfile(user.uid, {
+        'firstName': _firstName,
+        'lastName': _lastName,
+        'email': _email,
+        'phone': _phone,
+        'gender': _gender,
+        'birthday': _birthday?.toIso8601String(),
+        'university1': _university1,
+        'university2': _university2,
+        'university3': _university3,
+        'avatarUrl': _avatarDownloadUrl ?? _avatarUrl,
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Profile updated!')));
+    }
+    setState(() => _saving = false);
   }
 
   @override
@@ -104,9 +159,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       bottom: 0,
                       right: 0,
                       child: GestureDetector(
-                        onTap: () {
-                          // TODO: Implement avatar upload
-                        },
+                        onTap: _pickAvatar,
                         child: Container(
                           decoration: BoxDecoration(
                             color: AppColors.accentAmber,
@@ -132,6 +185,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       decoration: const InputDecoration(
                         labelText: 'First Name',
                       ),
+                      validator: (v) =>
+                          v == null || v.isEmpty ? 'Required' : null,
                       onSaved: (v) => _firstName = v,
                     ),
                   ),
@@ -139,6 +194,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   Expanded(
                     child: TextFormField(
                       decoration: const InputDecoration(labelText: 'Last Name'),
+                      validator: (v) =>
+                          v == null || v.isEmpty ? 'Required' : null,
                       onSaved: (v) => _lastName = v,
                     ),
                   ),
@@ -148,18 +205,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               TextFormField(
                 decoration: const InputDecoration(labelText: 'Email'),
                 keyboardType: TextInputType.emailAddress,
+                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                 onSaved: (v) => _email = v,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 decoration: const InputDecoration(labelText: 'Phone Number'),
                 keyboardType: TextInputType.phone,
+                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                 onSaved: (v) => _phone = v,
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 decoration: const InputDecoration(labelText: 'Gender'),
                 value: _gender,
+                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
                 items: _genders
                     .map((g) => DropdownMenuItem(value: g, child: Text(g)))
                     .toList(),
@@ -187,7 +247,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   labelText: '1st Choice University',
                 ),
                 value: _university1,
-                items: _nigerianInstitutions
+                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                items: FirestoreService.nigerianInstitutions()
                     .map((u) => DropdownMenuItem(value: u, child: Text(u)))
                     .toList(),
                 onChanged: (v) => setState(() => _university1 = v),
@@ -199,7 +260,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   labelText: '2nd Choice University',
                 ),
                 value: _university2,
-                items: _nigerianInstitutions
+                items: FirestoreService.nigerianInstitutions()
                     .map((u) => DropdownMenuItem(value: u, child: Text(u)))
                     .toList(),
                 onChanged: (v) => setState(() => _university2 = v),
@@ -211,7 +272,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   labelText: '3rd Choice University',
                 ),
                 value: _university3,
-                items: _nigerianInstitutions
+                items: FirestoreService.nigerianInstitutions()
                     .map((u) => DropdownMenuItem(value: u, child: Text(u)))
                     .toList(),
                 onChanged: (v) => setState(() => _university3 = v),
@@ -221,12 +282,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState?.validate() ?? false) {
-                      _formKey.currentState?.save();
-                      // TODO: Save profile changes
-                    }
-                  },
+                  onPressed: _saving ? null : _saveProfile,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.dominantPurple,
                     foregroundColor: Colors.white,
@@ -235,10 +291,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Save Changes',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                  child: _saving
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          'Save Changes',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                 ),
               ),
             ],

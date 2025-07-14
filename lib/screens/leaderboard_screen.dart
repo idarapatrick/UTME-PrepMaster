@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../services/firestore_service.dart';
 
 class LeaderboardScreen extends StatefulWidget {
   const LeaderboardScreen({Key? key}) : super(key: key);
@@ -13,11 +14,31 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
   late TabController _tabController;
   final List<String> _xpPeriods = ['24h', 'Weekly', 'Monthly'];
   int _xpPeriodIndex = 0;
+  List<Map<String, dynamic>> _xpLeaderboard = [];
+  List<Map<String, dynamic>> _cbtLeaderboard = [];
+  bool _loadingXp = true;
+  bool _loadingCbt = true;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _fetchLeaderboards();
+  }
+
+  Future<void> _fetchLeaderboards() async {
+    setState(() {
+      _loadingXp = true;
+      _loadingCbt = true;
+    });
+    _xpLeaderboard = await FirestoreService.fetchXpLeaderboard(
+      _xpPeriods[_xpPeriodIndex],
+    );
+    _cbtLeaderboard = await FirestoreService.fetchCbtLeaderboard();
+    setState(() {
+      _loadingXp = false;
+      _loadingCbt = false;
+    });
   }
 
   @override
@@ -59,7 +80,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                     _xpPeriods.length,
                     (i) => i == _xpPeriodIndex,
                   ),
-                  onPressed: (i) => setState(() => _xpPeriodIndex = i),
+                  onPressed: (i) async {
+                    setState(() => _xpPeriodIndex = i);
+                    setState(() => _loadingXp = true);
+                    _xpLeaderboard = await FirestoreService.fetchXpLeaderboard(
+                      _xpPeriods[_xpPeriodIndex],
+                    );
+                    setState(() => _loadingXp = false);
+                  },
                   borderRadius: BorderRadius.circular(12),
                   selectedColor: Colors.white,
                   fillColor: AppColors.dominantPurple,
@@ -78,87 +106,113 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                 ),
               ),
               Expanded(
-                child: ListView.builder(
-                  itemCount: 10,
-                  itemBuilder: (context, i) => ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: i == 0
-                          ? AppColors.accentAmber
-                          : AppColors.dominantPurple.withOpacity(0.1),
-                      child: Text(
-                        '${i + 1}',
-                        style: TextStyle(
-                          color: i == 0
-                              ? AppColors.dominantPurple
-                              : AppColors.dominantPurple,
-                        ),
+                child: _loadingXp
+                    ? const Center(child: CircularProgressIndicator())
+                    : ListView.builder(
+                        itemCount: _xpLeaderboard.isNotEmpty
+                            ? _xpLeaderboard.length
+                            : 10,
+                        itemBuilder: (context, i) {
+                          final user = _xpLeaderboard.isNotEmpty
+                              ? _xpLeaderboard[i]
+                              : {
+                                  'displayName': 'User ${i + 1}',
+                                  'xp': (10000 - i * 500),
+                                };
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: i == 0
+                                  ? AppColors.accentAmber
+                                  : AppColors.dominantPurple.withOpacity(0.1),
+                              child: Text(
+                                '${i + 1}',
+                                style: TextStyle(
+                                  color: i == 0
+                                      ? AppColors.dominantPurple
+                                      : AppColors.dominantPurple,
+                                ),
+                              ),
+                            ),
+                            title: Text(
+                              user['displayName'] ?? 'User',
+                              style: TextStyle(
+                                color: isDark
+                                    ? Colors.white
+                                    : AppColors.textPrimary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(
+                              '${user['xp']} XP',
+                              style: TextStyle(color: AppColors.textSecondary),
+                            ),
+                          );
+                        },
                       ),
-                    ),
-                    title: Text(
-                      'User ${i + 1}',
-                      style: TextStyle(
-                        color: isDark ? Colors.white : AppColors.textPrimary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    subtitle: Text(
-                      '${(10000 - i * 500)} XP',
-                      style: TextStyle(color: AppColors.textSecondary),
-                    ),
-                  ),
-                ),
               ),
             ],
           ),
           // CBT High Scores Leaderboard
-          ListView.builder(
-            itemCount: 10,
-            itemBuilder: (context, i) => ListTile(
-              leading: CircleAvatar(
-                backgroundColor: i == 0
-                    ? AppColors.accentAmber
-                    : AppColors.dominantPurple.withOpacity(0.1),
-                child: Text(
-                  '${i + 1}',
-                  style: TextStyle(
-                    color: i == 0
-                        ? AppColors.dominantPurple
-                        : AppColors.dominantPurple,
-                  ),
-                ),
-              ),
-              title: Text(
-                'User ${i + 1}',
-                style: TextStyle(
-                  color: isDark ? Colors.white : AppColors.textPrimary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              subtitle: Text(
-                '${(400 - i * 10)} marks',
-                style: TextStyle(color: AppColors.textSecondary),
-              ),
-              trailing: i == 0
-                  ? Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
+          _loadingCbt
+              ? const Center(child: CircularProgressIndicator())
+              : ListView.builder(
+                  itemCount: _cbtLeaderboard.isNotEmpty
+                      ? _cbtLeaderboard.length
+                      : 10,
+                  itemBuilder: (context, i) {
+                    final user = _cbtLeaderboard.isNotEmpty
+                        ? _cbtLeaderboard[i]
+                        : {
+                            'displayName': 'User ${i + 1}',
+                            'totalScore': (400 - i * 10),
+                          };
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: i == 0
+                            ? AppColors.accentAmber
+                            : AppColors.dominantPurple.withOpacity(0.1),
+                        child: Text(
+                          '${i + 1}',
+                          style: TextStyle(
+                            color: i == 0
+                                ? AppColors.dominantPurple
+                                : AppColors.dominantPurple,
+                          ),
+                        ),
                       ),
-                      decoration: BoxDecoration(
-                        color: AppColors.accentAmber,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text(
-                        'Top',
+                      title: Text(
+                        user['displayName'] ?? 'User',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: isDark ? Colors.white : AppColors.textPrimary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                    )
-                  : null,
-            ),
-          ),
+                      subtitle: Text(
+                        '${user['totalScore']} marks',
+                        style: TextStyle(color: AppColors.textSecondary),
+                      ),
+                      trailing: i == 0
+                          ? Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.accentAmber,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Text(
+                                'Top',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            )
+                          : null,
+                    );
+                  },
+                ),
         ],
       ),
     );
