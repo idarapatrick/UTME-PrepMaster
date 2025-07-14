@@ -1,26 +1,86 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
 import 'theme/app_theme.dart';
+import 'screens/auth_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'screens/settings_screen.dart';
+import 'screens/badges_screen.dart';
+import 'screens/phone_verification_screen.dart';
+import 'screens/ai_tutor_screen.dart';
+import 'screens/mock_test_screen.dart';
+import 'screens/home_screen.dart';
+import 'screens/profile_screen.dart';
+import 'screens/subject_selection_screen.dart';
 
-void main() {
-  runApp(const MyApp());
+class ThemeNotifier extends ChangeNotifier {
+  ThemeMode _themeMode = ThemeMode.light;
+  ThemeMode get themeMode => _themeMode;
+
+  void toggleTheme(bool isDark) {
+    _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
+    notifyListeners();
+  }
+}
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeNotifier(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
     return MaterialApp(
       title: 'UTME PrepMaster',
       theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeNotifier.themeMode,
       debugShowCheckedModeBanner: false,
-      initialRoute: '/',
+      home: const AuthGate(),
       routes: {
-        '/': (context) => const SplashScreen(),
         '/onboarding': (context) => const OnboardingScreen(),
+        '/settings': (context) => const SettingsScreen(),
+        '/badges': (context) => const BadgesScreen(),
+        '/phone-verification': (context) => const PhoneVerificationScreen(),
+        '/ai-tutor': (context) => const AiTutorScreen(),
+        '/mock-test': (context) => const MockTestScreen(),
+        '/profile': (context) => const ProfileScreen(),
+        '/home': (context) => const HomeScreen(),
+        '/subject-selection': (context) => const SubjectSelectionScreen(),
+      },
+    );
+  }
+}
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SplashScreen();
+        }
+        if (snapshot.hasData) {
+          // User is signed in
+          return const HomeScreen();
+        }
+        // Not signed in
+        return const AuthScreen();
       },
     );
   }

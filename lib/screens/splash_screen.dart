@@ -20,26 +20,37 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.dominantPurple,
+      backgroundColor: AppColors.backgroundPrimary,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.menu_book_rounded, size: 80, color: Colors.white),
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.dominantPurple.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              padding: const EdgeInsets.all(32),
+              child: Icon(
+                Icons.menu_book_rounded,
+                size: 80,
+                color: AppColors.dominantPurple,
+              ),
+            ),
             const SizedBox(height: 24),
             Text(
               'UTME PrepMaster',
               style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                color: Colors.white,
+                color: AppColors.dominantPurple,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Study',
+              'Your smart study companion for UTME success!',
               style: Theme.of(
                 context,
-              ).textTheme.titleLarge?.copyWith(color: Colors.white70),
+              ).textTheme.titleLarge?.copyWith(color: AppColors.textSecondary),
             ),
           ],
         ),

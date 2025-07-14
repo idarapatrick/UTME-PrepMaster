@@ -19,4 +19,9 @@ class AppColors {
   static const Color borderDark = Color(0xFF94A3B8);
 
   static const Color errorRed = Color(0xFFEF4444);
+  static const Color subjectBlue = Color(0xFF2563eb); // For Science subjects
+  static const Color subjectGreen = Color(
+    0xFF22c55e,
+  ); // For Social Science subjects
+  static const Color subjectRed = Color(0xFFef4444); // For Arts subjects
 }

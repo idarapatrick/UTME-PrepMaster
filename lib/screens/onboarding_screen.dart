@@ -20,7 +20,7 @@ class OnboardingScreen extends StatelessWidget {
                 height: 180,
                 width: 180,
                 decoration: BoxDecoration(
-                  color: AppColors.backgroundTertiary,
+                  color: AppColors.dominantPurple.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(90),
                 ),
                 child: const Icon(
@@ -52,6 +52,10 @@ class OnboardingScreen extends StatelessWidget {
                   onPressed: () {
                     // TODO: Navigate to sign up
                   },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.dominantPurple,
+                    foregroundColor: Colors.white,
+                  ),
                   child: const Text('Create an account'),
                 ),
               ),
@@ -62,6 +66,10 @@ class OnboardingScreen extends StatelessWidget {
                   onPressed: () {
                     // TODO: Navigate to sign in
                   },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.dominantPurple,
+                    side: const BorderSide(color: AppColors.dominantPurple),
+                  ),
                   child: const Text('Sign In'),
                 ),
               ),

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "997858029975",
+    "project_id": "utme-prepmaster",
+    "storage_bucket": "utme-prepmaster.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:997858029975:android:f1f3405c19d969b70914d2",
+        "android_client_info": {
+          "package_name": "com.example.utme_prep_master"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC6lKUP-geQzkyhsYZPyWRrZ9L2Ub_FFpw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
