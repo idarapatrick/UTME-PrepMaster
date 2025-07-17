@@ -9,74 +9,45 @@ const List<Map<String, dynamic>> kUtmeSubjects = [
   {
     'name': 'English',
     'icon': Icons.language,
-    'color': AppColors.dominantPurple,
+    'color': Colors.red, // Non-science
   },
   {
     'name': 'Mathematics',
     'icon': Icons.calculate,
-    'color': AppColors.subjectBlue,
+    'color': Colors.blue, // Science
   },
-  {'name': 'Physics', 'icon': Icons.science, 'color': AppColors.subjectBlue},
-  {
-    'name': 'Chemistry',
-    'icon': Icons.bubble_chart,
-    'color': AppColors.subjectBlue,
-  },
-  {'name': 'Biology', 'icon': Icons.biotech, 'color': AppColors.subjectBlue},
+  {'name': 'Physics', 'icon': Icons.science, 'color': Colors.blue},
+  {'name': 'Chemistry', 'icon': Icons.bubble_chart, 'color': Colors.blue},
+  {'name': 'Biology', 'icon': Icons.biotech, 'color': Colors.blue},
   {
     'name': 'Literature-in-English',
     'icon': Icons.menu_book,
-    'color': AppColors.subjectRed,
+    'color': Colors.red,
   },
-  {
-    'name': 'Government',
-    'icon': Icons.account_balance,
-    'color': AppColors.subjectGreen,
-  },
-  {
-    'name': 'Economics',
-    'icon': Icons.trending_up,
-    'color': AppColors.subjectGreen,
-  },
-  {
-    'name': 'Accounting',
-    'icon': Icons.receipt_long,
-    'color': AppColors.subjectGreen,
-  },
-  {
-    'name': 'Marketing',
-    'icon': Icons.campaign,
-    'color': AppColors.subjectGreen,
-  },
-  {'name': 'Geography', 'icon': Icons.public, 'color': AppColors.subjectGreen},
-  {
-    'name': 'Computer Studies',
-    'icon': Icons.computer,
-    'color': AppColors.subjectBlue,
-  },
+  {'name': 'Government', 'icon': Icons.account_balance, 'color': Colors.red},
+  {'name': 'Economics', 'icon': Icons.trending_up, 'color': Colors.red},
+  {'name': 'Accounting', 'icon': Icons.receipt_long, 'color': Colors.red},
+  {'name': 'Marketing', 'icon': Icons.campaign, 'color': Colors.red},
+  {'name': 'Geography', 'icon': Icons.public, 'color': Colors.red},
+  {'name': 'Computer Studies', 'icon': Icons.computer, 'color': Colors.blue},
   {
     'name': 'Christian Religious Studies',
     'icon': Icons.church,
-    'color': AppColors.subjectRed,
+    'color': Colors.red,
   },
-  {
-    'name': 'Islamic Studies',
-    'icon': Icons.mosque,
-    'color': AppColors.subjectRed,
-  },
+  {'name': 'Islamic Studies', 'icon': Icons.mosque, 'color': Colors.red},
   {
     'name': 'Agricultural Science',
     'icon': Icons.agriculture,
-    'color': AppColors.subjectGreen,
+    'color': Colors.blue,
   },
-  {'name': 'Commerce', 'icon': Icons.store, 'color': AppColors.subjectGreen},
-  {'name': 'History', 'icon': Icons.history_edu, 'color': AppColors.subjectRed},
+  {'name': 'Commerce', 'icon': Icons.store, 'color': Colors.red},
+  {'name': 'History', 'icon': Icons.history_edu, 'color': Colors.red},
 ];
 
 class SubjectSelectionScreen extends StatefulWidget {
   final bool isForMockTest;
-  const SubjectSelectionScreen({Key? key, this.isForMockTest = false})
-    : super(key: key);
+  const SubjectSelectionScreen({super.key, this.isForMockTest = false});
 
   @override
   State<SubjectSelectionScreen> createState() => _SubjectSelectionScreenState();
@@ -155,6 +126,7 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
                 childAspectRatio: 3.5,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
+                padding: const EdgeInsets.only(bottom: 8),
                 children: kUtmeSubjects.map((subject) {
                   final name = subject['name'] as String;
                   final icon = subject['icon'] as IconData;
@@ -171,6 +143,7 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
                         ? const Icon(
                             Icons.check_circle,
                             color: AppColors.dominantPurple,
+                            size: 16,
                           )
                         : null,
                   );

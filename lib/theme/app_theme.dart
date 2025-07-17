@@ -9,7 +9,7 @@ class AppTheme {
       colorScheme: ColorScheme.light(
         primary: AppColors.dominantPurple,
         secondary: AppColors.secondaryGray,
-        background: AppColors.backgroundPrimary,
+        surface: AppColors.backgroundPrimary,
         error: AppColors.errorRed,
       ),
       appBarTheme: const AppBarTheme(
@@ -96,7 +96,7 @@ class AppTheme {
       colorScheme: ColorScheme.dark(
         primary: AppColors.dominantPurple,
         secondary: AppColors.secondaryGray,
-        background: const Color(0xFF181A20),
+        surface: const Color(0xFF181A20),
         error: AppColors.errorRed,
       ),
       appBarTheme: const AppBarTheme(

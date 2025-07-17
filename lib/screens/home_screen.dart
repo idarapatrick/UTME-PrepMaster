@@ -130,7 +130,7 @@ const List<String> kAvatarGallery = [
 ];
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -557,29 +557,32 @@ class _HomeScreenState extends State<HomeScreen> {
           // Stat pills row (compact, rounded, spaced)
           Padding(
             padding: const EdgeInsets.only(bottom: 14),
-            child: Row(
-              children: [
-                _buildStatPill(
-                  icon: Icons.local_fire_department,
-                  label: '7d Streak',
-                  color: AppColors.accentAmber,
-                  isDark: false,
-                ),
-                const SizedBox(width: 10),
-                _buildStatPill(
-                  icon: Icons.emoji_events,
-                  label: 'Badges',
-                  color: AppColors.dominantPurple,
-                  isDark: false,
-                ),
-                const SizedBox(width: 10),
-                _buildStatPill(
-                  icon: Icons.flag,
-                  label: 'Daily Challenge',
-                  color: AppColors.secondaryGray,
-                  isDark: false,
-                ),
-              ],
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildStatPill(
+                    icon: Icons.local_fire_department,
+                    label: '7d Streak',
+                    color: AppColors.accentAmber,
+                    isDark: false,
+                  ),
+                  const SizedBox(width: 10),
+                  _buildStatPill(
+                    icon: Icons.emoji_events,
+                    label: 'Badges',
+                    color: AppColors.dominantPurple,
+                    isDark: false,
+                  ),
+                  const SizedBox(width: 10),
+                  _buildStatPill(
+                    icon: Icons.flag,
+                    label: 'Daily Challenge',
+                    color: AppColors.secondaryGray,
+                    isDark: false,
+                  ),
+                ],
+              ),
             ),
           ),
           // Carousel card (white background, compact)
@@ -686,6 +689,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     context,
                     '/subject-selection',
                   ).then((_) => _loadUserSubjects()),
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size(0, 0),
+                  ),
                   child: Text(
                     'Edit',
                     style: TextStyle(
@@ -693,10 +700,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
                     ),
-                  ),
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    minimumSize: Size(0, 0),
                   ),
                 ),
               ],

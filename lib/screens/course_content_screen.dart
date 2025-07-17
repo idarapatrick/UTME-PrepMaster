@@ -6,8 +6,7 @@ import '../theme/app_colors.dart';
 class CourseContentScreen extends StatefulWidget {
   final String subject;
   final String? initialTab;
-  const CourseContentScreen({Key? key, required this.subject, this.initialTab})
-    : super(key: key);
+  const CourseContentScreen({super.key, required this.subject, this.initialTab});
 
   @override
   State<CourseContentScreen> createState() => _CourseContentScreenState();
