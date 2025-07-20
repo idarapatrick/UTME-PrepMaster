@@ -18,8 +18,8 @@ class SubjectCard extends StatelessWidget {
     required this.onTap,
     this.progressText,
     this.trailing,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -30,59 +30,73 @@ class SubjectCard extends StatelessWidget {
 
     return Card(
       color: cardColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 1,
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  imageUrl,
-                  width: 56,
-                  height: 56,
-                  fit: BoxFit.cover,
+              if (imageUrl.isNotEmpty)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    imageUrl,
+                    width: 32,
+                    height: 32,
+                    fit: BoxFit.cover,
+                  ),
+                )
+              else
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: accentColor.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, color: accentColor, size: 16),
                 ),
-              ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 8),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Row(
                       children: [
-                        Icon(icon, color: iconColor, size: 20),
-                        const SizedBox(width: 8),
+                        Icon(icon, color: iconColor, size: 14),
+                        const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             name,
                             style: TextStyle(
                               color: textColor,
                               fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                              fontSize: 12,
                             ),
                             overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
                         ),
                         if (trailing != null) trailing!,
                       ],
                     ),
                     if (progressText != null) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Text(
                         progressText!,
                         style: TextStyle(
                           color: isDark
                               ? Colors.white70
                               : AppColors.textSecondary,
-                          fontSize: 12,
+                          fontSize: 9,
                         ),
                         overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                     ],
                   ],

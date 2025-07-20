@@ -6,7 +6,7 @@ import '../services/firestore_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class EditProfileScreen extends StatefulWidget {
-  const EditProfileScreen({Key? key}) : super(key: key);
+  const EditProfileScreen({super.key});
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -242,39 +242,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               const SizedBox(height: 12),
               // Intended University Choices
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
-                  labelText: '1st Choice University',
-                ),
+              SearchableDropdown(
+                label: '1st Choice University',
                 value: _university1,
-                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-                items: FirestoreService.nigerianInstitutions()
-                    .map((u) => DropdownMenuItem(value: u, child: Text(u)))
-                    .toList(),
+                options: FirestoreService.nigerianInstitutions(),
                 onChanged: (v) => setState(() => _university1 = v),
                 onSaved: (v) => _university1 = v,
+                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
-                  labelText: '2nd Choice University',
-                ),
+              SearchableDropdown(
+                label: '2nd Choice University',
                 value: _university2,
-                items: FirestoreService.nigerianInstitutions()
-                    .map((u) => DropdownMenuItem(value: u, child: Text(u)))
-                    .toList(),
+                options: FirestoreService.nigerianInstitutions(),
                 onChanged: (v) => setState(() => _university2 = v),
                 onSaved: (v) => _university2 = v,
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
-                  labelText: '3rd Choice University',
-                ),
+              SearchableDropdown(
+                label: '3rd Choice University',
                 value: _university3,
-                items: FirestoreService.nigerianInstitutions()
-                    .map((u) => DropdownMenuItem(value: u, child: Text(u)))
-                    .toList(),
+                options: FirestoreService.nigerianInstitutions(),
                 onChanged: (v) => setState(() => _university3 = v),
                 onSaved: (v) => _university3 = v,
               ),
@@ -302,6 +290,122 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class SearchableDropdown extends StatefulWidget {
+  final String label;
+  final String? value;
+  final List<String> options;
+  final ValueChanged<String?> onChanged;
+  final FormFieldSetter<String>? onSaved;
+  final FormFieldValidator<String>? validator;
+  const SearchableDropdown({
+    required this.label,
+    required this.value,
+    required this.options,
+    required this.onChanged,
+    this.onSaved,
+    this.validator,
+    super.key,
+  });
+  @override
+  State<SearchableDropdown> createState() => _SearchableDropdownState();
+}
+
+class _SearchableDropdownState extends State<SearchableDropdown> {
+  late List<String> filtered;
+  String search = '';
+  @override
+  void initState() {
+    super.initState();
+    filtered = widget.options;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FormField<String>(
+      validator: widget.validator,
+      onSaved: widget.onSaved,
+      builder: (state) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InputDecorator(
+            decoration: InputDecoration(
+              labelText: widget.label,
+              errorText: state.errorText,
+            ),
+            child: GestureDetector(
+              onTap: () async {
+                final result = await showDialog<String>(
+                  context: context,
+                  builder: (context) {
+                    String temp = search;
+                    List<String> tempFiltered = widget.options;
+                    return StatefulBuilder(
+                      builder: (context, setState) => AlertDialog(
+                        title: Text('Select ${widget.label}'),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TextField(
+                              autofocus: true,
+                              decoration: const InputDecoration(
+                                hintText: 'Search...',
+                              ),
+                              onChanged: (v) {
+                                temp = v;
+                                setState(() {
+                                  tempFiltered = widget.options
+                                      .where(
+                                        (o) => o.toLowerCase().contains(
+                                          v.toLowerCase(),
+                                        ),
+                                      )
+                                      .toList();
+                                });
+                              },
+                            ),
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              height: 200,
+                              width: 300,
+                              child: ListView(
+                                children: tempFiltered
+                                    .map(
+                                      (o) => ListTile(
+                                        title: Text(o),
+                                        onTap: () => Navigator.pop(context, o),
+                                      ),
+                                    )
+                                    .toList(),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+                if (result != null) widget.onChanged(result);
+              },
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    widget.value ?? 'Select',
+                    style: TextStyle(
+                      color: widget.value == null ? Colors.grey : null,
+                    ),
+                  ),
+                  const Icon(Icons.arrow_drop_down),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'edit_profile_screen.dart';
 import 'leaderboard_screen.dart';
 import 'my_library_screen.dart';
+import '../services/firestore_service.dart';
 
 // Add a list of avatar URLs (DiceBear, diverse styles)
 const List<Map<String, String>> kAvatars = [
@@ -60,17 +61,33 @@ const List<Map<String, String>> kAvatars = [
 ];
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({Key? key}) : super(key: key);
+  const ProfileScreen({super.key});
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
   String _avatarUrl = kAvatars[Random().nextInt(kAvatars.length)]['url']!;
+  List<Map<String, dynamic>> _badges = [];
+  bool _loadingBadges = true;
+
   @override
   void initState() {
     super.initState();
-    // TODO: Load avatar from Firestore/user profile if available
+    _fetchBadges();
+  }
+
+  Future<void> _fetchBadges() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final badges = await FirestoreService.fetchUserBadges(user.uid);
+      setState(() {
+        _badges = badges;
+        _loadingBadges = false;
+      });
+    } else {
+      setState(() => _loadingBadges = false);
+    }
   }
 
   void _changeAvatar() async {
@@ -223,11 +240,146 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 _buildStatCard(Icons.local_fire_department, 'Streak', '7 days'),
                 const SizedBox(width: 16),
-                _buildStatCard(Icons.emoji_events, 'Badges', '12'),
+                _buildStatCard(
+                  Icons.emoji_events,
+                  'Badges',
+                  _badges.length.toString(),
+                ),
                 const SizedBox(width: 16),
                 _buildStatCard(Icons.timer, 'Study Time', '5h'),
               ],
             ),
+            const SizedBox(height: 12),
+            // Badges horizontal list
+            if (_loadingBadges)
+              const Center(child: CircularProgressIndicator())
+            else if (_badges.isNotEmpty)
+              SizedBox(
+                height: 64,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _badges.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 12),
+                  itemBuilder: (context, i) {
+                    final badge = _badges[i];
+                    return GestureDetector(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: AppColors.accentAmber
+                                      .withOpacity(0.2),
+                                  radius: 22,
+                                  backgroundImage:
+                                      badge['iconUrl'] != null &&
+                                          badge['iconUrl'].toString().isNotEmpty
+                                      ? NetworkImage(badge['iconUrl'])
+                                      : null,
+                                  child:
+                                      (badge['iconUrl'] == null ||
+                                          badge['iconUrl'].toString().isEmpty)
+                                      ? const Icon(
+                                          Icons.emoji_events,
+                                          color: AppColors.accentAmber,
+                                        )
+                                      : null,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    badge['name'] ?? 'Badge',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (badge['description'] != null &&
+                                    badge['description'].toString().isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 8),
+                                    child: Text(
+                                      badge['description'],
+                                      style: const TextStyle(fontSize: 15),
+                                    ),
+                                  ),
+                                if (badge['earnedAt'] != null)
+                                  Text(
+                                    'Earned: ' +
+                                        (badge['earnedAt'] is String
+                                            ? badge['earnedAt']
+                                            : (badge['earnedAt'] is DateTime
+                                                  ? (badge['earnedAt']
+                                                            as DateTime)
+                                                        .toLocal()
+                                                        .toString()
+                                                        .split(' ')[0]
+                                                  : badge['earnedAt']
+                                                        .toDate()
+                                                        .toLocal()
+                                                        .toString()
+                                                        .split(' ')[0])),
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('Close'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      child: Column(
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: AppColors.accentAmber.withOpacity(
+                              0.2,
+                            ),
+                            radius: 22,
+                            backgroundImage:
+                                badge['iconUrl'] != null &&
+                                    badge['iconUrl'].toString().isNotEmpty
+                                ? NetworkImage(badge['iconUrl'])
+                                : null,
+                            child:
+                                (badge['iconUrl'] == null ||
+                                    badge['iconUrl'].toString().isEmpty)
+                                ? const Icon(
+                                    Icons.emoji_events,
+                                    color: AppColors.accentAmber,
+                                  )
+                                : null,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            badge['name'] ?? 'Badge',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
             const SizedBox(height: 24),
             Expanded(
               child: ListView(

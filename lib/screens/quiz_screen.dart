@@ -5,7 +5,7 @@ import '../theme/app_colors.dart';
 
 class QuizScreen extends StatefulWidget {
   final String subject;
-  const QuizScreen({Key? key, required this.subject}) : super(key: key);
+  const QuizScreen({super.key, required this.subject});
 
   @override
   State<QuizScreen> createState() => _QuizScreenState();
@@ -13,7 +13,7 @@ class QuizScreen extends StatefulWidget {
 
 class _QuizScreenState extends State<QuizScreen> {
   int _currentQuestionIndex = 0;
-  List<String> _selectedAnswers = List.filled(10, '');
+  final List<String> _selectedAnswers = List.filled(10, '');
   bool _paused = false;
   int _timeElapsed = 0; // seconds
   late List<_QuizQuestion> _questions;

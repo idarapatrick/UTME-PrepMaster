@@ -14,6 +14,9 @@ import 'screens/mock_test_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/subject_selection_screen.dart';
+import 'providers/user_state.dart';
+import 'providers/subject_state.dart';
+import 'providers/test_state.dart';
 
 class ThemeNotifier extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.light;
@@ -30,8 +33,13 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeNotifier(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeNotifier()),
+        ChangeNotifierProvider(create: (_) => UserState()),
+        ChangeNotifierProvider(create: (_) => SubjectState()),
+        ChangeNotifierProvider(create: (_) => TestState()),
+      ],
       child: const MyApp(),
     ),
   );
@@ -66,7 +74,7 @@ class MyApp extends StatelessWidget {
 }
 
 class AuthGate extends StatelessWidget {
-  const AuthGate({Key? key}) : super(key: key);
+  const AuthGate({super.key});
 
   @override
   Widget build(BuildContext context) {
