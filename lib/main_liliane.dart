@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/onboarding/welcome_screen.dart';
 import 'screens/onboarding/personal_info_screen.dart';
+import 'screens/onboarding/university_selection_screen.dart'; // ✅ Add this line
 
 void main() {
   runApp(const LilianeApp());
@@ -18,7 +19,8 @@ class LilianeApp extends StatelessWidget {
       routes: {
         '/welcome': (context) => const WelcomeScreen(),
         '/personal-info': (context) => const PersonalInfoScreen(),
-        // You can add more screens later
+        '/university-selection': (context) =>
+            const UniversitySelectionScreen(), // ✅ Added route
       },
     );
   }
