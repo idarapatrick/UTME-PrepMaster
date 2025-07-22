@@ -18,6 +18,9 @@ import 'screens/subject_selection_screen.dart';
 import 'providers/user_state.dart';
 import 'providers/subject_state.dart';
 import 'providers/test_state.dart';
+import 'screens/welcome_screen.dart';
+import 'screens/personal_info_screen.dart';
+import 'screens/university_selection_screen.dart';
 
 class ThemeNotifier extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.light;
