@@ -1,23 +1,67 @@
+import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'dart:typed_data';
+import '../models/user_profile_model.dart';
 
 class FirestoreService {
   static final _db = FirebaseFirestore.instance;
 
+  /// Create a new user profile document only if it doesn't exist
   static Future<void> createUserProfile(User user) async {
     final doc = _db.collection('users').doc(user.uid);
     final snapshot = await doc.get();
     if (!snapshot.exists) {
-      await doc.set({
-        'email': user.email,
-        'createdAt': FieldValue.serverTimestamp(),
-        'isAnonymous': user.isAnonymous,
-      });
+      final profile = UserProfile(
+        uid: user.uid,
+        email: user.email ?? '',
+        displayName: user.displayName,
+        phoneNumber: user.phoneNumber,
+        photoUrl: user.photoURL,
+        createdAt: DateTime.now(),
+      );
+      await doc.set(profile.toMap());
     }
   }
 
+  /// Load full user profile as model
+  static Future<UserProfile?> getUserProfile(String userId) async {
+    final doc = await _db.collection('users').doc(userId).get();
+    if (!doc.exists) return null;
+    return UserProfile.fromMap(doc.data()!, doc.id);
+  }
+
+  /// Update profile from model
+  static Future<void> updateUserProfileFromModel(UserProfile profile) async {
+    await _db
+        .collection('users')
+        .doc(profile.uid)
+        .set(profile.toMap(), SetOptions(merge: true));
+  }
+
+  /// Update profile with partial data
+  static Future<void> updateUserProfile(
+    String userId,
+    Map<String, dynamic> data,
+  ) async {
+    await _db
+        .collection('users')
+        .doc(userId)
+        .set(data, SetOptions(merge: true));
+  }
+
+  /// Save or overwrite full user profile from map
+  static Future<void> saveFullUserProfile(
+    String userId,
+    Map<String, dynamic> data,
+  ) async {
+    await _db
+        .collection('users')
+        .doc(userId)
+        .set(data, SetOptions(merge: true));
+  }
+
+  /// Save user test result
   static Future<void> saveTestResult({
     required String userId,
     required String testId,
@@ -32,6 +76,24 @@ class FirestoreService {
     });
   }
 
+  /// Save quiz result
+  static Future<void> saveQuizResult({
+    required String userId,
+    required String subject,
+    required int correct,
+    required int attempted,
+    required double score,
+  }) async {
+    await _db.collection('users').doc(userId).collection('quizzes').add({
+      'subject': subject,
+      'correct': correct,
+      'attempted': attempted,
+      'score': score,
+      'takenAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// Save selected subjects
   static Future<void> saveUserSubjects(
     String userId,
     List<String> subjects,
@@ -39,6 +101,7 @@ class FirestoreService {
     await _db.collection('users').doc(userId).update({'subjects': subjects});
   }
 
+  /// Load selected subjects
   static Future<List<String>> loadUserSubjects(String userId) async {
     final doc = await _db.collection('users').doc(userId).get();
     final data = doc.data();
@@ -48,6 +111,7 @@ class FirestoreService {
     return [];
   }
 
+  /// Save progress on a subject
   static Future<void> saveSubjectProgress({
     required String userId,
     required String subject,
@@ -68,6 +132,7 @@ class FirestoreService {
         }, SetOptions(merge: true));
   }
 
+  /// Load subject progress
   static Future<Map<String, dynamic>?> loadSubjectProgress(
     String userId,
     String subject,
@@ -81,6 +146,7 @@ class FirestoreService {
     return doc.exists ? doc.data() : null;
   }
 
+  /// Save full mock test result
   static Future<void> saveMockTestResult({
     required String userId,
     required List<Map<String, dynamic>> subjectResults,
@@ -93,49 +159,7 @@ class FirestoreService {
     });
   }
 
-  static Future<void> saveQuizResult({
-    required String userId,
-    required String subject,
-    required int correct,
-    required int attempted,
-    required double score,
-  }) async {
-    await _db.collection('users').doc(userId).collection('quizzes').add({
-      'subject': subject,
-      'correct': correct,
-      'attempted': attempted,
-      'score': score,
-      'takenAt': FieldValue.serverTimestamp(),
-    });
-  }
-
-  static Future<Map<String, dynamic>?> getUserProfile(String userId) async {
-    final doc = await _db.collection('users').doc(userId).get();
-    return doc.exists ? doc.data() : null;
-  }
-
-  static Future<void> updateUserProfile(
-    String userId,
-    Map<String, dynamic> data,
-  ) async {
-    await _db
-        .collection('users')
-        .doc(userId)
-        .set(data, SetOptions(merge: true));
-  }
-
-  // Save or update full user profile
-  static Future<void> saveFullUserProfile(
-    String userId,
-    Map<String, dynamic> data,
-  ) async {
-    await _db
-        .collection('users')
-        .doc(userId)
-        .set(data, SetOptions(merge: true));
-  }
-
-  // Upload file to Firebase Storage and return download URL
+  /// Upload file to Firebase Storage
   static Future<String> uploadFile(
     String userId,
     String path,
@@ -149,7 +173,7 @@ class FirestoreService {
     return await uploadTask.ref.getDownloadURL();
   }
 
-  // Save PDF metadata
+  /// Save PDF metadata
   static Future<void> savePdf(
     String userId,
     String fileName,
@@ -162,7 +186,7 @@ class FirestoreService {
     });
   }
 
-  // Save note
+  /// Save user note
   static Future<void> saveNote(String userId, String note) async {
     await _db.collection('users').doc(userId).collection('library_notes').add({
       'note': note,
@@ -170,7 +194,7 @@ class FirestoreService {
     });
   }
 
-  // Save link
+  /// Save a useful link
   static Future<void> saveLink(
     String userId,
     String link, {
@@ -183,11 +207,10 @@ class FirestoreService {
     });
   }
 
-  // Fetch leaderboard data (XP and CBT)
+  /// Fetch top XP leaderboard
   static Future<List<Map<String, dynamic>>> fetchXpLeaderboard(
     String period,
   ) async {
-    // period: '24h', 'weekly', 'monthly'
     final query = await _db
         .collection('users')
         .orderBy('xp', descending: true)
@@ -196,8 +219,8 @@ class FirestoreService {
     return query.docs.map((d) => d.data()).toList();
   }
 
+  /// Fetch top CBT scores in last 2 weeks
   static Future<List<Map<String, dynamic>>> fetchCbtLeaderboard() async {
-    // Example: fetch top CBT scores in last 2 weeks
     final now = DateTime.now();
     final twoWeeksAgo = now.subtract(const Duration(days: 14));
     final query = await _db
@@ -209,7 +232,7 @@ class FirestoreService {
     return query.docs.map((d) => d.data()).toList();
   }
 
-  // Fetch badges for a user
+  /// Fetch user badges
   static Future<List<Map<String, dynamic>>> fetchUserBadges(
     String userId,
   ) async {
@@ -221,7 +244,7 @@ class FirestoreService {
     return query.docs.map((d) => d.data()).toList();
   }
 
-  // Static list of Nigerian tertiary institutions (for dropdowns)
+  /// Static Nigerian Institutions List
   static List<String> nigerianInstitutions() => [
     'University of Lagos',
     'Obafemi Awolowo University',
