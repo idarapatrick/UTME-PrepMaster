@@ -2,10 +2,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:typed_data';
+import 'dart:developer' as developer;
+
+import 'package:flutter/material.dart';
+import 'package:utme_prep_master/widgets/achievement_badge.dart';
 
 class FirestoreService {
-  static final _db = FirebaseFirestore.instance;
+  static final FirebaseFirestore _db = FirebaseFirestore.instance;
+  static final FirebaseAuth _auth = FirebaseAuth.instance;
+  static final FirebaseStorage _storage = FirebaseStorage.instance;
 
+  // USER PROFILE METHODS
   static Future<void> createUserProfile(User user) async {
     final doc = _db.collection('users').doc(user.uid);
     final snapshot = await doc.get();
@@ -14,24 +21,148 @@ class FirestoreService {
         'email': user.email,
         'createdAt': FieldValue.serverTimestamp(),
         'isAnonymous': user.isAnonymous,
+        'xp': 0, // Initialize XP
+        'cbtHighScore': 0, // Initialize CBT score
+        'displayName': user.displayName ?? 'User${user.uid.substring(0, 6)}',
       });
     }
   }
 
+  static Future<Map<String, dynamic>?> getUserProfile(String userId) async {
+    final doc = await _db.collection('users').doc(userId).get();
+    return doc.exists ? doc.data() : null;
+  }
+
+  static Future<void> updateUserProfile(
+    String userId,
+    Map<String, dynamic> data,
+  ) async {
+    await _db.collection('users').doc(userId).set(data, SetOptions(merge: true));
+  }
+
+  static Future<void> saveFullUserProfile(
+    String userId,
+    Map<String, dynamic> data,
+  ) async {
+    await _db.collection('users').doc(userId).set(data, SetOptions(merge: true));
+  }
+
+  // TEST & QUIZ METHODS
   static Future<void> saveTestResult({
     required String userId,
     required String testId,
     required double score,
     required List<Map<String, dynamic>> answers,
   }) async {
-    await _db.collection('users').doc(userId).collection('test_results').add({
+    final batch = _db.batch();
+    
+    // Save test result
+    final testRef = _db.collection('users').doc(userId).collection('test_results').doc();
+    batch.set(testRef, {
       'testId': testId,
       'score': score,
       'answers': answers,
       'takenAt': FieldValue.serverTimestamp(),
     });
+
+    // Add XP for completing test
+    final xpAmount = (score * 10).toInt(); // 10 XP per percentage point
+    batch.update(_db.collection('users').doc(userId), {
+      'xp': FieldValue.increment(xpAmount),
+    });
+
+    // Record XP event
+    final xpEventRef = _db.collection('users').doc(userId).collection('xp_events').doc();
+    batch.set(xpEventRef, {
+      'amount': xpAmount,
+      'reason': 'Completed test $testId',
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+
+    await batch.commit();
+
+    // Update high score if this is a CBT test
+    if (testId.startsWith('cbt_')) {
+      await updateCbtHighScore(userId: userId, newScore: score);
+    }
+
+    // Check for achievements
+    await _checkAchievements(userId);
   }
 
+  static Future<void> saveMockTestResult({
+    required String userId,
+    required List<Map<String, dynamic>> subjectResults,
+    required double totalScore,
+  }) async {
+    final batch = _db.batch();
+    
+    // Save mock test result
+    final mockTestRef = _db.collection('users').doc(userId).collection('mock_tests').doc();
+    batch.set(mockTestRef, {
+      'subjectResults': subjectResults,
+      'totalScore': totalScore,
+      'takenAt': FieldValue.serverTimestamp(),
+    });
+
+    // Add XP for completing mock test
+    final xpAmount = (totalScore * 0.2).toInt(); // 0.2 XP per mark
+    batch.update(_db.collection('users').doc(userId), {
+      'xp': FieldValue.increment(xpAmount),
+    });
+
+    // Record XP event
+    final xpEventRef = _db.collection('users').doc(userId).collection('xp_events').doc();
+    batch.set(xpEventRef, {
+      'amount': xpAmount,
+      'reason': 'Completed mock test',
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+
+    await batch.commit();
+
+    // Update CBT high score
+    await updateCbtHighScore(userId: userId, newScore: totalScore);
+  }
+
+  static Future<void> saveQuizResult({
+    required String userId,
+    required String subject,
+    required int correct,
+    required int attempted,
+    required double score,
+  }) async {
+    final batch = _db.batch();
+    
+    // Save quiz result
+    final quizRef = _db.collection('users').doc(userId).collection('quizzes').doc();
+    batch.set(quizRef, {
+      'subject': subject,
+      'correct': correct,
+      'attempted': attempted,
+      'score': score,
+      'takenAt': FieldValue.serverTimestamp(),
+    });
+
+    // Add XP for completing quiz
+    final xpAmount = (correct * 5); // 5 XP per correct answer
+    batch.update(_db.collection('users').doc(userId), {
+      'xp': FieldValue.increment(xpAmount),
+    });
+
+    // Record XP event
+    final xpEventRef = _db.collection('users').doc(userId).collection('xp_events').doc();
+    batch.set(xpEventRef, {
+      'amount': xpAmount,
+      'reason': 'Completed quiz in $subject',
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+
+    await batch.commit();
+    await _checkAchievements(userId);
+  }
+
+  // SUBJECT METHODS
   static Future<void> saveUserSubjects(
     String userId,
     List<String> subjects,
@@ -81,75 +212,18 @@ class FirestoreService {
     return doc.exists ? doc.data() : null;
   }
 
-  static Future<void> saveMockTestResult({
-    required String userId,
-    required List<Map<String, dynamic>> subjectResults,
-    required double totalScore,
-  }) async {
-    await _db.collection('users').doc(userId).collection('mock_tests').add({
-      'subjectResults': subjectResults,
-      'totalScore': totalScore,
-      'takenAt': FieldValue.serverTimestamp(),
-    });
-  }
-
-  static Future<void> saveQuizResult({
-    required String userId,
-    required String subject,
-    required int correct,
-    required int attempted,
-    required double score,
-  }) async {
-    await _db.collection('users').doc(userId).collection('quizzes').add({
-      'subject': subject,
-      'correct': correct,
-      'attempted': attempted,
-      'score': score,
-      'takenAt': FieldValue.serverTimestamp(),
-    });
-  }
-
-  static Future<Map<String, dynamic>?> getUserProfile(String userId) async {
-    final doc = await _db.collection('users').doc(userId).get();
-    return doc.exists ? doc.data() : null;
-  }
-
-  static Future<void> updateUserProfile(
-    String userId,
-    Map<String, dynamic> data,
-  ) async {
-    await _db
-        .collection('users')
-        .doc(userId)
-        .set(data, SetOptions(merge: true));
-  }
-
-  // Save or update full user profile
-  static Future<void> saveFullUserProfile(
-    String userId,
-    Map<String, dynamic> data,
-  ) async {
-    await _db
-        .collection('users')
-        .doc(userId)
-        .set(data, SetOptions(merge: true));
-  }
-
-  // Upload file to Firebase Storage and return download URL
+  // LIBRARY METHODS
   static Future<String> uploadFile(
     String userId,
     String path,
     String fileName,
     Uint8List bytes,
   ) async {
-    final ref = FirebaseStorage.instance.ref().child(
-      'users/$userId/$path/$fileName',
-    );
+    final ref = _storage.ref().child('users/$userId/$path/$fileName');
     final uploadTask = await ref.putData(bytes);
     return await uploadTask.ref.getDownloadURL();
   }
 
-  // Save PDF metadata
   static Future<void> savePdf(
     String userId,
     String fileName,
@@ -162,7 +236,6 @@ class FirestoreService {
     });
   }
 
-  // Save note
   static Future<void> saveNote(String userId, String note) async {
     await _db.collection('users').doc(userId).collection('library_notes').add({
       'note': note,
@@ -170,7 +243,6 @@ class FirestoreService {
     });
   }
 
-  // Save link
   static Future<void> saveLink(
     String userId,
     String link, {
@@ -183,42 +255,226 @@ class FirestoreService {
     });
   }
 
-  // Fetch leaderboard data (XP and CBT)
-  static Future<List<Map<String, dynamic>>> fetchXpLeaderboard(
-    String period,
-  ) async {
-    // period: '24h', 'weekly', 'monthly'
-    final query = await _db
-        .collection('users')
-        .orderBy('xp', descending: true)
-        .limit(20)
-        .get();
-    return query.docs.map((d) => d.data()).toList();
+  // LEADERBOARD & ACHIEVEMENT METHODS
+  static Future<List<Map<String, dynamic>>> fetchXpLeaderboard(String period) async {
+    try {
+      final userId = _auth.currentUser?.uid;
+      if (userId == null) return [];
+
+      final DateTimeRange dateRange = _getDateRange(period);
+      
+      final query = await _db
+          .collection('users')
+          .orderBy('xp', descending: true)
+          .limit(100)
+          .get();
+
+      final List<Map<String, dynamic>> leaderboard = [];
+      
+      for (final doc in query.docs) {
+        final xpEvents = await _db
+            .collection('users/${doc.id}/xp_events')
+            .where('timestamp', isGreaterThanOrEqualTo: dateRange.start)
+            .where('timestamp', isLessThanOrEqualTo: dateRange.end)
+            .get();
+
+        final totalXp = xpEvents.docs.fold(0, (sum, event) => sum + (event.data()['amount'] as int));
+
+        if (totalXp > 0) {
+          leaderboard.add({
+            'userId': doc.id,
+            'displayName': doc.data()['displayName'] ?? 'Anonymous',
+            'xp': totalXp,
+            'isCurrentUser': doc.id == userId,
+            'achievements': await _getUserAchievementIds(doc.id),
+            'avatarUrl': doc.data()['avatarUrl'],
+          });
+        }
+      }
+
+      leaderboard.sort((a, b) => b['xp'].compareTo(a['xp']));
+      return leaderboard;
+    } catch (e) {
+      developer.log('Error fetching XP leaderboard: $e', error: e);
+      return [];
+    }
   }
 
   static Future<List<Map<String, dynamic>>> fetchCbtLeaderboard() async {
-    // Example: fetch top CBT scores in last 2 weeks
-    final now = DateTime.now();
-    final twoWeeksAgo = now.subtract(const Duration(days: 14));
-    final query = await _db
-        .collectionGroup('mock_tests')
-        .where('takenAt', isGreaterThan: Timestamp.fromDate(twoWeeksAgo))
-        .orderBy('totalScore', descending: true)
-        .limit(20)
-        .get();
-    return query.docs.map((d) => d.data()).toList();
+    try {
+      final userId = _auth.currentUser?.uid;
+      if (userId == null) return [];
+
+      final query = await _db
+          .collection('users')
+          .orderBy('cbtHighScore', descending: true)
+          .limit(100)
+          .get();
+
+      return query.docs.map((doc) {
+        return {
+          'userId': doc.id,
+          'displayName': doc.data()['displayName'] ?? 'Anonymous',
+          'totalScore': doc.data()['cbtHighScore'] ?? 0,
+          'isCurrentUser': doc.id == userId,
+          'achievements': doc.data()['achievements'] ?? [],
+          'avatarUrl': doc.data()['avatarUrl'],
+        };
+      }).toList();
+    } catch (e) {
+      developer.log('Error fetching CBT leaderboard: $e', error: e);
+      return [];
+    }
   }
 
-  // Fetch badges for a user
-  static Future<List<Map<String, dynamic>>> fetchUserBadges(
-    String userId,
-  ) async {
-    final query = await _db
+  static Future<void> updateCbtHighScore({
+    required String userId,
+    required double newScore,
+  }) async {
+    final userDoc = await _db.collection('users').doc(userId).get();
+    final currentHighScore = (userDoc.data()?['cbtHighScore'] as num?)?.toDouble() ?? 0;
+    
+    if (newScore > currentHighScore) {
+      await _db.collection('users').doc(userId).update({
+        'cbtHighScore': newScore,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      await _checkAchievements(userId);
+    }
+  }
+
+  static Future<void> addUserXp({
+    required String userId,
+    required int amount,
+    required String reason,
+  }) async {
+    final batch = _db.batch();
+    
+    // Update total XP
+    final userRef = _db.collection('users').doc(userId);
+    batch.update(userRef, {
+      'xp': FieldValue.increment(amount),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    
+    // Record XP event
+    final xpEventRef = userRef.collection('xp_events').doc();
+    batch.set(xpEventRef, {
+      'amount': amount,
+      'reason': reason,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+    
+    await batch.commit();
+    await _checkAchievements(userId);
+  }
+
+  static Future<void> _checkAchievements(String userId) async {
+    final userDoc = await _db.collection('users').doc(userId).get();
+    final userData = userDoc.data() ?? {};
+    
+    final xp = userData['xp'] as int? ?? 0;
+    final cbtHighScore = userData['cbtHighScore'] as double? ?? 0;
+    
+    // XP-based achievements
+    if (xp >= 10000 && !await _hasAchievement(userId, 'top-1')) {
+      await _grantAchievement(userId, 'top-1');
+    }
+    if (xp >= 5000 && !await _hasAchievement(userId, 'fast-learner')) {
+      await _grantAchievement(userId, 'fast-learner');
+    }
+    if (xp >= 1000 && !await _hasAchievement(userId, 'dedicated-learner')) {
+      await _grantAchievement(userId, 'dedicated-learner');
+    }
+    
+    // CBT-based achievements
+    if (cbtHighScore >= 90 && !await _hasAchievement(userId, 'perfect-score')) {
+      await _grantAchievement(userId, 'perfect-score');
+    }
+    if (cbtHighScore >= 75 && !await _hasAchievement(userId, 'high-achiever')) {
+      await _grantAchievement(userId, 'high-achiever');
+    }
+  }
+
+  static Future<bool> _hasAchievement(String userId, String achievementId) async {
+    final doc = await _db
         .collection('users')
         .doc(userId)
-        .collection('badges')
+        .collection('achievements')
+        .doc(achievementId)
         .get();
-    return query.docs.map((d) => d.data()).toList();
+    return doc.exists;
+  }
+
+  static Future<void> _grantAchievement(String userId, String achievementId) async {
+    await _db
+        .collection('users')
+        .doc(userId)
+        .collection('achievements')
+        .doc(achievementId)
+        .set({
+          'unlockedAt': FieldValue.serverTimestamp(),
+        });
+  }
+
+  static Future<List<String>> _getUserAchievementIds(String userId) async {
+    try {
+      final snapshot = await _db
+          .collection('users/$userId/achievements')
+          .get();
+      return snapshot.docs.map((doc) => doc.id).toList();
+    } catch (e) {
+      developer.log('Error fetching achievements: $e', error: e);
+      return [];
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> fetchUserBadges(String userId) async {
+  try {
+    final snapshot = await _db
+        .collection('users')
+        .doc(userId)
+        .collection('achievements')
+        .get();
+    
+    return snapshot.docs.map((doc) {
+      return {
+        'id': doc.id,
+        'name': doc.id.replaceAll('-', ' ').toTitleCase(),
+        'unlockedAt': doc.data()['unlockedAt'],
+        // Add other fields you need from the achievement documents
+      };
+    }).toList();
+  } catch (e) {
+    developer.log('Error fetching user badges: $e', error: e);
+    return [];
+  }
+}
+
+  static DateTimeRange _getDateRange(String period) {
+    final now = DateTime.now();
+    switch (period.toLowerCase()) {
+      case '24h':
+        return DateTimeRange(
+          start: now.subtract(const Duration(days: 1)),
+          end: now,
+        );
+      case 'weekly':
+        return DateTimeRange(
+          start: now.subtract(const Duration(days: 7)),
+          end: now,
+        );
+      case 'monthly':
+        return DateTimeRange(
+          start: DateTime(now.year, now.month - 1, now.day),
+          end: now,
+        );
+      default:
+        return DateTimeRange(
+          start: DateTime(0),
+          end: now,
+        );
+    }
   }
 
   // Static list of Nigerian tertiary institutions (for dropdowns)
