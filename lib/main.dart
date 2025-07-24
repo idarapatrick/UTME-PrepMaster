@@ -17,6 +17,8 @@ import 'screens/subject_selection_screen.dart';
 import 'providers/user_state.dart';
 import 'providers/subject_state.dart';
 import 'providers/test_state.dart';
+import 'screens/life_at_intro_screen.dart';
+import 'screens/life_at_browser_screen.dart';
 
 class ThemeNotifier extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.light;
@@ -67,6 +69,8 @@ class MyApp extends StatelessWidget {
         '/profile': (context) => const ProfileScreen(),
         '/home': (context) => const HomeScreen(),
         '/subject-selection': (context) => const SubjectSelectionScreen(),
+        '/life-at-intro': (context) => const LifeAtIntroScreen(),
+        '/life-at-browser': (context) => const LifeAtBrowserScreen(),
       },
     );
   }

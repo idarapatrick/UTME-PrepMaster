@@ -90,7 +90,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
         );
       },
     );
-    if (note != null && note.trim().isNotEmpty) {
+    if (note.trim().isNotEmpty) {
       await FirestoreService.saveNote(user.uid, note.trim());
       _loadLibrary();
     }
@@ -123,7 +123,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
         );
       },
     );
-    if (link != null && link.trim().isNotEmpty) {
+    if (link.trim().isNotEmpty) {
       await FirestoreService.saveLink(user.uid, link.trim());
       _loadLibrary();
     }
@@ -261,7 +261,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
         );
       },
     );
-    if (note != null && note.trim().isNotEmpty) {
+    if (note.trim().isNotEmpty) {
       await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
