@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../services/ai_service.dart';
 
 
 class AiTutorScreen extends StatefulWidget {
@@ -68,21 +69,22 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
     _scrollToBottom();
 
     // Simulate AI response
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _isTyping = false;
-          _messages.add(
-            ChatMessage(
-              text: _generateAiResponse(message),
-              isUser: false,
-              timestamp: DateTime.now(),
-            ),
-          );
-        });
-        _scrollToBottom();
-      }
+    AIService.getAIResponse(message).then((aiResponse) {
+  if (mounted) {
+    setState(() {
+      _isTyping = false;
+      _messages.add(
+        ChatMessage(
+          text: aiResponse,
+          isUser: false,
+          timestamp: DateTime.now(),
+        ),
+      );
     });
+    _scrollToBottom();
+  }
+});
+
   }
 
   String _generateAiResponse(String userMessage) {
