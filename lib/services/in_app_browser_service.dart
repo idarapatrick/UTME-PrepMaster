@@ -9,10 +9,7 @@ class InAppBrowserService {
     await browser.open(
       url: webUri,
       settings: ChromeSafariBrowserSettings(
-        shareState: CsbShareState.DEFAULT, 
       ),
     );
   }
 }
-
-

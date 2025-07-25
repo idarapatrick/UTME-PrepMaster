@@ -19,6 +19,7 @@ import 'providers/subject_state.dart';
 import 'providers/test_state.dart';
 import 'screens/life_at_intro_screen.dart';
 import 'screens/life_at_browser_screen.dart';
+import 'screens/study_partner_screen.dart';
 
 class ThemeNotifier extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.light;
