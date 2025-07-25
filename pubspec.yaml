@@ -26,7 +26,11 @@ dependencies:
   url_launcher: ^6.1.10
   firebase_storage: ^12.4.9
   image_picker: ^1.0.7
-
+  flutter_inappwebview: ^6.0.0
+ 
+  
+  # For Unique ID generation
+  uuid: ^4.4.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
