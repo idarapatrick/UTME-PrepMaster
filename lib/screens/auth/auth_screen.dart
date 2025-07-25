@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../theme/app_colors.dart';
-import '../services/firestore_service.dart';
+import '../../services/email_verification_service.dart';
+import '../../theme/app_colors.dart';
+import '../../services/firestore_service.dart';
+import 'email_verification_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -27,26 +29,56 @@ class _AuthScreenState extends State<AuthScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
+
     try {
       if (_isSignUp) {
         await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
+
+        await EmailVerificationService.sendVerificationEmail();
+
+        // Create user profile before navigating
+        await FirestoreService.createUserProfile(
+          FirebaseAuth.instance.currentUser!,
+        );
+
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const EmailVerificationScreen()),
+          );
+        }
       } else {
         await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
+
+        final user = FirebaseAuth.instance.currentUser!;
+        if (!user.emailVerified) {
+          await EmailVerificationService.sendVerificationEmail();
+
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const EmailVerificationScreen(),
+              ),
+            );
+          }
+          return;
+        }
+
+        // Create user profile after login
+        await FirestoreService.createUserProfile(user);
       }
-      // After sign-in or sign-up:
-      await FirestoreService.createUserProfile(
-        FirebaseAuth.instance.currentUser!,
-      );
     } on FirebaseAuthException catch (e) {
       setState(() {
         _errorMessage = e.message;
@@ -65,9 +97,10 @@ class _AuthScreenState extends State<AuthScreen> {
       _isLoading = true;
       _errorMessage = null;
     });
+
     try {
       await FirebaseAuth.instance.signInAnonymously();
-      // After sign-in or sign-up:
+
       await FirestoreService.createUserProfile(
         FirebaseAuth.instance.currentUser!,
       );
