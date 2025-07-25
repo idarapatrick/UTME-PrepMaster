@@ -180,7 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (user != null) {
       final doc = await FirestoreService.getUserProfile(user.uid);
       setState(() {
-        _avatarUrl = doc?['avatarUrl'] as String?;
+        _avatarUrl = doc?.photoUrl as String?;
       });
     }
   }
