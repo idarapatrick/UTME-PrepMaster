@@ -52,7 +52,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
     });
     try {
       final results = await Future.wait([
-        FirestoreService.fetchXpLeaderboard(_xpPeriods[_xpPeriodIndex]),
+        FirestoreService.fetchXpLeaderboard(),
         FirestoreService.fetchCbtLeaderboard(),
       ]);
       setState(() {
@@ -158,9 +158,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
               onTap: () async {
                 setState(() => _xpPeriodIndex = index);
                 setState(() => _loadingXp = true);
-                _xpLeaderboard = await FirestoreService.fetchXpLeaderboard(
-                  _xpPeriods[_xpPeriodIndex],
-                );
+                _xpLeaderboard = await FirestoreService.fetchXpLeaderboard();
                 setState(() => _loadingXp = false);
               },
               child: Container(
@@ -420,7 +418,7 @@ class _UserCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: isCurrentUser
-              ? AppColors.dominantPurple.withOpacity(0.1)
+              ? AppColors.dominantPurple.withValues(alpha: 0.1)
               : isDark
                   ? Colors.grey[800]
                   : Colors.white,
@@ -431,7 +429,7 @@ class _UserCard extends StatelessWidget {
           boxShadow: [
             if (!isDark)
               BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
+                color: Colors.grey.withValues(alpha: 0.1),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),

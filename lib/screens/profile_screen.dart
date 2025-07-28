@@ -3,10 +3,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../theme/app_colors.dart';
 import 'dart:math';
 import 'package:url_launcher/url_launcher.dart';
+import '../services/firestore_service.dart';
+import '../models/user_profile_model.dart';
 import 'edit_profile_screen.dart';
 import 'leaderboard_screen.dart';
 import 'my_library_screen.dart';
-import '../services/firestore_service.dart';
+import 'badges_screen.dart';
+import 'life_at_intro_screen.dart';
 
 // Add a list of avatar URLs (DiceBear, diverse styles)
 const List<Map<String, String>> kAvatars = [
@@ -68,7 +71,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   String _avatarUrl = kAvatars[Random().nextInt(kAvatars.length)]['url']!;
-  List<Map<String, dynamic>> _badges = [];
+  List<String> _badges = [];
   bool _loadingBadges = true;
 
   @override
@@ -176,7 +179,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   CircleAvatar(
                     radius: 48,
-                    backgroundColor: AppColors.dominantPurple.withOpacity(0.1),
+                    backgroundColor: AppColors.accentAmber.withValues(alpha: 0.2),
                     backgroundImage: NetworkImage(_avatarUrl),
                   ),
                   Positioned(
@@ -207,7 +210,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const EditProfileScreen(),
+                    builder: (context) => EditProfileScreen(
+                      userProfile: UserProfile(
+                        uid: 'temp-uid',
+                        email: 'john.doe@example.com',
+                        displayName: 'John Doe',
+                        phoneNumber: '+2341234567890',
+                        photoUrl: 'https://via.placeholder.com/150',
+                        createdAt: DateTime.now(),
+                      ),
+                    ),
                   ),
                 );
               },
@@ -271,26 +283,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               children: [
                                 CircleAvatar(
                                   backgroundColor: AppColors.accentAmber
-                                      .withOpacity(0.2),
+                                      .withValues(alpha: 0.2),
                                   radius: 22,
-                                  backgroundImage:
-                                      badge['iconUrl'] != null &&
-                                          badge['iconUrl'].toString().isNotEmpty
-                                      ? NetworkImage(badge['iconUrl'])
-                                      : null,
-                                  child:
-                                      (badge['iconUrl'] == null ||
-                                          badge['iconUrl'].toString().isEmpty)
-                                      ? const Icon(
-                                          Icons.emoji_events,
-                                          color: AppColors.accentAmber,
-                                        )
-                                      : null,
+                                  child: const Icon(
+                                    Icons.emoji_events,
+                                    color: AppColors.accentAmber,
+                                  ),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
-                                    badge['name'] ?? 'Badge',
+                                    badge.replaceAll('-', ' ').toTitleCase(),
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
@@ -303,36 +306,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                if (badge['description'] != null &&
-                                    badge['description'].toString().isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 8),
-                                    child: Text(
-                                      badge['description'],
-                                      style: const TextStyle(fontSize: 15),
-                                    ),
-                                  ),
-                                if (badge['earnedAt'] != null)
-                                  Text(
-                                    'Earned: ' +
-                                        (badge['earnedAt'] is String
-                                            ? badge['earnedAt']
-                                            : (badge['earnedAt'] is DateTime
-                                                  ? (badge['earnedAt']
-                                                            as DateTime)
-                                                        .toLocal()
-                                                        .toString()
-                                                        .split(' ')[0]
-                                                  : badge['earnedAt']
-                                                        .toDate()
-                                                        .toLocal()
-                                                        .toString()
-                                                        .split(' ')[0])),
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
+                                Text(
+                                  'Congratulations! You earned this badge.',
+                                  style: const TextStyle(fontSize: 15),
+                                ),
                               ],
                             ),
                             actions: [
@@ -347,27 +324,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         children: [
                           CircleAvatar(
-                            backgroundColor: AppColors.accentAmber.withOpacity(
-                              0.2,
-                            ),
+                            backgroundColor: AppColors.accentAmber.withValues(alpha: 0.2),
                             radius: 22,
-                            backgroundImage:
-                                badge['iconUrl'] != null &&
-                                    badge['iconUrl'].toString().isNotEmpty
-                                ? NetworkImage(badge['iconUrl'])
-                                : null,
-                            child:
-                                (badge['iconUrl'] == null ||
-                                    badge['iconUrl'].toString().isEmpty)
-                                ? const Icon(
-                                    Icons.emoji_events,
-                                    color: AppColors.accentAmber,
-                                  )
-                                : null,
+                            child: const Icon(
+                              Icons.emoji_events,
+                              color: AppColors.accentAmber,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            badge['name'] ?? 'Badge',
+                            badge.replaceAll('-', ' ').toTitleCase(),
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
@@ -534,5 +500,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
     );
+  }
+}
+
+extension StringExtension on String {
+  String toTitleCase() {
+    return split(' ').map((word) {
+      if (word.isEmpty) return word;
+      return word[0].toUpperCase() + word.substring(1).toLowerCase();
+    }).join(' ');
   }
 }

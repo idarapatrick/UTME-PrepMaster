@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
+import '../theme/app_colors.dart';
 
 class AchievementBadge extends StatelessWidget {
   final String achievement;
@@ -13,7 +13,7 @@ class AchievementBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (icon, color) = _getAchievementData(achievement);
+    final achievementData = _getAchievementData(achievement);
     
     return Tooltip(
       message: achievement.replaceAll('-', ' ').toTitleCase(),
@@ -21,15 +21,15 @@ class AchievementBadge extends StatelessWidget {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.2),
+          color: achievementData.$2.withValues(alpha: 0.2),
           shape: BoxShape.circle,
-          border: Border.all(color: color, width: 1.5),
+          border: Border.all(color: achievementData.$2, width: 1.5),
         ),
         child: Center(
           child: Icon(
-            icon,
+            achievementData.$1,
             size: size * 0.6,
-            color: color,
+            color: achievementData.$2,
           ),
         ),
       ),

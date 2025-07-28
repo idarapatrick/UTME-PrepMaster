@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
+import '../theme/app_colors.dart';
 
 class RankBadge extends StatelessWidget {
   final int rank;
@@ -26,11 +26,11 @@ class RankBadge extends StatelessWidget {
         textColor = Colors.white;
         break;
       case 3:
-        badgeColor = Colors.brown;
+        badgeColor = Colors.brown.shade500;
         textColor = Colors.white;
         break;
       default:
-        badgeColor = AppColors.dominantPurple.withOpacity(0.1);
+        badgeColor = AppColors.dominantPurple.withValues(alpha: 0.1);
         textColor = AppColors.dominantPurple;
     }
 

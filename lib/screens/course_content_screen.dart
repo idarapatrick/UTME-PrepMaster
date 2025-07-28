@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../services/firestore_service.dart';
 import '../theme/app_colors.dart';
 
 class CourseContentScreen extends StatefulWidget {
@@ -58,12 +56,12 @@ class _CourseContentScreenState extends State<CourseContentScreen>
       },
     );
     // Simulate loading progress from Firestore (not implemented in detail)
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      // You can extend this to load per-topic progress from Firestore
-      // For now, mark all as not completed
-      _completed = {for (var t in _topics) t['id']: false};
-    }
+    // final user = FirebaseAuth.instance.currentUser;
+    // if (user != null) {
+    //   // You can extend this to load per-topic progress from Firestore
+    //   // For now, mark all as not completed
+    //   _completed = {for (var t in _topics) t['id']: false};
+    // }
     setState(() => _loading = false);
   }
 

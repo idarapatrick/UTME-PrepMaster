@@ -19,10 +19,10 @@ class BadgesScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.dominantPurple.withOpacity(0.1),
+              color: AppColors.dominantPurple.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: AppColors.dominantPurple.withOpacity(0.2),
+                color: AppColors.dominantPurple.withValues(alpha: 0.2),
               ),
             ),
             child: Row(
@@ -254,7 +254,7 @@ class BadgesScreen extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: isUnlocked
-                ? AppColors.accentAmber.withOpacity(0.2)
+                ? AppColors.accentAmber.withValues(alpha: 0.2)
                 : AppColors.borderLight,
             borderRadius: BorderRadius.circular(12),
           ),
@@ -304,73 +304,6 @@ class BadgesScreen extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  void _showBadgeDetails(
-    BuildContext context,
-    String title,
-    String description,
-    bool isUnlocked,
-    double progress,
-    int totalRequired,
-  ) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Row(
-            children: [
-              Icon(
-                isUnlocked ? Icons.verified : Icons.lock_outline,
-                color: isUnlocked
-                    ? AppColors.accentAmber
-                    : AppColors.textTertiary,
-              ),
-              const SizedBox(width: 8),
-              Text(title),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(description),
-              const SizedBox(height: 16),
-              if (!isUnlocked) ...[
-                Text(
-                  'Progress: ${(progress * totalRequired).toInt()}/$totalRequired',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                LinearProgressIndicator(
-                  value: progress,
-                  backgroundColor: AppColors.borderLight,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    AppColors.dominantPurple,
-                  ),
-                ),
-              ] else ...[
-                Text(
-                  'Badge Unlocked!',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.accentAmber,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
-            ),
-          ],
-        );
-      },
     );
   }
 }

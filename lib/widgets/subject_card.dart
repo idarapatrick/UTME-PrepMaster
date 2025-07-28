@@ -6,19 +6,19 @@ class SubjectCard extends StatelessWidget {
   final IconData icon;
   final String imageUrl;
   final Color accentColor;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final String? progressText;
   final Widget? trailing;
 
   const SubjectCard({
+    super.key,
     required this.name,
     required this.icon,
     required this.imageUrl,
     required this.accentColor,
-    required this.onTap,
     this.progressText,
+    this.onTap,
     this.trailing,
-    super.key,
   });
 
   @override
@@ -55,7 +55,7 @@ class SubjectCard extends StatelessWidget {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: accentColor.withOpacity(0.15),
+                    color: accentColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(icon, color: accentColor, size: 16),

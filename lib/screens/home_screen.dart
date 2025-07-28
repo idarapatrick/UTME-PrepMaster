@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../theme/app_colors.dart';
-import 'profile_screen.dart';
 import '../services/firestore_service.dart';
-import 'subject_selection_screen.dart';
-import 'quiz_screen.dart';
-import 'course_content_screen.dart';
 import '../widgets/subject_card.dart';
+import 'profile_screen.dart';
+import 'course_content_screen.dart';
 
 const List<Map<String, dynamic>> kUtmeSubjects = [
   {
@@ -157,10 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final selected = await FirestoreService.loadUserSubjects(user.uid);
       final progress = <String, Map<String, dynamic>>{};
       for (final subject in selected) {
-        final data = await FirestoreService.loadSubjectProgress(
-          user.uid,
-          subject,
-        );
+        final data = await FirestoreService.loadSubjectProgress(user.uid, subject);
         if (data != null) progress[subject] = data;
       }
       setState(() {
@@ -180,7 +175,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (user != null) {
       final doc = await FirestoreService.getUserProfile(user.uid);
       setState(() {
-        _avatarUrl = doc?.photoUrl as String?;
+        _avatarUrl = doc?['photoUrl'] as String?;
       });
     }
   }
@@ -215,9 +210,6 @@ class _HomeScreenState extends State<HomeScreen> {
           'https://images.unsplash.com/photo-1503676382389-4809596d5290?auto=format&fit=crop&w=600&q=80',
     },
   ];
-
-  final List<String> _weekdays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-  final int _todayIndex = DateTime.now().weekday % 7; // 0=Mon, 6=Sun
 
   void _onNavTap(int index) {
     setState(() {
@@ -344,11 +336,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       final user = FirebaseAuth.instance.currentUser;
                       if (user != null) {
                         await FirestoreService.saveSubjectProgress(
-                          userId: user.uid,
-                          subject: mainSubject['name'],
-                          attempted: 0,
-                          correct: 0,
-                          bestScore: 0,
+                          user.uid,
+                          {mainSubject['name']: 0.0},
                         );
                         setState(
                           () => _subjectProgress[mainSubject['name']] = {
@@ -382,10 +371,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ? const Color(0xFF181A20)
         : AppColors.backgroundSecondary;
     final cardColor = Colors.white;
-    final textColor = isDark ? Colors.black : AppColors.textPrimary;
-    final secondaryTextColor = isDark
-        ? Colors.black.withOpacity(0.7)
-        : AppColors.textSecondary;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -662,7 +647,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     shape: BoxShape.circle,
                     color: _carouselIndex == i
                         ? AppColors.dominantPurple
-                        : AppColors.textTertiary.withOpacity(0.3),
+                        : AppColors.textTertiary.withValues(alpha: 0.3),
                   ),
                 ),
               ),
@@ -825,7 +810,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
       decoration: BoxDecoration(
-        color: isDark ? color.withOpacity(0.18) : color.withOpacity(0.12),
+        color: isDark ? color.withValues(alpha: 0.18) : color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(24),
       ),
       child: Row(
@@ -841,55 +826,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildQuickAccessCard(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required String subtitle,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Card(
-      color: isDark ? const Color(0xFF23243B) : Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 2,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(icon, color: color, size: 22),
-                  const SizedBox(width: 8),
-                  Text(
-                    label,
-                    style: TextStyle(
-                      color: color,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                subtitle,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -939,7 +875,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   return GestureDetector(
                     onTap: () async {
                       await _setAvatar(url);
-                      Navigator.pop(context);
+                      if (mounted) {
+                        Navigator.pop(context);
+                      }
                     },
                     child: CircleAvatar(
                       radius: 32,
@@ -960,47 +898,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       },
-    );
-  }
-}
-
-class _SubjectQuickActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-  const _SubjectQuickActionButton({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: color.withOpacity(0.13),
-      borderRadius: BorderRadius.circular(10),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-          child: Row(
-            children: [
-              Icon(icon, color: color, size: 16),
-              const SizedBox(width: 3),
-              Text(
-                label,
-                style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

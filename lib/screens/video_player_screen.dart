@@ -17,18 +17,24 @@ class VideoPlayerScreen extends StatefulWidget {
 
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   late VideoPlayerController _controller;
-  bool _isLoading = true;
+  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.network(widget.videoUrl)
-      ..initialize().then((_) {
-        setState(() {
-          _isLoading = false;
-        });
-        _controller.play();
+    _initializeVideo();
+  }
+
+  Future<void> _initializeVideo() async {
+    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
+    try {
+      await _controller.initialize();
+      setState(() {
+        _isInitialized = true;
       });
+    } catch (e) {
+      // Error initializing video
+    }
   }
 
   @override
@@ -38,60 +44,64 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   }
 
   void _togglePlayPause() {
-    setState(() {
-      _controller.value.isPlaying ? _controller.pause() : _controller.play();
-    });
+    if (_controller.value.isPlaying) {
+      _controller.pause();
+    } else {
+      _controller.play();
+    }
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
       appBar: AppBar(
         title: Text(widget.title),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.white))
-          : Column(
-              children: [
-                AspectRatio(
-                  aspectRatio: _controller.value.aspectRatio,
-                  child: Stack(
-                    alignment: Alignment.bottomCenter,
+      backgroundColor: Colors.black,
+      body: Center(
+        child: _isInitialized
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AspectRatio(
+                    aspectRatio: _controller.value.aspectRatio,
+                    child: VideoPlayer(_controller),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      VideoPlayer(_controller),
-                      VideoProgressIndicator(
-                        _controller,
-                        allowScrubbing: true,
-                        padding: const EdgeInsets.all(10),
-                        colors: VideoProgressColors(
-                          playedColor: Colors.deepPurple,
-                          backgroundColor: Colors.white24,
-                          bufferedColor: Colors.deepPurple[200]!,
+                      IconButton(
+                        onPressed: _togglePlayPause,
+                        icon: Icon(
+                          _controller.value.isPlaying
+                              ? Icons.pause
+                              : Icons.play_arrow,
+                          color: Colors.white,
+                          size: 30,
                         ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 30),
-                IconButton(
-                  icon: Icon(
-                    _controller.value.isPlaying
-                        ? Icons.pause_circle_filled
-                        : Icons.play_circle_fill,
-                    size: 64,
-                    color: Colors.deepPurple,
+                  const SizedBox(height: 20),
+                  VideoProgressIndicator(
+                    _controller,
+                    allowScrubbing: true,
+                    colors: const VideoProgressColors(
+                      playedColor: Colors.red,
+                      bufferedColor: Colors.grey,
+                      backgroundColor: Colors.white,
+                    ),
                   ),
-                  onPressed: _togglePlayPause,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  _controller.value.isPlaying ? 'Playing' : 'Paused',
-                  style: const TextStyle(color: Colors.white70, fontSize: 16),
-                ),
-              ],
-            ),
+                ],
+              )
+            : const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+      ),
     );
   }
 }

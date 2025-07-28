@@ -90,11 +90,11 @@ class _QuizScreenState extends State<QuizScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       await FirestoreService.saveQuizResult(
-        userId: user.uid,
-        subject: widget.subject,
-        correct: correct,
-        attempted: attempted,
-        score: score,
+        user.uid,
+        widget.subject,
+        score.toInt(),
+        attempted,
+        Duration(seconds: _timeElapsed),
       );
       final prev = await FirestoreService.loadSubjectProgress(
         user.uid,
@@ -105,11 +105,8 @@ class _QuizScreenState extends State<QuizScreen> {
           : 0;
       if (score > bestScore) {
         await FirestoreService.saveSubjectProgress(
-          userId: user.uid,
-          subject: widget.subject,
-          attempted: attempted,
-          correct: correct,
-          bestScore: score,
+          user.uid,
+          {widget.subject: score},
         );
       }
     }

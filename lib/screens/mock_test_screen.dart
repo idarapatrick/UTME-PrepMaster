@@ -3,7 +3,6 @@ import '../theme/app_colors.dart';
 import '../services/firestore_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../screens/subject_selection_screen.dart';
-import 'package:collection/collection.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../questions/english_questions.dart';
 import '../questions/mathematics_questions.dart';
@@ -26,7 +25,6 @@ class _MockTestScreenState extends State<MockTestScreen> {
   List<String> _selectedAnswers = [];
   List<bool> _answeredQuestions = [];
   List<String> _userSubjects = [];
-  bool _loadingSubjects = true;
   String _currentSubject = '';
   final Map<String, List<int>> _subjectQuestionIndices = {};
   Map<String, int> _subjectAnswered = {};
@@ -91,33 +89,23 @@ class _MockTestScreenState extends State<MockTestScreen> {
       final selected = await FirestoreService.loadUserSubjects(user.uid);
       setState(() {
         _userSubjects = selected;
-        _loadingSubjects = false;
       });
-    } else {
-      setState(() => _loadingSubjects = false);
     }
   }
 
   void _generateQuestionsForTest(MockTest test) {
-    print('Generating questions for test: ${test.title}'); // Debug log
-    print('Test subjects: ${test.subjects}'); // Debug log
-    print('User subjects: $_userSubjects'); // Debug log
     _questions = [];
     _subjectQuestionIndices.clear();
 
     if (test.isCbt) {
       // CBT: Pull 60 English, 40 each from other 3 subjects
-      print('Generating CBT questions'); // Debug log
       final eng = englishQuestions.take(60).toList();
-      print('English questions: ${eng.length}'); // Debug log
       final others = <TestQuestion>[];
       for (final subj in _userSubjects.where((s) => s != 'English')) {
         final list = _getQuestionsForSubject(subj).take(40).toList();
-        print('$subj questions: ${list.length}'); // Debug log
         others.addAll(list);
       }
       _questions = [...eng, ...others];
-      print('Total CBT questions: ${_questions.length}'); // Debug log
       // Set up indices for subject tabs
       int idx = 0;
       for (final subj in _userSubjects) {
@@ -127,18 +115,11 @@ class _MockTestScreenState extends State<MockTestScreen> {
       }
     } else {
       // Specific subject tests: 20 questions each
-      print(
-        'Generating non-CBT questions for subjects: ${test.subjects}',
-      ); // Debug log
       if (test.title == 'Science Test') {
         // Mix Physics, Chemistry, Biology questions
-        print('Generating Science Test questions'); // Debug log
         final physics = physicsQuestions.take(7).toList();
         final chemistry = chemistryQuestions.take(7).toList();
         final biology = _getQuestionsForSubject('Biology').take(6).toList();
-        print(
-          'Physics: ${physics.length}, Chemistry: ${chemistry.length}, Biology: ${biology.length}',
-        ); // Debug log
         _questions = [...physics, ...chemistry, ...biology];
         _subjectQuestionIndices['Physics'] = List.generate(7, (i) => i);
         _subjectQuestionIndices['Chemistry'] = List.generate(7, (i) => i + 7);
@@ -146,18 +127,13 @@ class _MockTestScreenState extends State<MockTestScreen> {
       } else {
         // Single subject test: 20 questions
         final subj = test.subjects.first;
-        print('Generating single subject test for: $subj'); // Debug log
         _questions = _getQuestionsForSubject(subj).take(20).toList();
-        print('$subj questions: ${_questions.length}'); // Debug log
         _subjectQuestionIndices[subj] = List.generate(20, (i) => i);
       }
     }
-    print('Final question count: ${_questions.length}'); // Debug log
-    print('Subject indices: $_subjectQuestionIndices'); // Debug log
   }
 
   List<TestQuestion> _getQuestionsForSubject(String subject) {
-    print('Getting questions for subject: $subject'); // Debug log
     List<TestQuestion> questions;
     switch (subject) {
       case 'English':
@@ -179,69 +155,12 @@ class _MockTestScreenState extends State<MockTestScreen> {
         questions = [];
         break;
     }
-    print('Found ${questions.length} questions for $subject'); // Debug log
     return questions;
   }
 
-  void _startFullUtmeMockTest() async {
-    if (_userSubjects.length != 4 || !_userSubjects.contains('English')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'You must select 4 subjects (English + 3 others) before starting the UTME Mock Test.',
-          ),
-        ),
-      );
-      Navigator.pushNamed(context, '/subject-selection');
-      return;
-    }
-    // Select the correct number of questions for each subject
-    final List<TestQuestion> selectedQuestions = [];
-    selectedQuestions.addAll(englishQuestions.take(60));
-    for (final subject in _userSubjects) {
-      if (subject == 'English') continue;
-      if (subject == 'Mathematics') {
-        selectedQuestions.addAll(mathematicsQuestions.take(40));
-      } else if (subject == 'Physics') {
-        selectedQuestions.addAll(physicsQuestions.take(40));
-      } else if (subject == 'Chemistry') {
-        selectedQuestions.addAll(chemistryQuestions.take(40));
-      }
-      // Add more subjects here as needed
-    }
-    // Optionally shuffle questions within each subject or overall
-    // selectedQuestions.shuffle();
-    final test = MockTest(
-      id: 'utme_full',
-      title: 'UTME Full Mock Test',
-      description: 'Simulated UTME CBT (English + 3 subjects)',
-      duration: 120,
-      questions: 180,
-      subjects: _userSubjects,
-      difficulty: 'Advanced',
-      isCbt: true,
-    );
-    _generateQuestionsForTest(test);
-    setState(() {
-      _currentTest = test;
-      _isTestInProgress = true;
-      _currentQuestionIndex = 0;
-      _currentSubject = _userSubjects.first;
-      _timeRemaining = 120 * 60;
-      _selectedAnswers = List.filled(selectedQuestions.length, '');
-      _answeredQuestions = List.filled(selectedQuestions.length, false);
-    });
-    _startTimer();
-  }
-
   void _startTest(MockTest test) async {
-    print('Starting test: ${test.title}'); // Debug log
-    print('Test isCbt: ${test.isCbt}'); // Debug log
-    print('Test subjects: ${test.subjects}'); // Debug log
-
     if (test.isCbt) {
       // CBT: Always prompt for subject selection
-      print('CBT test - prompting for subject selection'); // Debug log
       final selected = await Navigator.push<List<String>>(
         context,
         MaterialPageRoute(
@@ -249,60 +168,48 @@ class _MockTestScreenState extends State<MockTestScreen> {
               const SubjectSelectionScreen(isForMockTest: true),
         ),
       );
-      print('Subject selection result: $selected'); // Debug log
       if (selected == null ||
           selected.length != 4 ||
           !selected.contains('English')) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'You must select 4 subjects (English + 3 others) to start the CBT test.',
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'You must select 4 subjects (English + 3 others) to start the CBT test.',
+              ),
             ),
-          ),
-        );
+          );
+        }
         return;
       }
       setState(() {
         _userSubjects = selected;
       });
-      print('Selected subjects: $_userSubjects'); // Debug log
     } else {
       // Specific subject tests: Use pre-configured subjects
-      print('Non-CBT test - using pre-configured subjects'); // Debug log
-      print('Test subjects: ${test.subjects}'); // Debug log
       setState(() {
         _userSubjects = test.subjects;
       });
-      print('Using pre-configured subjects: $_userSubjects'); // Debug log
     }
 
-    print('About to generate questions...'); // Debug log
     _generateQuestionsForTest(test);
-    print('Generated ${_questions.length} questions'); // Debug log
-    print('Subject indices: $_subjectQuestionIndices'); // Debug log
-    print('User subjects: $_userSubjects'); // Debug log
 
     // Null safety: check if questions and indices are valid
     if (_questions.isEmpty ||
         _userSubjects.isEmpty ||
         _subjectQuestionIndices.isEmpty) {
-      print('Questions generation failed!'); // Debug log
-      print('Questions empty: ${_questions.isEmpty}'); // Debug log
-      print('User subjects empty: ${_userSubjects.isEmpty}'); // Debug log
-      print(
-        'Subject indices empty: ${_subjectQuestionIndices.isEmpty}',
-      ); // Debug log
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'No questions available for the selected subjects. Please try again.',
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'No questions available for the selected subjects. Please try again.',
+            ),
           ),
-        ),
-      );
+        );
+      }
       return;
     }
 
-    print('Setting up test state...'); // Debug log
     setState(() {
       _currentTest = test;
       _isTestInProgress = true;
@@ -312,9 +219,6 @@ class _MockTestScreenState extends State<MockTestScreen> {
       _selectedAnswers = List.filled(_questions.length, '');
       _answeredQuestions = List.filled(_questions.length, false);
     });
-    print('Test started successfully'); // Debug log
-    print('Current test: ${_currentTest?.title}'); // Debug log
-    print('Test in progress: $_isTestInProgress'); // Debug log
     _startTimer();
   }
 
@@ -331,28 +235,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
     });
   }
 
-  void _selectAnswer(String answer) {
-    setState(() {
-      _selectedAnswers[_currentQuestionIndex] = answer;
-      _answeredQuestions[_currentQuestionIndex] = true;
-    });
-  }
 
-  void _nextQuestion() {
-    if (_currentQuestionIndex < _questions.length - 1) {
-      setState(() {
-        _currentQuestionIndex++;
-      });
-    }
-  }
-
-  void _previousQuestion() {
-    if (_currentQuestionIndex > 0) {
-      setState(() {
-        _currentQuestionIndex--;
-      });
-    }
-  }
 
   void _submitTest() async {
     setState(() {
@@ -435,19 +318,19 @@ class _MockTestScreenState extends State<MockTestScreen> {
         )['score'];
         if (currentScore > bestScore) bestScore = currentScore;
         await FirestoreService.saveSubjectProgress(
-          userId: user.uid,
-          subject: subject,
-          attempted: attemptedPerSubject[subject] ?? 0,
-          correct: correctPerSubject[subject] ?? 0,
-          bestScore: bestScore,
+          user.uid,
+          {subject: bestScore},
         );
       }
 
       // Save test result
       await FirestoreService.saveMockTestResult(
-        userId: user.uid,
-        subjectResults: subjectResults,
-        totalScore: totalScore,
+        user.uid,
+        'Mock Test',
+        totalScore.toInt(),
+        _questions.length,
+        Duration(minutes: _timeRemaining),
+        subjectResults,
       );
     }
 
@@ -501,9 +384,9 @@ class _MockTestScreenState extends State<MockTestScreen> {
                     'Last 10 CBT Test Scores:',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  ..._cbtHistory.mapIndexed(
-                    (i, h) => Text(
-                      '${i + 1}. ${h['totalScore'].toStringAsFixed(2)} / 400',
+                  ..._cbtHistory.asMap().entries.map(
+                    (entry) => Text(
+                      '${entry.key + 1}. ${entry.value['totalScore'].toStringAsFixed(2)} / 400',
                     ),
                   ),
                 ],
@@ -536,17 +419,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
     }
   }
 
-  void _showDetailedResults() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => TestResultsScreen(
-          questions: _questions,
-          selectedAnswers: _selectedAnswers,
-        ),
-      ),
-    );
-  }
+
 
   String _formatTime(int seconds) {
     int hours = seconds ~/ 3600;
@@ -606,10 +479,10 @@ class _MockTestScreenState extends State<MockTestScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.dominantPurple.withOpacity(0.1),
+              color: AppColors.dominantPurple.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: AppColors.dominantPurple.withOpacity(0.2),
+                color: AppColors.dominantPurple.withValues(alpha: 0.2),
               ),
             ),
             child: Column(
@@ -679,12 +552,6 @@ class _MockTestScreenState extends State<MockTestScreen> {
         ),
         trailing: ElevatedButton(
           onPressed: () {
-            print('=== BUTTON PRESSED ==='); // Debug log
-            print('Button pressed for test: ${test.title}'); // Debug log
-            print('Test isCbt: ${test.isCbt}'); // Debug log
-            print('Test subjects: ${test.subjects}'); // Debug log
-
-            // Show immediate feedback
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('Starting ${test.title}...'),
@@ -694,9 +561,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
 
             try {
               _startTest(test);
-            } catch (e, stackTrace) {
-              print('Error starting test: $e'); // Debug log
-              print('Stack trace: $stackTrace'); // Debug log
+            } catch (e) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('Error starting test: $e'),
@@ -719,34 +584,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
     );
   }
 
-  Widget _buildTestInfo(IconData icon, String text) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 16, color: AppColors.textSecondary),
-        const SizedBox(width: 4),
-        Text(
-          text,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
-        ),
-      ],
-    );
-  }
 
-  Color _getDifficultyColor(String difficulty) {
-    switch (difficulty.toLowerCase()) {
-      case 'easy':
-        return Colors.green;
-      case 'intermediate':
-        return AppColors.accentAmber;
-      case 'advanced':
-        return AppColors.dominantPurple;
-      default:
-        return AppColors.textSecondary;
-    }
-  }
 
   Widget _buildTestInterface() {
     final subjectTabs = _userSubjects;
@@ -779,8 +617,10 @@ class _MockTestScreenState extends State<MockTestScreen> {
             .where((i) => _selectedAnswers[i].isNotEmpty)
             .length,
     };
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) async {
+        if (didPop) return;
         // Show confirmation dialog before allowing back navigation
         final shouldPop = await showDialog<bool>(
           context: context,
@@ -801,7 +641,11 @@ class _MockTestScreenState extends State<MockTestScreen> {
             ],
           ),
         );
-        return shouldPop ?? false;
+        if (shouldPop == true) {
+          if (mounted) {
+            Navigator.of(context).pop();
+          }
+        }
       },
       child: Scaffold(
         appBar: AppBar(
@@ -1175,11 +1019,8 @@ class _MockTestScreenState extends State<MockTestScreen> {
               : 0;
           if (score > bestScore) bestScore = score;
           await FirestoreService.saveSubjectProgress(
-            userId: user.uid,
-            subject: subject,
-            attempted: attempted,
-            correct: correct,
-            bestScore: bestScore,
+            user.uid,
+            {subject: bestScore},
           );
         }
       }
@@ -1206,11 +1047,8 @@ class _MockTestScreenState extends State<MockTestScreen> {
               : 0;
           if (score > bestScore) bestScore = score;
           await FirestoreService.saveSubjectProgress(
-            userId: user.uid,
-            subject: subject,
-            attempted: attempted,
-            correct: correct,
-            bestScore: bestScore,
+            user.uid,
+            {subject: bestScore},
           );
         }
       }
@@ -1218,9 +1056,12 @@ class _MockTestScreenState extends State<MockTestScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       await FirestoreService.saveMockTestResult(
-        userId: user.uid,
-        subjectResults: subjectResults,
-        totalScore: totalScore,
+        user.uid,
+        'Mock Test',
+        totalScore.toInt(),
+        _questions.length,
+        Duration(minutes: _timeRemaining),
+        subjectResults,
       );
     }
     return {'subjectResults': subjectResults, 'totalScore': totalScore};

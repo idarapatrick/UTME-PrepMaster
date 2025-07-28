@@ -75,7 +75,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
           content: TextField(
             autofocus: true,
             onChanged: (v) => temp = v,
-            decoration: const InputDecoration(hintText: 'Enter note...'),
+            decoration: const InputDecoration(hintText: 'Write your note...'),
           ),
           actions: [
             TextButton(
@@ -90,8 +90,8 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
         );
       },
     );
-    if (note.trim().isNotEmpty) {
-      await FirestoreService.saveNote(user.uid, note.trim());
+    if (note != null && note.trim().isNotEmpty) {
+      await FirestoreService.saveNote(user.uid, 'General', 'Note', note.trim());
       _loadLibrary();
     }
   }
@@ -123,8 +123,8 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
         );
       },
     );
-    if (link.trim().isNotEmpty) {
-      await FirestoreService.saveLink(user.uid, link.trim());
+    if (link != null && link.trim().isNotEmpty) {
+      await FirestoreService.saveLink(user.uid, 'General', 'Link', link.trim());
       _loadLibrary();
     }
   }
@@ -261,7 +261,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
         );
       },
     );
-    if (note.trim().isNotEmpty) {
+    if (note != null && note.trim().isNotEmpty) {
       await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
