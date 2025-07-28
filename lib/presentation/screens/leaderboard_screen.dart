@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:utme_prep_master/widgets/achievement_badge.dart';
-import 'package:utme_prep_master/widgets/rank_badge.dart';
+import '../widgets/achievement_badge.dart';
+import '../widgets/rank_badge.dart';
 import '../theme/app_colors.dart';
-import '../services/firestore_service.dart';
+import '../../data/services/firestore_service.dart';
 
 class LeaderboardScreen extends StatefulWidget {
   const LeaderboardScreen({super.key});

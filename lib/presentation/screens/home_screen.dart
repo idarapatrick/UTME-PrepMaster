@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../theme/app_colors.dart';
-import '../services/firestore_service.dart';
+import '../../data/services/firestore_service.dart';
 import '../widgets/subject_card.dart';
 import 'profile_screen.dart';
 import 'course_content_screen.dart';
+import 'life_at_simple_screen.dart';
 
 const List<Map<String, dynamic>> kUtmeSubjects = [
   {
@@ -198,10 +199,10 @@ class _HomeScreenState extends State<HomeScreen> {
           'https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=600&q=80',
     },
     {
-      'title': 'Tip of the Day',
-      'subtitle': 'Practice makes perfect. Try a mock test!',
+      'title': 'LifeAt Study',
+      'subtitle': 'Focus with Pomodoro timer & background music',
       'image':
-          'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=600&q=80',
+          'https://images.unsplash.com/photo-1503676382389-4809596d5290?auto=format&fit=crop&w=600&q=80',
     },
     {
       'title': 'AI Tutor',
@@ -232,6 +233,23 @@ class _HomeScreenState extends State<HomeScreen> {
           context,
           MaterialPageRoute(builder: (context) => const ProfileScreen()),
         );
+        break;
+    }
+  }
+
+  void _onCarouselItemTap(int index) {
+    switch (index) {
+      case 0: // Today's Challenge
+        Navigator.pushNamed(context, '/mock-test');
+        break;
+      case 1: // LifeAt Study
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const LifeAtSimpleScreen()),
+        );
+        break;
+      case 2: // AI Tutor
+        Navigator.pushNamed(context, '/ai-tutor');
         break;
     }
   }
@@ -579,54 +597,57 @@ class _HomeScreenState extends State<HomeScreen> {
               onPageChanged: (i) => setState(() => _carouselIndex = i),
               itemBuilder: (context, index) {
                 final item = _carouselItems[index];
-                return Card(
-                  color: cardColor,
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  margin: const EdgeInsets.symmetric(horizontal: 2),
-                  child: Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: const BorderRadius.horizontal(
-                          left: Radius.circular(14),
-                        ),
-                        child: Image.network(
-                          item['image']!,
-                          width: 90,
-                          height: 120,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(14),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item['title']!,
-                                style: TextStyle(
-                                  color: AppColors.dominantPurple,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                item['subtitle']!,
-                                style: TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
+                return GestureDetector(
+                  onTap: () => _onCarouselItemTap(index),
+                  child: Card(
+                    color: cardColor,
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    margin: const EdgeInsets.symmetric(horizontal: 2),
+                    child: Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: const BorderRadius.horizontal(
+                            left: Radius.circular(14),
+                          ),
+                          child: Image.network(
+                            item['image']!,
+                            width: 90,
+                            height: 120,
+                            fit: BoxFit.cover,
                           ),
                         ),
-                      ),
-                    ],
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item['title']!,
+                                  style: TextStyle(
+                                    color: AppColors.dominantPurple,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  item['subtitle']!,
+                                  style: TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },

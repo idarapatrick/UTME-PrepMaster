@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../services/email_verification_service.dart';
+import '../../../data/services/email_verification_service.dart';
 import '../../theme/app_colors.dart';
-import '../../services/firestore_service.dart';
+import '../../../data/services/firestore_service.dart';
 import 'email_verification_screen.dart';
 
 class AuthScreen extends StatefulWidget {

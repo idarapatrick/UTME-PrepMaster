@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../data/utme_subjects.dart'; // Ensure this file exists and exports List<String> utmeSubjects;
+import '../../data/utme_subjects.dart'; // Ensure this file exists and exports List<String> utmeSubjects;
 
 class SubjectsSelectionScreen extends StatefulWidget {
   const SubjectsSelectionScreen({super.key});

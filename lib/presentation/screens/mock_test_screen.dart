@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
-import '../services/firestore_service.dart';
+import '../../data/services/firestore_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../screens/subject_selection_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../questions/english_questions.dart';
-import '../questions/mathematics_questions.dart';
-import '../questions/physics_questions.dart';
-import '../questions/chemistry_questions.dart';
-import '../questions/biology_questions.dart';
-import '../models/test_question.dart';
+import '../../data/questions/english_questions.dart';
+import '../../data/questions/mathematics_questions.dart';
+import '../../data/questions/physics_questions.dart';
+import '../../data/questions/chemistry_questions.dart';
+import '../../data/questions/biology_questions.dart';
+import '../../domain/models/test_question.dart';
 
 class MockTestScreen extends StatefulWidget {
   const MockTestScreen({super.key});

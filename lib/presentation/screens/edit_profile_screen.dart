@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import 'package:image_picker/image_picker.dart';
-import '../services/firestore_service.dart';
+import '../../data/services/firestore_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../models/user_profile_model.dart';
+import '../../domain/models/user_profile_model.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final UserProfile userProfile;

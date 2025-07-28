@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../services/firestore_service.dart';
+import '../../data/services/firestore_service.dart';
 import '../theme/app_colors.dart';
 import 'mock_test_screen.dart';
 import '../widgets/subject_card.dart';

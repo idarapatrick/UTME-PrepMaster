@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
-import '../main.dart';
+import '../providers/theme_notifier.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});

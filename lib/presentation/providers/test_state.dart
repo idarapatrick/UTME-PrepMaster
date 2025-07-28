@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../screens/mock_test_screen.dart';
-import '../models/test_question.dart';
+import '../../domain/models/test_question.dart';
 
 class TestState extends ChangeNotifier {
   MockTest? _currentTest;

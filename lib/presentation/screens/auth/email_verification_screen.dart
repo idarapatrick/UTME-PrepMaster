@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../services/email_verification_service.dart';
+import '../../../data/services/email_verification_service.dart';
 import '../../theme/app_colors.dart';
 
 class EmailVerificationScreen extends StatefulWidget {

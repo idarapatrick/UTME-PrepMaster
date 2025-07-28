@@ -1,4 +1,4 @@
-import '../models/test_question.dart';
+import '../../domain/models/test_question.dart';
 
 final List<TestQuestion> chemistryQuestions = [
   TestQuestion(
