@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // <-- Added
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'theme/app_theme.dart';
 import 'screens/auth/auth_screen.dart';
@@ -18,9 +18,9 @@ import 'screens/subject_selection_screen.dart';
 import 'providers/user_state.dart';
 import 'providers/subject_state.dart';
 import 'providers/test_state.dart';
-import 'screens/welcome_screen.dart';
-import 'screens/personal_info_screen.dart';
-import 'screens/university_selection_screen.dart';
+import 'screens/life_at_intro_screen.dart';
+import 'screens/life_at_browser_screen.dart';
+
 
 class ThemeNotifier extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.light;
@@ -79,6 +79,8 @@ class MyApp extends StatelessWidget {
         '/profile': (context) => const ProfileScreen(),
         '/home': (context) => const HomeScreen(),
         '/subject-selection': (context) => const SubjectSelectionScreen(),
+        '/life-at-intro': (context) => const LifeAtIntroScreen(),
+        '/life-at-browser': (context) => const LifeAtBrowserScreen(),
       },
     );
   }
@@ -132,7 +134,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text('You have pushed the button this many times:'),
+            const Text('Welcome Screen'),
             Text(
               '$_counter',
               style: Theme.of(context).textTheme.headlineMedium,

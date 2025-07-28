@@ -42,16 +42,17 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
     super.dispose();
   }
 
-  void _addWelcomeMessage() {
+ void _addWelcomeMessage() {
+  setState(() {
     _messages.add(
       ChatMessage(
-        text:
-            'Hello! I\'m your AI tutor. I can help you with any UTME subject. What would you like to learn today?',
+        text: 'Hello! I\'m your AI tutor. I can help you with any UTME subject. What would you like to learn today?',
         isUser: false,
         timestamp: DateTime.now(),
       ),
     );
-  }
+  });
+}
 
   void _sendMessage() {
     if (_messageController.text.trim().isEmpty) return;
