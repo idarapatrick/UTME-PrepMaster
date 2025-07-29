@@ -12,7 +12,8 @@ class StudyPartnerScreen extends StatefulWidget {
 
 class _StudyPartnerScreenState extends State<StudyPartnerScreen> {
   List<StudyPartner> availablePartners = [
-    studyPartner(
+    StudyPartner(
+      id: 'uid1',
       name: 'Alice',
       subject: StudyPartnerSubject.science,
       goal: 'Improve Physics',
@@ -20,8 +21,9 @@ class _StudyPartnerScreenState extends State<StudyPartnerScreen> {
       status: StudyPartnerStatus.pending,
     ),
     StudyPartner(
+      id: 'uid2',
       name: 'Ben',
-      subject: StudyPartnerSubject.arts,
+      subject: StudyPartnerSubject.science,
       goal: 'Master History',
       interests: ['Ancient', 'War'],
       status: StudyPartnerStatus.pending,

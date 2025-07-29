@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import '../models/user_profile_model.dart';
+import '../models/study_partner.dart';
 
 class FirestoreService {
   static final _db = FirebaseFirestore.instance;
@@ -231,7 +232,6 @@ class FirestoreService {
         .get();
     return query.docs.map((d) => d.data()).toList();
   }
-
   /// Fetch user badges
   static Future<List<Map<String, dynamic>>> fetchUserBadges(
     String userId,
@@ -391,3 +391,22 @@ class FirestoreService {
     'Others...',
   ];
 }
+ // Get stream of matched partners
+ final FirebaseFirestore _db = FirebaseFirestore.instance;
+   Future<List<StudyPartner>> getMatchedPartners(String userId) async {
+    try {
+      final snapshot = await _db
+          .collection('study_partners')
+          .where('matchedUserIds', arrayContains: userId)
+          .get();
+
+      return snapshot.docs.map((doc) {
+        return StudyPartner.fromMap(doc.data(), doc.id);
+      }).toList();
+    } catch (e) {
+      print('Error fetching matched partners: $e');
+      return [];
+    }
+  }
+
+

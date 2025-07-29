@@ -20,14 +20,11 @@ import 'providers/subject_state.dart';
 import 'providers/test_state.dart';
 import 'screens/life_at_intro_screen.dart';
 import 'screens/life_at_browser_screen.dart';
-<<<<<<< HEAD
 import 'screens/study_partner_screen.dart';
-=======
 import 'screens/welcome_screen.dart';
 import 'screens/personal_info_screen.dart';
 import 'screens/university_selection_screen.dart';
 
->>>>>>> b0b51b7844d9bccc21cd1a9803dc6217fede7c8e
 
 class ThemeNotifier extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.light;

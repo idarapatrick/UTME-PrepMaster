@@ -4,10 +4,11 @@ enum StudyPartnerStatus {
   pending,
   matched,
   rejected,
-  available, 
+  available,
   idle,
   studying,
 }
+
 enum StudyPartnerSubject {
   science,
   literature,
@@ -21,7 +22,7 @@ enum StudyPartnerSubject {
 class StudyPartner {
   final String id;
   final String name;
-  final StudyPartnerStatus status;
+  StudyPartnerStatus status;
   final StudyPartnerSubject subject;
   final String goal;
   final List<String> interests;
@@ -35,28 +36,53 @@ class StudyPartner {
     required this.interests,
   });
 
-  // For UI display
-  String get statusText {
-    switch (status) {
-  case StudyPartnerStatus.available:
-    return 'Available';
-  case StudyPartnerStatus.matched:
-    return 'Matched';
-  case StudyPartnerStatus.rejected:
-    return 'Rejected';
-  case StudyPartnerStatus.pending:   
-    return 'Pending';
-     case StudyPartnerStatus.idle:   
-    return 'Pending';
-     case StudyPartnerStatus.studying:   
-    return 'Pending';
-  // OR use default:
-  // default:
-  //   return 'Unknown status';
-}
+  factory StudyPartner.fromMap(Map<String, dynamic> data, String id) {
+    final statusString = data['status'] ?? 'idle';
+    final subjectString = data['subject'] ?? 'science';
+
+    StudyPartnerStatus status = StudyPartnerStatus.idle;
+    StudyPartnerSubject subject = StudyPartnerSubject.science;
+
+    for (var s in StudyPartnerStatus.values) {
+      if (s.name == statusString) {
+        status = s;
+        break;
+      }
+    }
+
+    for (var s in StudyPartnerSubject.values) {
+      if (s.name == subjectString) {
+        subject = s;
+        break;
+      }
+    }
+
+    return StudyPartner(
+      id: id,
+      name: data['name'] ?? '',
+      status: status,
+      subject: subject,
+      goal: data['goal'] ?? '',
+      interests: List<String>.from(data['interests'] ?? []),
+    );
   }
 
-  // You can map subjects to nice text or colors here too
+  // Helper methods for UI display
+  String get statusText {
+    switch (status) {
+      case StudyPartnerStatus.available:
+        return 'Available';
+      case StudyPartnerStatus.matched:
+        return 'Matched';
+      case StudyPartnerStatus.rejected:
+        return 'Rejected';
+      case StudyPartnerStatus.pending:
+      case StudyPartnerStatus.idle:
+      case StudyPartnerStatus.studying:
+        return 'Pending';
+    }
+  }
+
   String get subjectText {
     switch (subject) {
       case StudyPartnerSubject.science:
