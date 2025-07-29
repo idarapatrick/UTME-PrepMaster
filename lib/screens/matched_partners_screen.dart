@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/study_partner.dart';
 import '../theme/app_colors.dart';
 import 'chat_screen.dart';
+import '../services/firestore_service.dart';
+
 
 class MatchedPartnersScreen extends StatefulWidget {
   @override
@@ -9,19 +11,39 @@ class MatchedPartnersScreen extends StatefulWidget {
 }
 
 class _MatchedPartnersScreenState extends State<MatchedPartnersScreen> {
+  
   final FirestoreService _firestoreService = FirestoreService();
   late Future<List<StudyPartner>> _matchedPartnersFuture;
+  
+  Color getSubjectColor(String subject) {
+  switch (subject.toLowerCase()) {
+    case 'math':
+      return Colors.blue;
+    case 'english':
+      return Colors.green;
+    case 'physics':
+      return Colors.deepPurple;
+    case 'chemistry':
+      return Colors.orange;
+    default:
+      return Colors.grey;
+  }
+}
+
 
   @override
   void initState() {
     super.initState();
-    _matchedPartnersFuture = _firestoreService.getMatchedPartners();
+    _matchedPartnersFuture = _firestoreService. getMatchedPartners();
   }
 
-  Color getSubjectColor(StudyPartnerSubject subject) {
-    // Your existing color logic here
+  Color getBackgroundColor(bool isAccepted) {
+  if (isAccepted) {
+    return Colors.green;
+  } else {
+    return Colors.red;
   }
-
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,7 +89,7 @@ class _MatchedPartnersScreenState extends State<MatchedPartnersScreen> {
                 child: ListTile(
                   contentPadding: const EdgeInsets.all(16),
                   leading: CircleAvatar(
-                    backgroundColor: getSubjectColor(partner.subject),
+                    backgroundColor:getSubjectColor(partner.subject.name),
                     child: Text(
                       partner.name[0],
                       style: const TextStyle(color: Colors.white),

@@ -391,11 +391,14 @@ class FirestoreService {
     'Others...',
   ];
 }
- // Get stream of matched partners
- final FirebaseFirestore _db = FirebaseFirestore.instance;
-   Future<List<StudyPartner>> getMatchedPartners(String userId) async {
+ 
+ /// Get matched partners for a specific user
+
+ final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  Future<List<StudyPartner>> getMatchedPartners(String userId) async {
     try {
-      final snapshot = await _db
+      final snapshot = await _firestore
           .collection('study_partners')
           .where('matchedUserIds', arrayContains: userId)
           .get();
