@@ -5,6 +5,8 @@ class TestQuestion {
   final int correctAnswer;
   final String subject;
   final String explanation;
+  final String? difficulty;
+  final String? topic;
 
   TestQuestion({
     required this.id,
@@ -13,5 +15,7 @@ class TestQuestion {
     required this.correctAnswer,
     required this.subject,
     required this.explanation,
+    this.difficulty,
+    this.topic,
   });
 }

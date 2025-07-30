@@ -180,7 +180,7 @@ class _PhoneVerificationScreenState extends State<PhoneVerificationScreen> {
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: AppColors.dominantPurple.withOpacity(0.1),
+                  color: AppColors.dominantPurple.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(

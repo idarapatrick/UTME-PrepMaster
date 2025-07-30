@@ -1,155 +1,129 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import '../providers/user_stats_provider.dart';
 import '../theme/app_colors.dart';
-import 'dart:math';
-import 'package:url_launcher/url_launcher.dart';
 import '../../data/services/firestore_service.dart';
-import '../../domain/models/user_profile_model.dart';
-import 'edit_profile_screen.dart';
-import 'leaderboard_screen.dart';
-import 'my_library_screen.dart';
-import 'badges_screen.dart';
-import 'life_at_intro_screen.dart';
-
-// Add a list of avatar URLs (DiceBear, diverse styles)
-const List<Map<String, String>> kAvatars = [
-  // Boy avatars
-  {
-    'url':
-        'https://api.dicebear.com/6.x/adventurer/svg?seed=boy1&skinColor=bf8b5a',
-    'label': 'Boy 1',
-  },
-  {
-    'url':
-        'https://api.dicebear.com/6.x/adventurer/svg?seed=boy2&skinColor=8d5524',
-    'label': 'Boy 2',
-  },
-  {
-    'url':
-        'https://api.dicebear.com/6.x/adventurer/svg?seed=boy3&skinColor=c68642',
-    'label': 'Boy 3',
-  },
-  // Girl avatars
-  {
-    'url':
-        'https://api.dicebear.com/6.x/adventurer/svg?seed=girl1&skinColor=fd9841',
-    'label': 'Girl 1',
-  },
-  {
-    'url':
-        'https://api.dicebear.com/6.x/adventurer/svg?seed=girl2&skinColor=ffdbac',
-    'label': 'Girl 2',
-  },
-  {
-    'url':
-        'https://api.dicebear.com/6.x/adventurer/svg?seed=girl3&skinColor=614335',
-    'label': 'Girl 3',
-  },
-  // Hijabi avatars (using 'micah' style with hijab)
-  {
-    'url':
-        'https://api.dicebear.com/6.x/micah/svg?seed=hijabi1&skinColor=ae5d29&clothing=hijab',
-    'label': 'Hijabi 1',
-  },
-  {
-    'url':
-        'https://api.dicebear.com/6.x/micah/svg?seed=hijabi2&skinColor=ffdbb4&clothing=hijab',
-    'label': 'Hijabi 2',
-  },
-  {
-    'url':
-        'https://api.dicebear.com/6.x/micah/svg?seed=hijabi3&skinColor=614335&clothing=hijab',
-    'label': 'Hijabi 3',
-  },
-];
+import '../utils/responsive_helper.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  String _avatarUrl = kAvatars[Random().nextInt(kAvatars.length)]['url']!;
-  List<String> _badges = [];
-  bool _loadingBadges = true;
+  String? _avatarAsset = 'assets/avatars/avatar1.png';
+  bool _loading = true;
+
+  // Avatar options
+  static const List<Map<String, String>> kAvatars = [
+    {'asset': 'assets/avatars/avatar1.png'},
+    {'asset': 'assets/avatars/avatar2.png'},
+    {'asset': 'assets/avatars/avatar3.png'},
+    {'asset': 'assets/avatars/avatar4.png'},
+    {'asset': 'assets/avatars/avatar5.png'},
+    {'asset': 'assets/avatars/avatar6.png'},
+    {'asset': 'assets/avatars/avatar7.png'},
+    {'asset': 'assets/avatars/avatar8.png'},
+  ];
 
   @override
   void initState() {
     super.initState();
-    _fetchBadges();
+    _fetchUserProfile();
   }
 
-  Future<void> _fetchBadges() async {
+  Future<void> _fetchUserProfile() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      final badges = await FirestoreService.fetchUserBadges(user.uid);
-      setState(() {
-        _badges = badges;
-        _loadingBadges = false;
-      });
-    } else {
-      setState(() => _loadingBadges = false);
+      try {
+        final profile = await FirestoreService.getUserProfile(user.uid);
+        if (profile != null && profile['avatarUrl'] != null) {
+          setState(() {
+            _avatarAsset = profile['avatarUrl'];
+          });
+        }
+      } catch (e) {
+        print('Error fetching user profile: $e');
+      }
     }
+    setState(() {
+      _loading = false;
+    });
   }
 
-  void _changeAvatar() async {
-    final url = await showDialog<String>(
+  void _changeAvatar() {
+    _showAvatarGallery(context);
+  }
+
+  void _showAvatarGallery(BuildContext context) {
+    showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Choose Your Avatar',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Select Avatar'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: GridView.builder(
+              shrinkWrap: true,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
               ),
-              const SizedBox(height: 16),
-              SizedBox(
-                height: 120,
-                child: GridView.count(
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  shrinkWrap: true,
-                  children: kAvatars
-                      .map(
-                        (a) => GestureDetector(
-                          onTap: () => Navigator.of(context).pop(a['url']),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: _avatarUrl == a['url']
-                                    ? AppColors.accentAmber
-                                    : Colors.transparent,
-                                width: 3,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.network(
-                                a['url']!,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                        ),
-                      )
-                      .toList(),
-                ),
-              ),
-            ],
+              itemCount: kAvatars.length,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _avatarAsset = kAvatars[index]['asset']!;
+                    });
+                    _saveAvatarToFirestore(kAvatars[index]['asset']!);
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: _avatarAsset == kAvatars[index]['asset']
+                            ? AppColors.dominantPurple
+                            : Colors.grey.shade300,
+                        width: _avatarAsset == kAvatars[index]['asset'] ? 2 : 1,
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.asset(
+                        kAvatars[index]['asset']!,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
-        ),
-      ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
     );
-    if (url != null && url != _avatarUrl) {
-      setState(() => _avatarUrl = url);
-      // TODO: Save avatar to Firestore/user profile
+  }
+
+  Future<void> _saveAvatarToFirestore(String avatarPath) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        await FirestoreService.updateUserProfile(user.uid, {'avatarUrl': avatarPath});
+      } catch (e) {
+        print('Error saving avatar: $e');
+      }
     }
   }
 
@@ -157,315 +131,107 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark
+        ? const Color(0xFF181A20)
+        : AppColors.backgroundSecondary;
+    
+    // Get user stats provider
+    final userStatsProvider = Provider.of<UserStatsProvider>(context);
+    final userStats = userStatsProvider.userStats;
+
     return Scaffold(
+      backgroundColor: bgColor,
       appBar: AppBar(
-        title: const Text('Profile'),
+        elevation: 0,
         backgroundColor: AppColors.dominantPurple,
-        foregroundColor: Colors.white,
+        titleSpacing: 0,
+        title: Padding(
+          padding: ResponsiveHelper.getResponsiveHorizontalPadding(context),
+          child: Row(
+            children: [
+              Icon(
+                Icons.person,
+                color: Colors.white,
+                size: ResponsiveHelper.getResponsiveIconSize(context, 24),
+              ),
+              SizedBox(width: ResponsiveHelper.isMobile(context) ? 8 : 12),
+              Text(
+                'Profile',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold, 
+                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 20)
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          Padding(
+            padding: EdgeInsets.only(
+              right: ResponsiveHelper.isMobile(context) ? 12 : 16, 
+              left: 0
+            ),
+            child: Center(
+              child: IconButton(
+                icon: Icon(
+                  Icons.settings, 
+                  size: ResponsiveHelper.getResponsiveIconSize(context, 22)
+                ),
+                tooltip: 'Settings',
+                onPressed: () => Navigator.pushNamed(context, '/settings'),
+                splashRadius: ResponsiveHelper.getResponsiveIconSize(context, 22),
+              ),
+            ),
+          ),
+        ],
       ),
-      backgroundColor: isDark
-          ? const Color(0xFF181A20)
-          : AppColors.backgroundPrimary,
-      body: Padding(
-        padding: const EdgeInsets.all(24),
+      body: ResponsiveHelper.responsiveSingleChildScrollView(
+        context: context,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 24),
-            GestureDetector(
-              onTap: _changeAvatar,
-              child: Stack(
-                alignment: Alignment.bottomRight,
-                children: [
-                  CircleAvatar(
-                    radius: 48,
-                    backgroundColor: AppColors.accentAmber.withValues(alpha: 0.2),
-                    backgroundImage: NetworkImage(_avatarUrl),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: GestureDetector(
-                      onTap: _changeAvatar,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.accentAmber,
-                          shape: BoxShape.circle,
-                        ),
-                        padding: const EdgeInsets.all(6),
-                        child: const Icon(
-                          Icons.edit,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EditProfileScreen(
-                      userProfile: UserProfile(
-                        uid: 'temp-uid',
-                        email: 'john.doe@example.com',
-                        displayName: 'John Doe',
-                        phoneNumber: '+2341234567890',
-                        photoUrl: 'https://via.placeholder.com/150',
-                        createdAt: DateTime.now(),
-                      ),
-                    ),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.edit, size: 18),
-              label: const Text('Edit Profile'),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.dominantPurple,
-                textStyle: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              user?.email ?? 'Guest Account',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: AppColors.dominantPurple,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              user?.isAnonymous == true ? 'Guest Account' : 'Registered User',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 16),
-            // Stats row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildStatCard(Icons.local_fire_department, 'Streak', '7 days'),
-                const SizedBox(width: 16),
-                _buildStatCard(
-                  Icons.emoji_events,
-                  'Badges',
-                  _badges.length.toString(),
-                ),
-                const SizedBox(width: 16),
-                _buildStatCard(Icons.timer, 'Study Time', '5h'),
-              ],
-            ),
-            const SizedBox(height: 12),
-            // Badges horizontal list
-            if (_loadingBadges)
-              const Center(child: CircularProgressIndicator())
-            else if (_badges.isNotEmpty)
-              SizedBox(
-                height: 64,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _badges.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 12),
-                  itemBuilder: (context, i) {
-                    final badge = _badges[i];
-                    return GestureDetector(
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: Row(
-                              children: [
-                                CircleAvatar(
-                                  backgroundColor: AppColors.accentAmber
-                                      .withValues(alpha: 0.2),
-                                  radius: 22,
-                                  child: const Icon(
-                                    Icons.emoji_events,
-                                    color: AppColors.accentAmber,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    badge.replaceAll('-', ' ').toTitleCase(),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Congratulations! You earned this badge.',
-                                  style: const TextStyle(fontSize: 15),
-                                ),
-                              ],
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text('Close'),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      child: Column(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: AppColors.accentAmber.withValues(alpha: 0.2),
-                            radius: 22,
-                            child: const Icon(
-                              Icons.emoji_events,
-                              color: AppColors.accentAmber,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            badge.replaceAll('-', ' ').toTitleCase(),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-            const SizedBox(height: 24),
-            Expanded(
-              child: ListView(
-                children: [
-                  // Badges
-                  ListTile(
-                    leading: const Icon(
-                      Icons.emoji_events,
-                      color: AppColors.accentAmber,
-                    ),
-                    title: const Text(
-                      'Badges',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    trailing: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.accentAmber,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text(
-                        '12',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    onTap: () => Navigator.pushNamed(context, '/badges'),
-                  ),
-                  // Leaderboard
-                  ListTile(
-                    leading: const Icon(
-                      Icons.leaderboard,
-                      color: AppColors.dominantPurple,
-                    ),
-                    title: const Text(
-                      'Leaderboard',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const LeaderboardScreen(),
-                      ),
-                    ),
-                  ),
-                  // LifeAt
-                  ListTile(
-                    leading: const Icon(
-                      Icons.music_note,
-                      color: AppColors.secondaryGray,
-                    ),
-                    title: const Text(
-                      'LifeAt',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    onTap: () async {
-                      final url = Uri.parse('https://lifeat.io');
-                      if (await canLaunchUrl(url)) {
-                        await launchUrl(url, mode: LaunchMode.inAppWebView);
-                      }
-                    },
-                  ),
-                  // Settings
-                  ListTile(
-                    leading: const Icon(
-                      Icons.settings,
-                      color: AppColors.secondaryGray,
-                    ),
-                    title: const Text(
-                      'Settings',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    onTap: () => Navigator.pushNamed(context, '/settings'),
-                  ),
-                  // My Library
-                  ListTile(
-                    leading: const Icon(
-                      Icons.library_books,
-                      color: AppColors.dominantPurple,
-                    ),
-                    title: const Text(
-                      'My Library',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const MyLibraryScreen(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // Profile Header
+            _buildProfileHeader(context, user, userStats, isDark),
+            
+            // Stats Section
+            _buildStatsSection(context, userStats, isDark),
+            
+            // Menu Items
+            _buildMenuItems(context, isDark),
           ],
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 4,
+        currentIndex: 4, // Profile tab
         onTap: (index) {
-          // Handle navigation
+          switch (index) {
+            case 0:
+              // Navigate to home without replacement to maintain proper navigation stack
+              Navigator.pushNamed(context, '/home');
+              break;
+            case 1:
+              Navigator.pushNamed(context, '/study-partner');
+              break;
+            case 2:
+              Navigator.pushNamed(context, '/mock-test');
+              break;
+            case 3:
+              Navigator.pushNamed(context, '/ai-tutor');
+              break;
+            case 4:
+              // Already on profile
+              break;
+          }
         },
         selectedItemColor: AppColors.dominantPurple,
         unselectedItemColor: AppColors.secondaryGray,
         showUnselectedLabels: true,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explore'),
+          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Study Partner'),
+          BottomNavigationBarItem(icon: Icon(Icons.quiz), label: 'CBT Tests'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.leaderboard),
-            label: 'Leaderboard',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.library_books),
-            label: 'Library',
+            icon: Icon(Icons.psychology),
+            label: 'AI Tutor',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
@@ -476,38 +242,345 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildStatCard(IconData icon, String label, String value) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = Theme.of(context).cardColor;
-    final textColor = isDark ? Colors.white : AppColors.textPrimary;
-    return Card(
-      color: cardColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: AppColors.dominantPurple, size: 28),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+  Widget _buildProfileHeader(BuildContext context, User? user, dynamic userStats, bool isDark) {
+    return Padding(
+      padding: ResponsiveHelper.getResponsiveHorizontalPadding(context),
+      child: Column(
+        children: [
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+          
+          // Avatar and Name
+          Row(
+            children: [
+              GestureDetector(
+                onTap: _changeAvatar,
+                child: Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: ResponsiveHelper.getResponsiveIconSize(context, 40),
+                      backgroundColor: AppColors.dominantPurple.withValues(alpha: 0.1),
+                      backgroundImage: _avatarAsset != null && _avatarAsset!.isNotEmpty
+                          ? AssetImage(_avatarAsset!)
+                          : null,
+                      child: _avatarAsset == null || _avatarAsset!.isEmpty
+                          ? Icon(
+                              Icons.person,
+                              color: AppColors.dominantPurple,
+                              size: ResponsiveHelper.getResponsiveIconSize(context, 40),
+                            )
+                          : null,
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        padding: EdgeInsets.all(ResponsiveHelper.getResponsivePadding(context) / 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.accentAmber,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.edit,
+                          color: Colors.white,
+                          size: ResponsiveHelper.getResponsiveIconSize(context, 12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: ResponsiveHelper.getResponsivePadding(context)),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user?.displayName ?? 'Guest User',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: ResponsiveHelper.getResponsiveFontSize(context, 20),
+                        color: isDark ? Colors.white : AppColors.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: ResponsiveHelper.getResponsivePadding(context) / 4),
+                    Text(
+                      user?.email ?? 'guest@example.com',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: () => Navigator.pushNamed(context, '/edit-profile'),
+                icon: Icon(
+                  Icons.edit,
+                  color: AppColors.dominantPurple,
+                  size: ResponsiveHelper.getResponsiveIconSize(context, 20),
+                ),
+              ),
+            ],
+          ),
+          
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+          
+          // Quick Stats
+          Row(
+            children: [
+              Expanded(
+                child: _buildQuickStat(
+                  context,
+                  'XP',
+                  '${userStats?.totalXp ?? 0}',
+                  Icons.star,
+                  AppColors.accentAmber,
+                ),
+              ),
+              SizedBox(width: ResponsiveHelper.getResponsivePadding(context)),
+              Expanded(
+                child: _buildQuickStat(
+                  context,
+                  'Questions',
+                  '${userStats?.totalQuestionsAnswered ?? 0}',
+                  Icons.quiz,
+                  AppColors.subjectBlue,
+                ),
+              ),
+              SizedBox(width: ResponsiveHelper.getResponsivePadding(context)),
+              Expanded(
+                child: _buildQuickStat(
+                  context,
+                  'Accuracy',
+                  '${userStats?.accuracyPercentage?.toStringAsFixed(1) ?? '0.0'}%',
+                  Icons.trending_up,
+                  AppColors.subjectGreen,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickStat(BuildContext context, String label, String value, IconData icon, Color color) {
+    return Container(
+      padding: EdgeInsets.all(ResponsiveHelper.getResponsivePadding(context)),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(ResponsiveHelper.getResponsiveBorderRadius(context)),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            icon,
+            color: color,
+            size: ResponsiveHelper.getResponsiveIconSize(context, 20),
+          ),
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context) / 2),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+              color: color,
             ),
-            Text(value, style: TextStyle(color: AppColors.textSecondary)),
-          ],
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 12),
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsSection(BuildContext context, dynamic userStats, bool isDark) {
+    return Padding(
+      padding: ResponsiveHelper.getResponsiveHorizontalPadding(context),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+          Text(
+            'Your Progress',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 18),
+              color: isDark ? Colors.white : AppColors.textPrimary,
+            ),
+          ),
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+          
+          // Stats cards
+          ResponsiveHelper.responsiveGridView(
+            context: context,
+            children: [
+              _buildStatCard(
+                context,
+                'Total Study Time',
+                '${userStats?.totalStudyTime?.inHours ?? 0}h',
+                Icons.timer,
+                AppColors.dominantPurple,
+                isDark,
+              ),
+              _buildStatCard(
+                context,
+                'Questions Answered',
+                '${userStats?.totalQuestionsAnswered ?? 0}',
+                Icons.quiz,
+                AppColors.subjectBlue,
+                isDark,
+              ),
+              _buildStatCard(
+                context,
+                'Correct Answers',
+                '${userStats?.totalCorrectAnswers ?? 0}',
+                Icons.check_circle,
+                AppColors.accentAmber,
+                isDark,
+              ),
+              _buildStatCard(
+                context,
+                'Accuracy',
+                '${userStats?.accuracyPercentage?.toStringAsFixed(1) ?? '0.0'}%',
+                Icons.trending_up,
+                AppColors.subjectGreen,
+                isDark,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(BuildContext context, String title, String value, IconData icon, Color color, bool isDark) {
+    return ResponsiveHelper.responsiveCard(
+      context: context,
+      color: isDark ? const Color(0xFF23243B) : Colors.white,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            color: color,
+            size: ResponsiveHelper.getResponsiveIconSize(context, 32),
+          ),
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context) / 2),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 18),
+              color: isDark ? Colors.white : AppColors.textPrimary,
+            ),
+          ),
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context) / 4),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 12),
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenuItems(BuildContext context, bool isDark) {
+    return Padding(
+      padding: ResponsiveHelper.getResponsiveHorizontalPadding(context),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+          Text(
+            'Quick Actions',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 18),
+              color: isDark ? Colors.white : AppColors.textPrimary,
+            ),
+          ),
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+          
+          // Menu items
+          ResponsiveHelper.responsiveListView(
+            context: context,
+            children: [
+              _buildMenuItem(
+                context,
+                'Edit Profile',
+                Icons.edit,
+                AppColors.dominantPurple,
+                () => Navigator.pushNamed(context, '/edit-profile'),
+                isDark,
+              ),
+              _buildMenuItem(
+                context,
+                'Leaderboard',
+                Icons.leaderboard,
+                AppColors.accentAmber,
+                () => Navigator.pushNamed(context, '/leaderboard'),
+                isDark,
+              ),
+              _buildMenuItem(
+                context,
+                'Badges',
+                Icons.emoji_events,
+                AppColors.subjectGreen,
+                () => Navigator.pushNamed(context, '/badges'),
+                isDark,
+              ),
+              _buildMenuItem(
+                context,
+                'Settings',
+                Icons.settings,
+                AppColors.subjectBlue,
+                () => Navigator.pushNamed(context, '/settings'),
+                isDark,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenuItem(BuildContext context, String title, IconData icon, Color color, VoidCallback onTap, bool isDark) {
+    return ResponsiveHelper.responsiveCard(
+      context: context,
+      color: isDark ? const Color(0xFF23243B) : Colors.white,
+      child: ListTile(
+        leading: Icon(
+          icon,
+          color: color,
+          size: ResponsiveHelper.getResponsiveIconSize(context, 24),
         ),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+            color: isDark ? Colors.white : AppColors.textPrimary,
+          ),
+        ),
+        trailing: Icon(
+          Icons.arrow_forward_ios,
+          color: AppColors.textSecondary,
+          size: ResponsiveHelper.getResponsiveIconSize(context, 16),
+        ),
+        onTap: onTap,
       ),
     );
   }
 }
 
-extension StringExtension on String {
-  String toTitleCase() {
-    return split(' ').map((word) {
-      if (word.isEmpty) return word;
-      return word[0].toUpperCase() + word.substring(1).toLowerCase();
-    }).join(' ');
-  }
-}

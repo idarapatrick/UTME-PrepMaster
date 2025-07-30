@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../../data/services/firestore_service.dart';
+import '../../data/services/cbt_question_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../screens/subject_selection_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../data/questions/english_questions.dart';
-import '../../data/questions/mathematics_questions.dart';
-import '../../data/questions/physics_questions.dart';
-import '../../data/questions/chemistry_questions.dart';
-import '../../data/questions/biology_questions.dart';
 import '../../domain/models/test_question.dart';
+import '../utils/responsive_helper.dart';
 
 class MockTestScreen extends StatefulWidget {
   const MockTestScreen({super.key});
@@ -31,57 +28,68 @@ class _MockTestScreenState extends State<MockTestScreen> {
   List<Map<String, dynamic>> _cbtHistory = [];
   bool _showHistory = false;
 
-  final List<MockTest> _availableTests = [
-    MockTest(
-      id: '1',
-      title: 'CBT Mock Test',
-      description: 'Complete UTME simulation with subject selection',
-      duration: 120, // 2 hours
-      questions: 180,
-      subjects: ['English', 'Mathematics', 'Physics', 'Chemistry'],
-      difficulty: 'Advanced',
-      isCbt: true,
-    ),
-    MockTest(
-      id: '2',
-      title: 'Mathematics Test',
-      description: 'Mathematics practice test (20 questions)',
-      duration: 30, // 30 minutes
-      questions: 20,
-      subjects: ['Mathematics'],
-      difficulty: 'Intermediate',
-      isCbt: false,
-    ),
-    MockTest(
-      id: '3',
-      title: 'English Language Test',
-      description: 'English language assessment (20 questions)',
-      duration: 25, // 25 minutes
-      questions: 20,
-      subjects: ['English'],
-      difficulty: 'Intermediate',
-      isCbt: false,
-    ),
-    MockTest(
-      id: '4',
-      title: 'Science Test',
-      description: 'Physics, Chemistry, and Biology combined (20 questions)',
-      duration: 35, // 35 minutes
-      questions: 20,
-      subjects: ['Physics', 'Chemistry', 'Biology'],
-      difficulty: 'Advanced',
-      isCbt: false,
-    ),
-  ];
-
-  MockTest? _currentTest;
-  List<TestQuestion> _questions = [];
+  List<MockTest> _availableTests = [];
 
   @override
   void initState() {
     super.initState();
     _loadUserSubjects();
+    _loadCbtTests();
   }
+
+  Future<void> _loadCbtTests() async {
+    try {
+      final testConfigs = [
+        'full_cbt',
+        'science_cbt', 
+        'mathematics_cbt',
+        'english_cbt',
+      ];
+
+      final tests = <MockTest>[];
+
+      for (final configType in testConfigs) {
+        final config = await CbtQuestionService.getCbtTestConfig(configType);
+        
+        if (config.isNotEmpty) {
+          tests.add(MockTest(
+            id: configType,
+            title: config['title'] ?? 'CBT Test',
+            description: config['description'] ?? 'CBT Practice Test',
+            duration: config['duration'] ?? 60,
+            questions: config['questions'] ?? 40,
+            subjects: List<String>.from(config['subjects'] ?? []),
+            difficulty: 'Advanced',
+            isCbt: true,
+          ));
+        }
+      }
+
+      setState(() {
+        _availableTests = tests;
+      });
+    } catch (e) {
+      print('Error loading CBT tests: $e');
+      // Fallback to default tests
+      _availableTests = [
+        MockTest(
+          id: 'full_cbt',
+          title: 'Full CBT Mock Test',
+          description: 'Complete UTME simulation with all subjects',
+          duration: 120,
+          questions: 180,
+          subjects: ['English', 'Mathematics', 'Physics', 'Chemistry', 'Biology'],
+          difficulty: 'Advanced',
+          isCbt: true,
+        ),
+      ];
+    }
+  }
+
+  MockTest? _currentTest;
+  List<TestQuestion> _questions = [];
+
+
 
   Future<void> _loadUserSubjects() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -93,69 +101,332 @@ class _MockTestScreenState extends State<MockTestScreen> {
     }
   }
 
-  void _generateQuestionsForTest(MockTest test) {
+  void _generateQuestionsForTest(MockTest test) async {
     _questions = [];
     _subjectQuestionIndices.clear();
 
-    if (test.isCbt) {
-      // CBT: Pull 60 English, 40 each from other 3 subjects
-      final eng = englishQuestions.take(60).toList();
-      final others = <TestQuestion>[];
-      for (final subj in _userSubjects.where((s) => s != 'English')) {
-        final list = _getQuestionsForSubject(subj).take(40).toList();
-        others.addAll(list);
-      }
-      _questions = [...eng, ...others];
-      // Set up indices for subject tabs
-      int idx = 0;
-      for (final subj in _userSubjects) {
-        final count = subj == 'English' ? 60 : 40;
-        _subjectQuestionIndices[subj] = List.generate(count, (i) => idx + i);
-        idx += count;
-      }
-    } else {
-      // Specific subject tests: 20 questions each
-      if (test.title == 'Science Test') {
-        // Mix Physics, Chemistry, Biology questions
-        final physics = physicsQuestions.take(7).toList();
-        final chemistry = chemistryQuestions.take(7).toList();
-        final biology = _getQuestionsForSubject('Biology').take(6).toList();
-        _questions = [...physics, ...chemistry, ...biology];
-        _subjectQuestionIndices['Physics'] = List.generate(7, (i) => i);
-        _subjectQuestionIndices['Chemistry'] = List.generate(7, (i) => i + 7);
-        _subjectQuestionIndices['Biology'] = List.generate(6, (i) => i + 14);
+    try {
+      if (test.isCbt) {
+        // CBT: Get questions from centralized service
+        for (final subject in test.subjects) {
+          final questionsPerSubject = subject == 'English' ? 60 : 40;
+          final subjectQuestions = await CbtQuestionService.getRandomQuestionsForCbt(
+            subject: subject,
+            count: questionsPerSubject,
+          );
+          
+          final startIndex = _questions.length;
+          _questions.addAll(subjectQuestions);
+          _subjectQuestionIndices[subject] = List.generate(
+            subjectQuestions.length, 
+            (i) => startIndex + i
+          );
+        }
       } else {
-        // Single subject test: 20 questions
-        final subj = test.subjects.first;
-        _questions = _getQuestionsForSubject(subj).take(20).toList();
-        _subjectQuestionIndices[subj] = List.generate(20, (i) => i);
+        // Specific subject tests: Get from centralized service
+        if (test.title.contains('Science')) {
+          // Mix Physics, Chemistry, Biology questions
+          final physics = await CbtQuestionService.getRandomQuestionsForCbt(
+            subject: 'Physics', 
+            count: 7
+          );
+          final chemistry = await CbtQuestionService.getRandomQuestionsForCbt(
+            subject: 'Chemistry', 
+            count: 7
+          );
+          final biology = await CbtQuestionService.getRandomQuestionsForCbt(
+            subject: 'Biology', 
+            count: 6
+          );
+          
+          _questions = [...physics, ...chemistry, ...biology];
+          _subjectQuestionIndices['Physics'] = List.generate(7, (i) => i);
+          _subjectQuestionIndices['Chemistry'] = List.generate(7, (i) => i + 7);
+          _subjectQuestionIndices['Biology'] = List.generate(6, (i) => i + 14);
+        } else {
+          // Single subject test
+          final subj = test.subjects.first;
+          final subjectQuestions = await CbtQuestionService.getRandomQuestionsForCbt(
+            subject: subj,
+            count: 20,
+          );
+          _questions = subjectQuestions;
+          _subjectQuestionIndices[subj] = List.generate(20, (i) => i);
+        }
       }
+    } catch (e) {
+      print('Error generating questions from Firebase: $e');
+      // Fallback to local questions
+      _questions = _getLocalQuestionsForSubject(test.subjects.first);
     }
   }
 
-  List<TestQuestion> _getQuestionsForSubject(String subject) {
-    List<TestQuestion> questions;
-    switch (subject) {
-      case 'English':
-        questions = englishQuestions;
-        break;
-      case 'Mathematics':
-        questions = mathematicsQuestions;
-        break;
-      case 'Physics':
-        questions = physicsQuestions;
-        break;
-      case 'Chemistry':
-        questions = chemistryQuestions;
-        break;
-      case 'Biology':
-        questions = biologyQuestions;
-        break;
+  List<TestQuestion> _getLocalQuestionsForSubject(String subject) {
+    // Fallback local questions if Firebase is unavailable
+    switch (subject.toLowerCase()) {
+      case 'mathematics':
+        return _getMathQuestions();
+      case 'physics':
+        return _getPhysicsQuestions();
+      case 'chemistry':
+        return _getChemistryQuestions();
+      case 'biology':
+        return _getBiologyQuestions();
+      case 'english':
+        return _getEnglishQuestions();
       default:
-        questions = [];
-        break;
+        return [];
     }
-    return questions;
+  }
+
+  List<TestQuestion> _getEnglishQuestions() {
+    return [
+      TestQuestion(
+        id: 'eng1',
+        question: 'What is the capital of France?',
+        options: ['Paris', 'London', 'Berlin', 'Madrid'],
+        correctAnswer: 0,
+        subject: 'English',
+        difficulty: 'Easy',
+        explanation: 'Paris is the capital of France.',
+      ),
+      TestQuestion(
+        id: 'eng2',
+        question: 'Which word means "to go"?',
+        options: ['Voyage', 'Voyager', 'Voyageur', 'Voyager'],
+        correctAnswer: 0,
+        subject: 'English',
+        difficulty: 'Easy',
+        explanation: 'Voyage means "to go".',
+      ),
+      TestQuestion(
+        id: 'eng3',
+        question: 'What is the plural of "child"?',
+        options: ['Children', 'Childs', 'Child', 'Childs'],
+        correctAnswer: 0,
+        subject: 'English',
+        difficulty: 'Easy',
+        explanation: 'Children is the plural of "child".',
+      ),
+      TestQuestion(
+        id: 'eng4',
+        question: 'Which word means "to be"?',
+        options: ['Etre', 'Etre', 'Etre', 'Etre'],
+        correctAnswer: 0,
+        subject: 'English',
+        difficulty: 'Easy',
+        explanation: 'Etre means "to be".',
+      ),
+      TestQuestion(
+        id: 'eng5',
+        question: 'What is the past tense of "go"?',
+        options: ['Went', 'Gone', 'Gone', 'Gone'],
+        correctAnswer: 0,
+        subject: 'English',
+        difficulty: 'Easy',
+        explanation: 'Went is the past tense of "go".',
+      ),
+    ];
+  }
+
+  List<TestQuestion> _getMathQuestions() {
+    return [
+      TestQuestion(
+        id: 'math1',
+        question: 'What is 2 + 2?',
+        options: ['1', '2', '3', '4'],
+        correctAnswer: 3,
+        subject: 'Mathematics',
+        difficulty: 'Easy',
+        explanation: '2 + 2 = 4.',
+      ),
+      TestQuestion(
+        id: 'math2',
+        question: 'What is 5 x 5?',
+        options: ['20', '25', '30', '35'],
+        correctAnswer: 1,
+        subject: 'Mathematics',
+        difficulty: 'Easy',
+        explanation: '5 x 5 = 25.',
+      ),
+      TestQuestion(
+        id: 'math3',
+        question: 'What is 10 - 3?',
+        options: ['5', '6', '7', '8'],
+        correctAnswer: 2,
+        subject: 'Mathematics',
+        difficulty: 'Easy',
+        explanation: '10 - 3 = 7.',
+      ),
+      TestQuestion(
+        id: 'math4',
+        question: 'What is 10 ÷ 2?',
+        options: ['4', '5', '6', '7'],
+        correctAnswer: 1,
+        subject: 'Mathematics',
+        difficulty: 'Easy',
+        explanation: '10 ÷ 2 = 5.',
+      ),
+      TestQuestion(
+        id: 'math5',
+        question: 'What is 3 x 4?',
+        options: ['10', '12', '14', '16'],
+        correctAnswer: 1,
+        subject: 'Mathematics',
+        difficulty: 'Easy',
+        explanation: '3 x 4 = 12.',
+      ),
+    ];
+  }
+
+  List<TestQuestion> _getPhysicsQuestions() {
+    return [
+      TestQuestion(
+        id: 'phy1',
+        question: 'What is the SI unit of force?',
+        options: ['Newton', 'Joule', 'Watt', 'Pascal'],
+        correctAnswer: 0,
+        subject: 'Physics',
+        difficulty: 'Easy',
+        explanation: 'Newton is the SI unit of force.',
+      ),
+      TestQuestion(
+        id: 'phy2',
+        question: 'What is the SI unit of energy?',
+        options: ['Joule', 'Watt', 'Newton', 'Pascal'],
+        correctAnswer: 0,
+        subject: 'Physics',
+        difficulty: 'Easy',
+        explanation: 'Joule is the SI unit of energy.',
+      ),
+      TestQuestion(
+        id: 'phy3',
+        question: 'What is the SI unit of power?',
+        options: ['Watt', 'Newton', 'Joule', 'Pascal'],
+        correctAnswer: 0,
+        subject: 'Physics',
+        difficulty: 'Easy',
+        explanation: 'Watt is the SI unit of power.',
+      ),
+      TestQuestion(
+        id: 'phy4',
+        question: 'What is the SI unit of pressure?',
+        options: ['Pascal', 'Watt', 'Newton', 'Joule'],
+        correctAnswer: 0,
+        subject: 'Physics',
+        difficulty: 'Easy',
+        explanation: 'Pascal is the SI unit of pressure.',
+      ),
+      TestQuestion(
+        id: 'phy5',
+        question: 'What is the SI unit of work?',
+        options: ['Joule', 'Watt', 'Newton', 'Pascal'],
+        correctAnswer: 0,
+        subject: 'Physics',
+        difficulty: 'Easy',
+        explanation: 'Joule is the SI unit of work.',
+      ),
+    ];
+  }
+
+  List<TestQuestion> _getChemistryQuestions() {
+    return [
+      TestQuestion(
+        id: 'chem1',
+        question: 'What is the chemical symbol for water?',
+        options: ['H2O', 'CO2', 'O2', 'H2'],
+        correctAnswer: 0,
+        subject: 'Chemistry',
+        difficulty: 'Easy',
+        explanation: 'H2O is the chemical symbol for water.',
+      ),
+      TestQuestion(
+        id: 'chem2',
+        question: 'What is the chemical formula for sodium chloride?',
+        options: ['NaCl', 'H2O', 'CO2', 'O2'],
+        correctAnswer: 0,
+        subject: 'Chemistry',
+        difficulty: 'Easy',
+        explanation: 'NaCl is the chemical formula for sodium chloride.',
+      ),
+      TestQuestion(
+        id: 'chem3',
+        question: 'What is the chemical formula for carbon dioxide?',
+        options: ['CO2', 'H2O', 'O2', 'H2'],
+        correctAnswer: 0,
+        subject: 'Chemistry',
+        difficulty: 'Easy',
+        explanation: 'CO2 is the chemical formula for carbon dioxide.',
+      ),
+      TestQuestion(
+        id: 'chem4',
+        question: 'What is the chemical formula for oxygen?',
+        options: ['O2', 'H2O', 'CO2', 'H2'],
+        correctAnswer: 0,
+        subject: 'Chemistry',
+        difficulty: 'Easy',
+        explanation: 'O2 is the chemical formula for oxygen.',
+      ),
+      TestQuestion(
+        id: 'chem5',
+        question: 'What is the chemical formula for hydrogen?',
+        options: ['H2O', 'CO2', 'O2', 'H2'],
+        correctAnswer: 3,
+        subject: 'Chemistry',
+        difficulty: 'Easy',
+        explanation: 'H2 is the chemical formula for hydrogen.',
+      ),
+    ];
+  }
+
+  List<TestQuestion> _getBiologyQuestions() {
+    return [
+      TestQuestion(
+        id: 'bio1',
+        question: 'What is the largest organ in the human body?',
+        options: ['Heart', 'Brain', 'Liver', 'Lungs'],
+        correctAnswer: 2,
+        subject: 'Biology',
+        difficulty: 'Easy',
+        explanation: 'The liver is the largest organ in the human body.',
+      ),
+      TestQuestion(
+        id: 'bio2',
+        question: 'What is the chemical formula for glucose?',
+        options: ['C6H12O6', 'H2O', 'CO2', 'O2'],
+        correctAnswer: 0,
+        subject: 'Biology',
+        difficulty: 'Easy',
+        explanation: 'C6H12O6 is the chemical formula for glucose.',
+      ),
+      TestQuestion(
+        id: 'bio3',
+        question: 'What is the chemical formula for water?',
+        options: ['H2O', 'CO2', 'O2', 'H2'],
+        correctAnswer: 0,
+        subject: 'Biology',
+        difficulty: 'Easy',
+        explanation: 'H2O is the chemical formula for water.',
+      ),
+      TestQuestion(
+        id: 'bio4',
+        question: 'What is the chemical formula for carbon dioxide?',
+        options: ['CO2', 'H2O', 'O2', 'H2'],
+        correctAnswer: 0,
+        subject: 'Biology',
+        difficulty: 'Easy',
+        explanation: 'CO2 is the chemical formula for carbon dioxide.',
+      ),
+      TestQuestion(
+        id: 'bio5',
+        question: 'What is the chemical formula for oxygen?',
+        options: ['O2', 'H2O', 'CO2', 'H2'],
+        correctAnswer: 0,
+        subject: 'Biology',
+        difficulty: 'Easy',
+        explanation: 'O2 is the chemical formula for oxygen.',
+      ),
+    ];
   }
 
   void _startTest(MockTest test) async {
@@ -435,156 +706,315 @@ class _MockTestScreenState extends State<MockTestScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isTestInProgress && _currentTest != null) {
-      return _buildTestInterface();
-    }
-
-    if (_showHistory) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('Mock Test History'),
-          backgroundColor: AppColors.dominantPurple,
-          foregroundColor: Colors.white,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => setState(() => _showHistory = false),
-          ),
-        ),
-        body: ListView.builder(
-          itemCount: _cbtHistory.length,
-          itemBuilder: (context, i) {
-            final h = _cbtHistory[i];
-            return ListTile(
-              leading: CircleAvatar(child: Text('${i + 1}')),
-              title: Text('Score: ${h['totalScore'].toStringAsFixed(2)} / 400'),
-              subtitle: Text(
-                'Taken: ${h['takenAt'] != null ? h['takenAt'].toDate().toString() : ''}',
-              ),
-            );
-          },
-        ),
-      );
-    }
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark
+        ? const Color(0xFF181A20)
+        : AppColors.backgroundPrimary;
 
     return Scaffold(
+      backgroundColor: bgColor,
       appBar: AppBar(
-        title: const Text('Mock Tests'),
+        title: Text(
+          'Mock Tests',
+          style: TextStyle(
+            fontSize: ResponsiveHelper.getResponsiveFontSize(context, 20),
+          ),
+        ),
         backgroundColor: AppColors.dominantPurple,
         foregroundColor: Colors.white,
+        elevation: 0,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+      body: ResponsiveHelper.responsiveSingleChildScrollView(
+        context: context,
+        child: Padding(
+          padding: ResponsiveHelper.getResponsiveEdgeInsets(context),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header Section
+              _buildHeaderSection(context, isDark),
+              
+              SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+              
+              // Available Tests
+              _buildAvailableTestsSection(context, isDark),
+              
+              SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+              
+              // Test History
+              _buildTestHistorySection(context, isDark),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeaderSection(BuildContext context, bool isDark) {
+    return ResponsiveHelper.responsiveCard(
+      context: context,
+      color: isDark ? const Color(0xFF23243B) : Colors.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.dominantPurple.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: AppColors.dominantPurple.withValues(alpha: 0.2),
-              ),
+          Text(
+            'Practice Tests',
+            style: TextStyle(
+              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 24),
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : AppColors.textPrimary,
             ),
-            child: Column(
-              children: [
-                Icon(Icons.quiz, size: 48, color: AppColors.dominantPurple),
-                const SizedBox(height: 16),
-                Text(
-                  'Mock Tests',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+          ),
+          
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context) / 2),
+          
+          Text(
+            'Choose a test to practice and improve your UTME skills',
+            style: TextStyle(
+              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvailableTestsSection(BuildContext context, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Available Tests',
+          style: TextStyle(
+            fontSize: ResponsiveHelper.getResponsiveFontSize(context, 20),
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : AppColors.textPrimary,
+          ),
+        ),
+        
+        SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+        
+        ResponsiveHelper.responsiveGridView(
+          context: context,
+          children: _availableTests.map((test) => _buildTestCard(context, test, isDark)).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTestCard(BuildContext context, MockTest test, bool isDark) {
+    return ResponsiveHelper.responsiveCard(
+      context: context,
+      color: isDark ? const Color(0xFF23243B) : Colors.white,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.quiz,
+                color: AppColors.dominantPurple,
+                size: ResponsiveHelper.getResponsiveIconSize(context, 24),
+              ),
+              
+              SizedBox(width: ResponsiveHelper.getResponsivePadding(context) / 2),
+              
+              Expanded(
+                child: Text(
+                  test.title,
+                  style: TextStyle(
+                    fontSize: ResponsiveHelper.getResponsiveFontSize(context, 18),
                     fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 8),
+              ),
+            ],
+          ),
+          
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+          
+          Text(
+            test.description,
+            style: TextStyle(
+              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
+              color: AppColors.textSecondary,
+            ),
+          ),
+          
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+          
+          // Test Details
+          Row(
+            children: [
+              _buildTestDetail(
+                context,
+                Icons.timer,
+                '${test.duration} min',
+                isDark,
+              ),
+              
+              SizedBox(width: ResponsiveHelper.getResponsivePadding(context)),
+              
+              _buildTestDetail(
+                context,
+                Icons.question_answer,
+                '${test.questions} questions',
+                isDark,
+              ),
+              
+              SizedBox(width: ResponsiveHelper.getResponsivePadding(context)),
+              
+              _buildTestDetail(
+                context,
+                Icons.subject,
+                test.subjects.length > 1 ? '${test.subjects.length} subjects' : test.subjects.first,
+                isDark,
+              ),
+            ],
+          ),
+          
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+          
+          // Start Button
+          ResponsiveHelper.responsiveButton(
+            context: context,
+            text: 'Start Test',
+            onPressed: () => _startTest(test),
+            backgroundColor: AppColors.dominantPurple,
+            foregroundColor: Colors.white,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTestDetail(BuildContext context, IconData icon, String text, bool isDark) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          icon,
+          size: ResponsiveHelper.getResponsiveIconSize(context, 16),
+          color: AppColors.textSecondary,
+        ),
+        
+        SizedBox(width: ResponsiveHelper.getResponsivePadding(context) / 4),
+        
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: ResponsiveHelper.getResponsiveFontSize(context, 12),
+            color: AppColors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTestHistorySection(BuildContext context, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Test History',
+              style: TextStyle(
+                fontSize: ResponsiveHelper.getResponsiveFontSize(context, 20),
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : AppColors.textPrimary,
+              ),
+            ),
+            
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _showHistory = !_showHistory;
+                });
+              },
+              child: Text(
+                _showHistory ? 'Hide' : 'Show',
+                style: TextStyle(
+                  color: AppColors.dominantPurple,
+                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
+                ),
+              ),
+            ),
+          ],
+        ),
+        
+        if (_showHistory) ...[
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+          
+          ResponsiveHelper.responsiveListView(
+            context: context,
+            children: _cbtHistory.map((test) => _buildHistoryCard(context, test, isDark)).toList(),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildHistoryCard(BuildContext context, Map<String, dynamic> test, bool isDark) {
+    return ResponsiveHelper.responsiveCard(
+      context: context,
+      color: isDark ? const Color(0xFF23243B) : Colors.white,
+      child: Row(
+        children: [
+          Container(
+            width: ResponsiveHelper.getResponsiveIconSize(context, 50),
+            height: ResponsiveHelper.getResponsiveIconSize(context, 50),
+            decoration: BoxDecoration(
+              color: AppColors.dominantPurple.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(ResponsiveHelper.getResponsiveBorderRadius(context)),
+            ),
+            child: Icon(
+              Icons.quiz,
+              color: AppColors.dominantPurple,
+              size: ResponsiveHelper.getResponsiveIconSize(context, 24),
+            ),
+          ),
+          
+          SizedBox(width: ResponsiveHelper.getResponsivePadding(context)),
+          
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text(
-                  'Practice with realistic UTME-style questions',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  test['title'] ?? 'Mock Test',
+                  style: TextStyle(
+                    fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                  ),
+                ),
+                
+                SizedBox(height: ResponsiveHelper.getResponsivePadding(context) / 4),
+                
+                Text(
+                  'Score: ${test['score'] ?? 0}%',
+                  style: TextStyle(
+                    fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
                     color: AppColors.textSecondary,
                   ),
                 ),
               ],
             ),
           ),
-
-          const SizedBox(height: 24),
-
-          // Available Tests
-          Text(
-            'Available Tests',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          
+          Icon(
+            Icons.arrow_forward_ios,
+            color: AppColors.textSecondary,
+            size: ResponsiveHelper.getResponsiveIconSize(context, 16),
           ),
-
-          const SizedBox(height: 16),
-
-          ..._availableTests.map((test) => _buildTestCard(test)),
         ],
       ),
     );
   }
-
-  Widget _buildTestCard(MockTest test) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = Theme.of(context).cardColor;
-    final textColor = isDark ? Colors.white : AppColors.textPrimary;
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      color: cardColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      elevation: 2,
-      child: ListTile(
-        leading: Icon(Icons.quiz, color: AppColors.dominantPurple, size: 32),
-        title: Text(
-          test.title,
-          style: TextStyle(
-            color: textColor,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-        ),
-        subtitle: Text(
-          test.description,
-          style: TextStyle(
-            color: isDark ? Colors.white70 : AppColors.textSecondary,
-          ),
-        ),
-        trailing: ElevatedButton(
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Starting ${test.title}...'),
-                duration: const Duration(seconds: 1),
-              ),
-            );
-
-            try {
-              _startTest(test);
-            } catch (e) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Error starting test: $e'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            }
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.dominantPurple,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          ),
-          child: const Text('Start'),
-        ),
-      ),
-    );
-  }
-
-
 
   Widget _buildTestInterface() {
     final subjectTabs = _userSubjects;

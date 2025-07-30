@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../../data/services/ai_service.dart';
+import '../utils/responsive_helper.dart';
 
 
 class AiTutorScreen extends StatefulWidget {
@@ -200,232 +201,302 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark
+        ? const Color(0xFF181A20)
+        : AppColors.backgroundPrimary;
+
     return Scaffold(
-      backgroundColor: AppColors.backgroundSecondary,
+      backgroundColor: bgColor,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'AI Tutor',
           style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 20,
+            fontSize: ResponsiveHelper.getResponsiveFontSize(context, 20),
           ),
         ),
         backgroundColor: AppColors.dominantPurple,
         foregroundColor: Colors.white,
         elevation: 0,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(
-            bottom: Radius.circular(20),
-          ),
-        ),
         actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.subject, size: 20),
-              onPressed: _showSubjectSelector,
-              tooltip: 'Change Subject',
+          PopupMenuButton<String>(
+            onSelected: (String value) {
+              setState(() {
+                _selectedSubject = value;
+              });
+            },
+            itemBuilder: (BuildContext context) {
+              return _subjects.map((String subject) {
+                return PopupMenuItem<String>(
+                  value: subject,
+                  child: Text(
+                    subject,
+                    style: TextStyle(
+                      fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
+                    ),
+                  ),
+                );
+              }).toList();
+            },
+            child: Padding(
+              padding: ResponsiveHelper.getResponsiveHorizontalPadding(context),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _selectedSubject,
+                    style: TextStyle(
+                      fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+                    ),
+                  ),
+                  Icon(
+                    Icons.arrow_drop_down,
+                    size: ResponsiveHelper.getResponsiveIconSize(context, 20),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
       ),
-      body: Column(
+      body: ResponsiveHelper.responsiveColumn(
+        context: context,
         children: [
-          // Enhanced Subject Header
-          Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.dominantPurple.withOpacity(0.1),
-                  AppColors.dominantPurple.withOpacity(0.05),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: AppColors.dominantPurple.withValues(alpha: 0.2),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.dominantPurple,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    _getSubjectIcon(_selectedSubject),
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Currently studying',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      Text(
-                        _selectedSubject,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: AppColors.dominantPurple,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Enhanced Chat Messages
+          // Chat Messages
           Expanded(
+            child: _buildChatMessages(context, isDark),
+          ),
+          
+          // Input Section
+          _buildInputSection(context, isDark),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChatMessages(BuildContext context, bool isDark) {
+    return ListView.builder(
+      padding: ResponsiveHelper.getResponsiveEdgeInsets(context),
+      controller: _scrollController,
+      itemCount: _messages.length + (_isTyping ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (index == _messages.length && _isTyping) {
+          return _buildTypingIndicator(context, isDark);
+        }
+        
+        final message = _messages[index];
+        return _buildMessageBubble(context, message, isDark);
+      },
+    );
+  }
+
+  Widget _buildMessageBubble(BuildContext context, ChatMessage message, bool isDark) {
+    final isUser = message.isUser;
+    
+    return Padding(
+      padding: EdgeInsets.only(bottom: ResponsiveHelper.getResponsivePadding(context)),
+      child: Row(
+        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!isUser) ...[
+            CircleAvatar(
+              radius: ResponsiveHelper.getResponsiveIconSize(context, 16),
+              backgroundColor: AppColors.dominantPurple,
+              child: Icon(
+                Icons.psychology,
+                color: Colors.white,
+                size: ResponsiveHelper.getResponsiveIconSize(context, 16),
+              ),
+            ),
+            SizedBox(width: ResponsiveHelper.getResponsivePadding(context) / 2),
+          ],
+          
+          Flexible(
             child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
+              constraints: BoxConstraints(
+                maxWidth: ResponsiveHelper.screenWidth(context) * 0.75,
+              ),
+              padding: EdgeInsets.all(ResponsiveHelper.getResponsivePadding(context)),
               decoration: BoxDecoration(
-                color: AppColors.backgroundPrimary,
-                borderRadius: BorderRadius.circular(20),
+                color: isUser
+                    ? AppColors.dominantPurple
+                    : isDark
+                        ? const Color(0xFF23243B)
+                        : Colors.white,
+                borderRadius: BorderRadius.circular(ResponsiveHelper.getResponsiveBorderRadius(context)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
                 ],
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _messages.length + (_isTyping ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (index == _messages.length && _isTyping) {
-                      return _buildTypingIndicator();
-                    }
-                    return _buildMessage(_messages[index]);
-                  },
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    message.text,
+                    style: TextStyle(
+                      fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+                      color: isUser ? Colors.white : (isDark ? Colors.white : AppColors.textPrimary),
+                    ),
+                  ),
+                  
+                  SizedBox(height: ResponsiveHelper.getResponsivePadding(context) / 4),
+                  
+                  Text(
+                    _formatTime(message.timestamp),
+                    style: TextStyle(
+                      fontSize: ResponsiveHelper.getResponsiveFontSize(context, 12),
+                      color: isUser 
+                          ? Colors.white.withValues(alpha: 0.7)
+                          : AppColors.textSecondary,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
+          
+          if (isUser) ...[
+            SizedBox(width: ResponsiveHelper.getResponsivePadding(context) / 2),
+            CircleAvatar(
+              radius: ResponsiveHelper.getResponsiveIconSize(context, 16),
+              backgroundColor: AppColors.accentAmber,
+              child: Icon(
+                Icons.person,
+                color: Colors.white,
+                size: ResponsiveHelper.getResponsiveIconSize(context, 16),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 
-          // Enhanced Input Section
+  Widget _buildTypingIndicator(BuildContext context, bool isDark) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: ResponsiveHelper.getResponsivePadding(context)),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: ResponsiveHelper.getResponsiveIconSize(context, 16),
+            backgroundColor: AppColors.dominantPurple,
+            child: Icon(
+              Icons.psychology,
+              color: Colors.white,
+              size: ResponsiveHelper.getResponsiveIconSize(context, 16),
+            ),
+          ),
+          
+          SizedBox(width: ResponsiveHelper.getResponsivePadding(context) / 2),
+          
           Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(ResponsiveHelper.getResponsivePadding(context)),
             decoration: BoxDecoration(
-              color: AppColors.backgroundPrimary,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
-                ),
-              ],
+              color: isDark ? const Color(0xFF23243B) : Colors.white,
+              borderRadius: BorderRadius.circular(ResponsiveHelper.getResponsiveBorderRadius(context)),
             ),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.backgroundSecondary,
-                      borderRadius: BorderRadius.circular(25),
-                      border: Border.all(
-                        color: AppColors.borderLight,
-                        width: 1,
-                      ),
-                    ),
-                    child: TextField(
-                      controller: _messageController,
-                      decoration: InputDecoration(
-                        hintText: 'Ask me anything about $_selectedSubject...',
-                        hintStyle: TextStyle(
-                          color: AppColors.textTertiary,
-                          fontSize: 14,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 16,
-                        ),
-                        prefixIcon: Icon(
-                          Icons.chat_bubble_outline,
-                          color: AppColors.textSecondary,
-                          size: 20,
-                        ),
-                      ),
-                      maxLines: null,
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: (_) => _sendMessage(),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.dominantPurple,
-                        AppColors.dominantPurple.withOpacity(0.8),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(25),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.dominantPurple.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(25),
-                      onTap: _sendMessage,
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        child: const Icon(
-                          Icons.send_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                _buildTypingDot(context, 0),
+                _buildTypingDot(context, 1),
+                _buildTypingDot(context, 2),
               ],
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildTypingDot(BuildContext context, int index) {
+    return AnimatedContainer(
+      duration: Duration(milliseconds: 600 + (index * 200)),
+      margin: EdgeInsets.symmetric(horizontal: 2),
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(
+        color: AppColors.dominantPurple,
+        shape: BoxShape.circle,
+      ),
+    );
+  }
+
+  Widget _buildInputSection(BuildContext context, bool isDark) {
+    return Container(
+      padding: ResponsiveHelper.getResponsiveEdgeInsets(context),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF23243B) : Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 4,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF181A20) : AppColors.backgroundSecondary,
+                borderRadius: BorderRadius.circular(ResponsiveHelper.getResponsiveBorderRadius(context)),
+                border: Border.all(
+                  color: AppColors.textTertiary,
+                  width: 1,
+                ),
+              ),
+              child: TextField(
+                controller: _messageController,
+                style: TextStyle(
+                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+                  color: isDark ? Colors.white : AppColors.textPrimary,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'Ask me anything about $_selectedSubject...',
+                  hintStyle: TextStyle(
+                    fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+                    color: AppColors.textSecondary,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.all(ResponsiveHelper.getResponsivePadding(context)),
+                ),
+                maxLines: null,
+                textInputAction: TextInputAction.send,
+                onSubmitted: (_) => _sendMessage(),
+              ),
+            ),
+          ),
+          
+          SizedBox(width: ResponsiveHelper.getResponsivePadding(context)),
+          
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.dominantPurple,
+              borderRadius: BorderRadius.circular(ResponsiveHelper.getResponsiveBorderRadius(context)),
+            ),
+            child: IconButton(
+              onPressed: _sendMessage,
+              icon: Icon(
+                Icons.send,
+                color: Colors.white,
+                size: ResponsiveHelper.getResponsiveIconSize(context, 20),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatTime(DateTime time) {
+    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
   }
 
   Widget _buildMessage(ChatMessage message) {
@@ -749,91 +820,6 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
     result = result.replaceAll('<sup>1</sup>', '¹');
     
     return result;
-  }
-
-  Widget _buildTypingIndicator() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.dominantPurple,
-                  AppColors.dominantPurple.withOpacity(0.8),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.dominantPurple.withOpacity(0.2),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.smart_toy_rounded,
-              color: Colors.white,
-              size: 18,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-            decoration: BoxDecoration(
-              color: AppColors.backgroundPrimary,
-              borderRadius: BorderRadius.circular(20).copyWith(
-                bottomLeft: const Radius.circular(6),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-              border: Border.all(
-                color: AppColors.borderLight,
-                width: 1,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildAnimatedDot(0),
-                const SizedBox(width: 4),
-                _buildAnimatedDot(1),
-                const SizedBox(width: 4),
-                _buildAnimatedDot(2),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAnimatedDot(int index) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: Duration(milliseconds: 600 + (index * 200)),
-      builder: (context, value, child) {
-        return Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: AppColors.dominantPurple.withOpacity(value * 0.6),
-            shape: BoxShape.circle,
-          ),
-        );
-      },
-    );
   }
 }
 

@@ -13,7 +13,9 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     Future.delayed(const Duration(seconds: 2), () {
-      Navigator.pushReplacementNamed(context, '/onboarding');
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/onboarding');
+      }
     });
   }
 
@@ -27,7 +29,7 @@ class _SplashScreenState extends State<SplashScreen> {
           children: [
             Container(
               decoration: BoxDecoration(
-                color: AppColors.dominantPurple.withOpacity(0.1),
+                color: AppColors.dominantPurple.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               padding: const EdgeInsets.all(32),

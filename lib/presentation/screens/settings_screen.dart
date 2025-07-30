@@ -3,6 +3,8 @@ import '../theme/app_colors.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_notifier.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/responsive_helper.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -12,12 +14,17 @@ class SettingsScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(
+          'Settings',
+          style: TextStyle(
+            fontSize: ResponsiveHelper.getResponsiveFontSize(context, 20),
+          ),
+        ),
         backgroundColor: AppColors.dominantPurple,
         foregroundColor: Colors.white,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+      body: ResponsiveHelper.responsiveListView(
+        context: context,
         children: [
           // Profile Section
           _buildSection(context, 'Profile', [
@@ -43,7 +50,7 @@ class SettingsScreen extends StatelessWidget {
             ),
           ]),
 
-          const SizedBox(height: 24),
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context) * 1.5),
 
           // Preferences Section
           _buildSection(context, 'Preferences', [
@@ -65,12 +72,23 @@ class SettingsScreen extends StatelessWidget {
                   listen: false,
                 ).toggleTheme(value);
               },
-              secondary: const Icon(
+              secondary: Icon(
                 Icons.dark_mode_outlined,
                 color: AppColors.dominantPurple,
+                size: ResponsiveHelper.getResponsiveIconSize(context, 24),
               ),
-              title: const Text('Dark Mode'),
-              subtitle: const Text('Switch between light and dark themes'),
+              title: Text(
+                'Dark Mode',
+                style: TextStyle(
+                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+                ),
+              ),
+              subtitle: Text(
+                'Switch between light and dark themes',
+                style: TextStyle(
+                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
+                ),
+              ),
               activeColor: AppColors.dominantPurple,
             ),
             _buildSettingTile(
@@ -85,7 +103,7 @@ class SettingsScreen extends StatelessWidget {
             ),
           ]),
 
-          const SizedBox(height: 24),
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context) * 1.5),
 
           // Study Section
           _buildSection(context, 'Study', [
@@ -111,7 +129,7 @@ class SettingsScreen extends StatelessWidget {
             ),
           ]),
 
-          const SizedBox(height: 24),
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context) * 1.5),
 
           // Support Section
           _buildSection(context, 'Support', [
@@ -119,7 +137,7 @@ class SettingsScreen extends StatelessWidget {
               context,
               icon: Icons.help_outline,
               title: 'Help & FAQ',
-              subtitle: '',
+              subtitle: 'Get help and find answers',
               onTap: () {},
               cardColor: isDark ? const Color(0xFF23243B) : Colors.white,
               textColor: isDark ? Colors.white : AppColors.textPrimary,
@@ -129,7 +147,7 @@ class SettingsScreen extends StatelessWidget {
               context,
               icon: Icons.feedback_outlined,
               title: 'Send Feedback',
-              subtitle: '',
+              subtitle: 'Help us improve the app',
               onTap: () {},
               cardColor: isDark ? const Color(0xFF23243B) : Colors.white,
               textColor: isDark ? Colors.white : AppColors.textPrimary,
@@ -137,9 +155,9 @@ class SettingsScreen extends StatelessWidget {
             ),
             _buildSettingTile(
               context,
-              icon: Icons.info_outline,
-              title: 'About',
-              subtitle: 'App version 1.0.0',
+              icon: Icons.star_outline,
+              title: 'Rate the App',
+              subtitle: 'Rate us on the app store',
               onTap: () {},
               cardColor: isDark ? const Color(0xFF23243B) : Colors.white,
               textColor: isDark ? Colors.white : AppColors.textPrimary,
@@ -147,7 +165,7 @@ class SettingsScreen extends StatelessWidget {
             ),
           ]),
 
-          const SizedBox(height: 24),
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context) * 1.5),
 
           // Account Section
           _buildSection(context, 'Account', [
@@ -176,22 +194,40 @@ class SettingsScreen extends StatelessWidget {
               iconColor: AppColors.dominantPurple,
             ),
           ]),
-          const SizedBox(height: 24),
+          
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context) * 1.5),
+          
           // Sign Out Button
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              icon: const Icon(Icons.logout, color: AppColors.dominantPurple),
-              label: const Text('Sign Out'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.dominantPurple,
-                side: const BorderSide(color: AppColors.dominantPurple),
-                padding: const EdgeInsets.symmetric(vertical: 16),
+          Padding(
+            padding: ResponsiveHelper.getResponsiveHorizontalPadding(context),
+            child: SizedBox(
+              width: double.infinity,
+              height: ResponsiveHelper.getResponsiveButtonHeight(context),
+              child: OutlinedButton.icon(
+                icon: Icon(
+                  Icons.logout, 
+                  color: AppColors.dominantPurple,
+                  size: ResponsiveHelper.getResponsiveIconSize(context, 20),
+                ),
+                label: Text(
+                  'Sign Out',
+                  style: TextStyle(
+                    fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.dominantPurple,
+                  side: const BorderSide(color: AppColors.dominantPurple),
+                  padding: EdgeInsets.symmetric(
+                    vertical: ResponsiveHelper.getResponsivePadding(context),
+                  ),
+                ),
+                onPressed: () => _showLogoutDialog(context),
               ),
-              onPressed: () => _showLogoutDialog(context),
             ),
           ),
-          const SizedBox(height: 32),
+          
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context) * 2),
         ],
       ),
     );
@@ -208,19 +244,21 @@ class SettingsScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: ResponsiveHelper.getResponsiveHorizontalPadding(context),
           child: Text(
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               color: AppColors.dominantPurple,
               fontWeight: FontWeight.w600,
+              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
             ),
           ),
         ),
         Container(
+          margin: ResponsiveHelper.getResponsiveHorizontalPadding(context),
           decoration: BoxDecoration(
             color: cardColor,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(ResponsiveHelper.getResponsivePadding(context) / 2),
             border: Border.all(
               color: isDark ? AppColors.borderDark : AppColors.borderLight,
             ),
@@ -245,22 +283,38 @@ class SettingsScreen extends StatelessWidget {
     final tileColor = cardColor;
     return Card(
       color: tileColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(ResponsiveHelper.getResponsivePadding(context) / 2),
+      ),
       elevation: 1,
       child: ListTile(
-        leading: Icon(icon, color: iconColor, size: 28),
+        leading: Icon(
+          icon, 
+          color: iconColor, 
+          size: ResponsiveHelper.getResponsiveIconSize(context, 28)
+        ),
         title: Text(
           title,
-          style: TextStyle(color: textColor, fontWeight: FontWeight.w500),
+          style: TextStyle(
+            color: textColor, 
+            fontWeight: FontWeight.w500,
+            fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+          ),
         ),
         subtitle: subtitle.isNotEmpty
             ? Text(
                 subtitle,
-                style: TextStyle(color: textColor.withOpacity(0.7)),
+                style: TextStyle(
+                  color: textColor.withValues(alpha: 0.7),
+                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
+                ),
               )
             : null,
         onTap: onTap,
-        trailing: const Icon(Icons.arrow_forward_ios, size: 18),
+        trailing: Icon(
+          Icons.arrow_forward_ios, 
+          size: ResponsiveHelper.getResponsiveIconSize(context, 18)
+        ),
       ),
     );
   }
@@ -280,7 +334,7 @@ class SettingsScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () async {
                 Navigator.of(context).pop();
-                await FirebaseAuth.instance.signOut();
+                await _performLogout(context);
               },
               child: const Text('Logout'),
             ),
@@ -288,5 +342,33 @@ class SettingsScreen extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<void> _performLogout(BuildContext context) async {
+    try {
+      // Sign out from Firebase Auth
+      await FirebaseAuth.instance.signOut();
+      
+      // Clear all session data from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      
+      // Navigate to onboarding screen
+      if (context.mounted) {
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          '/onboarding',
+          (route) => false, // Remove all previous routes from the stack
+        );
+      }
+    } catch (e) {
+      print('Error during logout: $e');
+      // Even if there's an error, try to navigate to onboarding
+      if (context.mounted) {
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          '/onboarding',
+          (route) => false,
+        );
+      }
+    }
   }
 }

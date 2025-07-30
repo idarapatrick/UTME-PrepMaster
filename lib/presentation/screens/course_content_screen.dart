@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import 'quiz_screen.dart';
 
 class CourseContentScreen extends StatefulWidget {
   final String subject;
@@ -21,7 +22,7 @@ class _CourseContentScreenState extends State<CourseContentScreen>
     'syllabus',
     'videos',
     'articles',
-    'resources',
+    'quizzes',
   ];
 
   @override
@@ -77,6 +78,113 @@ class _CourseContentScreenState extends State<CourseContentScreen>
     });
   }
 
+  Widget _buildQuizzesTab() {
+    final quizzes = _getSubjectQuizzes(widget.subject);
+    
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: quizzes.length,
+      itemBuilder: (context, index) {
+        final quiz = quizzes[index];
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: AppColors.dominantPurple.withValues(alpha: 0.1),
+              child: Icon(
+                Icons.quiz,
+                color: AppColors.dominantPurple,
+              ),
+            ),
+            title: Text(
+              quiz['title'],
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text(quiz['description']),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '${quiz['questions']} Qs',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
+              ],
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => QuizScreen(
+                    subject: widget.subject,
+                    quizType: quiz['type'],
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  List<Map<String, dynamic>> _getSubjectQuizzes(String subject) {
+    final allQuizzes = [
+      {
+        'title': 'Basic Concepts Quiz',
+        'description': 'Test your understanding of fundamental concepts',
+        'questions': 10,
+        'type': 'basic',
+        'subjects': ['Mathematics', 'Physics', 'Chemistry', 'Biology'],
+      },
+      {
+        'title': 'Problem Solving Quiz',
+        'description': 'Practice solving complex problems',
+        'questions': 15,
+        'type': 'problem_solving',
+        'subjects': ['Mathematics', 'Physics', 'Chemistry'],
+      },
+      {
+        'title': 'Theory Quiz',
+        'description': 'Test your theoretical knowledge',
+        'questions': 12,
+        'type': 'theory',
+        'subjects': ['Physics', 'Chemistry', 'Biology'],
+      },
+      {
+        'title': 'Grammar Quiz',
+        'description': 'Test your English grammar skills',
+        'questions': 20,
+        'type': 'grammar',
+        'subjects': ['English'],
+      },
+      {
+        'title': 'Comprehension Quiz',
+        'description': 'Test your reading comprehension',
+        'questions': 15,
+        'type': 'comprehension',
+        'subjects': ['English'],
+      },
+      {
+        'title': 'Literature Quiz',
+        'description': 'Test your knowledge of literature',
+        'questions': 10,
+        'type': 'literature',
+        'subjects': ['English'],
+      },
+    ];
+
+    return allQuizzes.where((quiz) => (quiz['subjects'] as List<dynamic>?)?.contains(subject) ?? false).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -97,7 +205,7 @@ class _CourseContentScreenState extends State<CourseContentScreen>
             Tab(text: 'Syllabus'),
             Tab(text: 'Videos'),
             Tab(text: 'Articles'),
-            Tab(text: 'Resources'),
+            Tab(text: 'Quizzes'),
           ],
           indicatorColor: AppColors.accentAmber,
         ),
@@ -136,8 +244,8 @@ class _CourseContentScreenState extends State<CourseContentScreen>
                 const Center(child: Text('Videos coming soon!')),
                 // Articles Tab
                 const Center(child: Text('Articles coming soon!')),
-                // Resources Tab
-                const Center(child: Text('Resources coming soon!')),
+                // Quizzes Tab
+                _buildQuizzesTab(),
               ],
             ),
     );

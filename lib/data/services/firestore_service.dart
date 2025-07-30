@@ -52,6 +52,23 @@ class FirestoreService {
     await _db.collection('users').doc(userId).set(data, SetOptions(merge: true));
   }
 
+  static Future<void> updateStudyStatistics(
+    String userId, {
+    int? studyStreak,
+    int? totalStudyTime,
+    int? badgesCount,
+  }) async {
+    final updates = <String, dynamic>{};
+    
+    if (studyStreak != null) updates['studyStreak'] = studyStreak;
+    if (totalStudyTime != null) updates['totalStudyTime'] = totalStudyTime;
+    if (badgesCount != null) updates['badgesCount'] = badgesCount;
+    
+    if (updates.isNotEmpty) {
+      await _db.collection('users').doc(userId).update(updates);
+    }
+  }
+
   static Future<void> saveFullUserProfile(
     String userId,
     Map<String, dynamic> data,

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../widgets/achievement_badge.dart';
 import '../widgets/rank_badge.dart';
 import '../theme/app_colors.dart';
 import '../../data/services/firestore_service.dart';
+import '../providers/user_stats_provider.dart';
+import '../../domain/models/user_stats_model.dart';
+import '../utils/responsive_helper.dart';
 
 class LeaderboardScreen extends StatefulWidget {
   const LeaderboardScreen({super.key});
@@ -51,13 +55,18 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
       _loadingCbt = true;
     });
     try {
+      final userStatsProvider = Provider.of<UserStatsProvider>(context, listen: false);
       final results = await Future.wait([
-        FirestoreService.fetchXpLeaderboard(),
+        userStatsProvider.getLeaderboard(limit: 50),
         FirestoreService.fetchCbtLeaderboard(),
       ]);
       setState(() {
-        _xpLeaderboard = results[0];
-        _cbtLeaderboard = results[1];
+        _xpLeaderboard = (results[0] as List<UserStats>).map((stats) => <String, dynamic>{
+          'name': stats.userId, // We'll need to get user names from profiles
+          'xp': stats.totalXp,
+          'avatar': 'https://api.dicebear.com/7.x/adventurer/svg?seed=${stats.userId}',
+        }).toList();
+        _cbtLeaderboard = results[1] as List<Map<String, dynamic>>;
       });
     } finally {
       setState(() {
@@ -78,66 +87,347 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : AppColors.textPrimary;
-    final backgroundColor = isDark ? const Color(0xFF181A20) : AppColors.backgroundPrimary;
+    final bgColor = isDark
+        ? const Color(0xFF181A20)
+        : AppColors.backgroundPrimary;
 
     return Scaffold(
+      backgroundColor: bgColor,
       appBar: AppBar(
-        title: const Text('Leaderboard'),
+        title: Text(
+          'Leaderboard',
+          style: TextStyle(
+            fontSize: ResponsiveHelper.getResponsiveFontSize(context, 20),
+          ),
+        ),
         backgroundColor: AppColors.dominantPurple,
         foregroundColor: Colors.white,
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: AppColors.accentAmber,
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-          tabs: const [
-            Tab(text: 'XP Earned'),
-            Tab(text: 'CBT High Scores'),
-          ],
+        elevation: 0,
+      ),
+      body: ResponsiveHelper.responsiveSingleChildScrollView(
+        context: context,
+        child: Padding(
+          padding: ResponsiveHelper.getResponsiveEdgeInsets(context),
+          child: Column(
+            children: [
+              // Header Section
+              _buildHeaderSection(context, isDark),
+              
+              SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+              
+              // Top 3 Podium
+              _buildPodiumSection(context, isDark),
+              
+              SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+              
+              // Leaderboard List
+              _buildLeaderboardList(context, isDark),
+            ],
+          ),
         ),
       ),
-      backgroundColor: backgroundColor,
-      body: RefreshIndicator(
-        onRefresh: _fetchLeaderboards,
-        color: AppColors.dominantPurple,
-        backgroundColor: backgroundColor,
-        child: TabBarView(
-          controller: _tabController,
+    );
+  }
+
+  Widget _buildHeaderSection(BuildContext context, bool isDark) {
+    return ResponsiveHelper.responsiveCard(
+      context: context,
+      color: isDark ? const Color(0xFF23243B) : Colors.white,
+      child: Column(
+        children: [
+          Icon(
+            Icons.emoji_events,
+            size: ResponsiveHelper.getResponsiveIconSize(context, 48),
+            color: AppColors.accentAmber,
+          ),
+          
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+          
+          Text(
+            'Top Performers',
+            style: TextStyle(
+              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 24),
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : AppColors.textPrimary,
+            ),
+          ),
+          
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context) / 2),
+          
+          Text(
+            'See how you rank among other students',
+            style: TextStyle(
+              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPodiumSection(BuildContext context, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Top 3',
+          style: TextStyle(
+            fontSize: ResponsiveHelper.getResponsiveFontSize(context, 20),
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : AppColors.textPrimary,
+          ),
+        ),
+        
+        SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+        
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            // XP Leaderboard
-            Column(
+            // 2nd Place
+            if (_xpLeaderboard.length > 1)
+              Expanded(
+                child: _buildPodiumCard(
+                  context,
+                  _xpLeaderboard[1],
+                  2,
+                  AppColors.subjectBlue,
+                  isDark,
+                ),
+              ),
+            
+            // 1st Place
+            if (_xpLeaderboard.isNotEmpty)
+              Expanded(
+                flex: 2,
+                child: _buildPodiumCard(
+                  context,
+                  _xpLeaderboard[0],
+                  1,
+                  AppColors.accentAmber,
+                  isDark,
+                ),
+              ),
+            
+            // 3rd Place
+            if (_xpLeaderboard.length > 2)
+              Expanded(
+                child: _buildPodiumCard(
+                  context,
+                  _xpLeaderboard[2],
+                  3,
+                  AppColors.subjectGreen,
+                  isDark,
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPodiumCard(BuildContext context, Map<String, dynamic> user, int position, Color color, bool isDark) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: ResponsiveHelper.getResponsivePadding(context) / 4),
+      child: Column(
+        children: [
+          // Position Badge
+          Container(
+            width: ResponsiveHelper.getResponsiveIconSize(context, 40),
+            height: ResponsiveHelper.getResponsiveIconSize(context, 40),
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                '$position',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 18),
+                ),
+              ),
+            ),
+          ),
+          
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context) / 2),
+          
+          // Avatar
+          CircleAvatar(
+            radius: ResponsiveHelper.getResponsiveIconSize(context, position == 1 ? 35 : 25),
+            backgroundColor: color.withValues(alpha: 0.1),
+            child: Text(
+              user['name']?.substring(0, 1).toUpperCase() ?? 'U',
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.bold,
+                fontSize: ResponsiveHelper.getResponsiveFontSize(context, position == 1 ? 20 : 16),
+              ),
+            ),
+          ),
+          
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context) / 2),
+          
+          // Name
+          Text(
+            user['name'] ?? 'Unknown',
+            style: TextStyle(
+              fontSize: ResponsiveHelper.getResponsiveFontSize(context, position == 1 ? 16 : 14),
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : AppColors.textPrimary,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context) / 4),
+          
+          // Score
+          Text(
+            '${user['xp'] ?? 0} XP',
+            style: TextStyle(
+              fontSize: ResponsiveHelper.getResponsiveFontSize(context, position == 1 ? 18 : 14),
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLeaderboardList(BuildContext context, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'All Rankings',
+          style: TextStyle(
+            fontSize: ResponsiveHelper.getResponsiveFontSize(context, 20),
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : AppColors.textPrimary,
+          ),
+        ),
+        
+        SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+        
+        ResponsiveHelper.responsiveListView(
+          context: context,
+          children: _xpLeaderboard.asMap().entries.map((entry) {
+            final index = entry.key;
+            final user = entry.value;
+            return _buildLeaderboardItem(context, user, index + 1, isDark);
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLeaderboardItem(BuildContext context, Map<String, dynamic> user, int rank, bool isDark) {
+    final isTop3 = rank <= 3;
+    final color = rank == 1 
+        ? AppColors.accentAmber 
+        : rank == 2 
+            ? AppColors.subjectBlue 
+            : rank == 3 
+                ? AppColors.subjectGreen 
+                : AppColors.textSecondary;
+    
+    return ResponsiveHelper.responsiveCard(
+      context: context,
+      color: isDark ? const Color(0xFF23243B) : Colors.white,
+      child: Row(
+        children: [
+          // Rank
+          Container(
+            width: ResponsiveHelper.getResponsiveIconSize(context, 40),
+            height: ResponsiveHelper.getResponsiveIconSize(context, 40),
+            decoration: BoxDecoration(
+              color: isTop3 ? color : AppColors.textTertiary,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                '$rank',
+                style: TextStyle(
+                  color: isTop3 ? Colors.white : AppColors.textSecondary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+                ),
+              ),
+            ),
+          ),
+          
+          SizedBox(width: ResponsiveHelper.getResponsivePadding(context)),
+          
+          // Avatar
+          CircleAvatar(
+            radius: ResponsiveHelper.getResponsiveIconSize(context, 20),
+            backgroundColor: color.withValues(alpha: 0.1),
+            child: Text(
+              user['name']?.substring(0, 1).toUpperCase() ?? 'U',
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.bold,
+                fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
+              ),
+            ),
+          ),
+          
+          SizedBox(width: ResponsiveHelper.getResponsivePadding(context)),
+          
+          // User Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Top Learners',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
-                        ),
-                      ),
-                      _buildPeriodSelector(isDark),
-                    ],
+                Text(
+                  user['name'] ?? 'Unknown',
+                  style: TextStyle(
+                    fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                 ),
-                _buildXpSummaryCard(isDark),
-                Expanded(
-                  child: _loadingXp
-                      ? const Center(child: CircularProgressIndicator())
-                      : _buildXpLeaderboard(isDark),
+                
+                SizedBox(height: ResponsiveHelper.getResponsivePadding(context) / 4),
+                
+                Text(
+                  '${user['achievements']?.join(', ') ?? 'No Achievements'}',
+                  style: TextStyle(
+                    fontSize: ResponsiveHelper.getResponsiveFontSize(context, 12),
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),
-            // CBT High Scores Leaderboard
-            _loadingCbt
-                ? const Center(child: CircularProgressIndicator())
-                : _buildCbtLeaderboard(isDark),
-          ],
-        ),
+          ),
+          
+          // Score
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${user['xp'] ?? 0}',
+                style: TextStyle(
+                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 18),
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+              ),
+              
+              Text(
+                'XP',
+                style: TextStyle(
+                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 12),
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

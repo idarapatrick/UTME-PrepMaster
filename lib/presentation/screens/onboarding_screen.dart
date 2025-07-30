@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../utils/responsive_helper.dart';
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
@@ -8,76 +9,162 @@ class OnboardingScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
-      body: SafeArea(
+      body: ResponsiveHelper.responsiveSingleChildScrollView(
+        context: context,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32.0),
+          padding: ResponsiveHelper.getResponsiveEdgeInsets(context),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SizedBox(height: 40),
-              // Illustration (placeholder)
+              SizedBox(height: ResponsiveHelper.getResponsivePadding(context) * 2),
+              
+              // Illustration
               Container(
-                height: 180,
-                width: 180,
+                height: ResponsiveHelper.getResponsiveIconSize(context, 180),
+                width: ResponsiveHelper.getResponsiveIconSize(context, 180),
                 decoration: BoxDecoration(
-                  color: AppColors.dominantPurple.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(90),
+                  color: AppColors.dominantPurple.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(ResponsiveHelper.getResponsiveIconSize(context, 90)),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.lightbulb_outline,
-                  size: 100,
+                  size: ResponsiveHelper.getResponsiveIconSize(context, 100),
                   color: AppColors.dominantPurple,
                 ),
               ),
-              const SizedBox(height: 32),
+              
+              SizedBox(height: ResponsiveHelper.getResponsivePadding(context) * 2),
+              
+              // Title
               Text(
                 'UTME PrepMaster',
                 style: Theme.of(context).textTheme.displaySmall?.copyWith(
                   color: AppColors.dominantPurple,
                   fontWeight: FontWeight.bold,
+                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 28),
                 ),
               ),
-              const SizedBox(height: 8),
+              
+              SizedBox(height: ResponsiveHelper.getResponsivePadding(context) / 2),
+              
+              // Subtitle
               Text(
                 'Your smart study companion for UTME success!',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.textSecondary,
+                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
                 ),
               ),
-              const SizedBox(height: 48),
+              
+              SizedBox(height: ResponsiveHelper.getResponsivePadding(context) * 3),
+              
+              // Get Started Button
               SizedBox(
                 width: double.infinity,
+                height: ResponsiveHelper.getResponsiveButtonHeight(context),
                 child: ElevatedButton(
-                  onPressed: () {
-                    // TODO: Navigate to sign up
-                  },
+                  onPressed: () => Navigator.pushReplacementNamed(context, '/auth'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.dominantPurple,
                     foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(ResponsiveHelper.getResponsivePadding(context) / 2),
+                    ),
                   ),
-                  child: const Text('Create an account'),
+                  child: Text(
+                    'Get Started',
+                    style: TextStyle(
+                      fontSize: ResponsiveHelper.getResponsiveFontSize(context, 18),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () {
-                    // TODO: Navigate to sign in
-                  },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.dominantPurple,
-                    side: const BorderSide(color: AppColors.dominantPurple),
-                  ),
-                  child: const Text('Sign In'),
-                ),
-              ),
-              const SizedBox(height: 40),
+              
+              SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+              
+              // Features
+              _buildFeaturesSection(context),
+              
+              SizedBox(height: ResponsiveHelper.getResponsivePadding(context) * 2),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildFeaturesSection(BuildContext context) {
+    return Column(
+      children: [
+        _buildFeatureItem(
+          context,
+          Icons.psychology,
+          'AI-Powered Learning',
+          'Get personalized study recommendations and explanations',
+          AppColors.dominantPurple,
+        ),
+        SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+        _buildFeatureItem(
+          context,
+          Icons.quiz,
+          'Practice Tests',
+          'Access thousands of UTME practice questions',
+          AppColors.subjectBlue,
+        ),
+        SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+        _buildFeatureItem(
+          context,
+          Icons.trending_up,
+          'Track Progress',
+          'Monitor your performance and improvement over time',
+          AppColors.accentAmber,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFeatureItem(BuildContext context, IconData icon, String title, String description, Color color) {
+    return Row(
+      children: [
+        Container(
+          padding: EdgeInsets.all(ResponsiveHelper.getResponsivePadding(context) / 2),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(ResponsiveHelper.getResponsivePadding(context) / 2),
+          ),
+          child: Icon(
+            icon,
+            color: color,
+            size: ResponsiveHelper.getResponsiveIconSize(context, 24),
+          ),
+        ),
+        SizedBox(width: ResponsiveHelper.getResponsivePadding(context)),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                description,
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

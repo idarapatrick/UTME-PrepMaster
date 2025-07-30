@@ -1,11 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_colors.dart';
+import '../providers/user_stats_provider.dart';
 import '../../data/services/firestore_service.dart';
+import '../../data/utme_subjects.dart';
+import '../widgets/achievement_badge.dart';
+import '../widgets/streak_animation_widget.dart';
+import '../widgets/xp_animation_widget.dart';
+import '../utils/responsive_helper.dart';
 import '../widgets/subject_card.dart';
+import '../widgets/badge_animation_widget.dart';
 import 'profile_screen.dart';
 import 'course_content_screen.dart';
-import 'life_at_simple_screen.dart';
+import 'life_at_info_screen.dart';
+import 'study_partner_screen.dart';
 
 const List<Map<String, dynamic>> kUtmeSubjects = [
   {
@@ -148,6 +158,11 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _loadUserSubjects();
     _loadAvatar();
+    // Initialize user stats
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userStatsProvider = Provider.of<UserStatsProvider>(context, listen: false);
+      userStatsProvider.initializeUserStats();
+    });
   }
 
   Future<void> _loadUserSubjects() async {
@@ -193,8 +208,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Map<String, String>> _carouselItems = [
     {
-      'title': "Today's Challenge",
-      'subtitle': 'Complete a mock test for 250 XP',
+      'title': "Today's CBT Challenge",
+      'subtitle': 'Complete a mock CBT test for 250 XP',
       'image':
           'https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=600&q=80',
     },
@@ -218,9 +233,13 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     switch (index) {
       case 0:
+        // Already on home screen
         break;
       case 1:
-        Navigator.pushNamed(context, '/explore');
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const StudyPartnerScreen()),
+        );
         break;
       case 2:
         Navigator.pushNamed(context, '/mock-test');
@@ -243,9 +262,10 @@ class _HomeScreenState extends State<HomeScreen> {
         Navigator.pushNamed(context, '/mock-test');
         break;
       case 1: // LifeAt Study
+        print('DEBUG: LifeAt carousel item tapped');
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const LifeAtSimpleScreen()),
+          MaterialPageRoute(builder: (context) => const LifeAtInfoScreen()),
         );
         break;
       case 2: // AI Tutor
@@ -389,6 +409,10 @@ class _HomeScreenState extends State<HomeScreen> {
         ? const Color(0xFF181A20)
         : AppColors.backgroundSecondary;
     final cardColor = Colors.white;
+    
+    // Get user stats provider
+    final userStatsProvider = Provider.of<UserStatsProvider>(context);
+    final userStats = userStatsProvider.userStats;
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -396,44 +420,56 @@ class _HomeScreenState extends State<HomeScreen> {
         elevation: 0,
         backgroundColor: AppColors.dominantPurple,
         titleSpacing: 0,
+        automaticallyImplyLeading: false, // Prevent back arrow from showing
         title: Padding(
-          padding: const EdgeInsets.only(left: 16), // Add left padding
+          padding: ResponsiveHelper.getResponsiveHorizontalPadding(context),
           child: Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.menu_book_rounded,
                 color: Colors.white,
-                size: 24,
+                size: ResponsiveHelper.getResponsiveIconSize(context, 24),
               ),
-              const SizedBox(width: 8),
-              const Text(
+              SizedBox(width: ResponsiveHelper.isMobile(context) ? 8 : 12),
+              Text(
                 'UTME PrepMaster',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold, 
+                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 20)
+                ),
               ),
             ],
           ),
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
+            padding: EdgeInsets.symmetric(
+              horizontal: ResponsiveHelper.isMobile(context) ? 4 : 8
+            ),
             child: Center(
               child: IconButton(
-                icon: const Icon(Icons.notifications_none, size: 22),
+                icon: Icon(
+                  Icons.notifications_none, 
+                  size: ResponsiveHelper.getResponsiveIconSize(context, 22)
+                ),
                 tooltip: 'Notifications',
                 onPressed: () {},
-                splashRadius: 22,
+                splashRadius: ResponsiveHelper.getResponsiveIconSize(context, 22),
               ),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(right: 12, left: 0),
+            padding: EdgeInsets.only(
+              right: ResponsiveHelper.isMobile(context) ? 12 : 16, 
+              left: 0
+            ),
             child: Center(
               child: GestureDetector(
                 onTap: () {
                   _showAvatarGallery(context);
                 },
                 child: CircleAvatar(
-                  radius: 16,
+                  radius: ResponsiveHelper.getResponsiveIconSize(context, 16),
                   backgroundColor: Colors.white,
                   backgroundImage: _avatarUrl != null && _avatarUrl!.isNotEmpty
                       ? NetworkImage(_avatarUrl!)
@@ -442,7 +478,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ? Icon(
                           Icons.person,
                           color: AppColors.dominantPurple,
-                          size: 18,
+                          size: ResponsiveHelper.getResponsiveIconSize(context, 18),
                         )
                       : null,
                 ),
@@ -451,353 +487,68 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-        children: [
-          // Search Bar
-          Padding(
-            padding: const EdgeInsets.only(top: 18, bottom: 12),
-            child: Material(
-              elevation: 3,
-              borderRadius: BorderRadius.circular(14),
-              child: TextField(
-                readOnly: true,
-                onTap: () {},
-                style: TextStyle(color: AppColors.textPrimary, fontSize: 16),
-                decoration: InputDecoration(
-                  hintText: 'Search subjects, topics, resources...',
-                  hintStyle: TextStyle(
-                    color: AppColors.textTertiary,
-                    fontSize: 16,
-                  ),
-                  prefixIcon: Icon(Icons.search, color: AppColors.textTertiary),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(
-                    vertical: 14,
-                    horizontal: 0,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                  disabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
+      body: ResponsiveHelper.responsiveSingleChildScrollView(
+        context: context,
+        child: Column(
+          children: [
+            // Search Bar
+            Padding(
+              padding: EdgeInsets.only(
+                top: ResponsiveHelper.getResponsivePadding(context), 
+                bottom: ResponsiveHelper.getResponsivePadding(context) / 2
               ),
-            ),
-          ),
-          // Greeting and user info card (compact, white background)
-          Card(
-            color: cardColor,
-            elevation: 1,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-            margin: const EdgeInsets.only(bottom: 14),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Good Morning ☀️',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    user?.displayName ??
-                        user?.email?.split('@').first ??
-                        'Student',
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Text(
-                        'Popular topics: ',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          _userSubjects.isNotEmpty
-                              ? _userSubjects
-                                    .map((s) => s['name'])
-                                    .take(4)
-                                    .join(', ')
-                              : 'Use of English',
-                          style: TextStyle(
-                            color: AppColors.dominantPurple,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // Stat pills row (compact, rounded, spaced)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 14),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  _buildStatPill(
-                    icon: Icons.local_fire_department,
-                    label: '7d Streak',
-                    color: AppColors.accentAmber,
-                    isDark: false,
-                  ),
-                  const SizedBox(width: 10),
-                  _buildStatPill(
-                    icon: Icons.emoji_events,
-                    label: 'Badges',
-                    color: AppColors.dominantPurple,
-                    isDark: false,
-                  ),
-                  const SizedBox(width: 10),
-                  _buildStatPill(
-                    icon: Icons.flag,
-                    label: 'Daily Challenge',
-                    color: AppColors.secondaryGray,
-                    isDark: false,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // Carousel card (white background, compact)
-          SizedBox(
-            height: 120,
-            child: PageView.builder(
-              itemCount: _carouselItems.length,
-              controller: PageController(viewportFraction: 0.92),
-              onPageChanged: (i) => setState(() => _carouselIndex = i),
-              itemBuilder: (context, index) {
-                final item = _carouselItems[index];
-                return GestureDetector(
-                  onTap: () => _onCarouselItemTap(index),
-                  child: Card(
-                    color: cardColor,
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    margin: const EdgeInsets.symmetric(horizontal: 2),
-                    child: Row(
-                      children: [
-                        ClipRRect(
-                          borderRadius: const BorderRadius.horizontal(
-                            left: Radius.circular(14),
-                          ),
-                          child: Image.network(
-                            item['image']!,
-                            width: 90,
-                            height: 120,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.all(14),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  item['title']!,
-                                  style: TextStyle(
-                                    color: AppColors.dominantPurple,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  item['subtitle']!,
-                                  style: TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          // Carousel indicators
-          Padding(
-            padding: const EdgeInsets.only(top: 6, bottom: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                _carouselItems.length,
-                (i) => Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _carouselIndex == i
-                        ? AppColors.dominantPurple
-                        : AppColors.textTertiary.withValues(alpha: 0.3),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          // Subjects section
-          Padding(
-            padding: const EdgeInsets.only(top: 10, bottom: 4),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Subjects',
+              child: Material(
+                elevation: 3,
+                borderRadius: BorderRadius.circular(14),
+                child: TextField(
+                  readOnly: true,
+                  onTap: () {},
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: isDark
-                        ? Colors.white
-                        : AppColors.textPrimary, // High contrast for dark mode
+                    color: AppColors.textPrimary, 
+                    fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16)
                   ),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pushNamed(
-                    context,
-                    '/subject-selection',
-                  ).then((_) => _loadUserSubjects()),
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    minimumSize: Size(0, 0),
-                  ),
-                  child: Text(
-                    'Edit',
-                    style: TextStyle(
-                      color: AppColors.dominantPurple,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
+                  decoration: InputDecoration(
+                    hintText: 'Search subjects, topics, resources...',
+                    hintStyle: TextStyle(
+                      color: AppColors.textTertiary,
+                      fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+                    ),
+                    prefixIcon: Icon(
+                      Icons.search, 
+                      color: AppColors.textTertiary,
+                      size: ResponsiveHelper.getResponsiveIconSize(context, 20),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding: EdgeInsets.symmetric(
+                      vertical: ResponsiveHelper.getResponsiveTextFieldHeight(context) / 3,
+                      horizontal: ResponsiveHelper.getResponsivePadding(context),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none,
                     ),
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
-          _loadingSubjects
-              ? const Center(child: CircularProgressIndicator())
-              : _userSubjects.isEmpty
-              ? Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pushNamed(
-                      context,
-                      '/subject-selection',
-                    ).then((_) => _loadUserSubjects()),
-                    child: const Text('Select Subjects'),
-                  ),
-                )
-              : Column(
-                  children: _userSubjects.map((subject) {
-                    final name = subject['name'] as String;
-                    final icon = subject['icon'] as IconData;
-                    final color = subject['color'] as Color;
-                    final imageUrl =
-                        kSubjectImages[name] ?? kSubjectImages['English']!;
-                    final progress = _subjectProgress[name];
-                    final progressText = progress != null
-                        ? 'Best:   a0${(progress['bestScore'] ?? 0).toStringAsFixed(1)} | Correct: ${progress['correct'] ?? 0} / ${progress['attempted'] ?? 0}'
-                        : 'Progress: 0%';
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: SubjectCard(
-                        name: name,
-                        icon: icon,
-                        imageUrl: imageUrl,
-                        accentColor: color,
-                        progressText: progressText,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  CourseContentScreen(subject: name),
-                            ),
-                          ).then((_) => _loadUserSubjects());
-                        },
-                        trailing: OutlinedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    CourseContentScreen(subject: name),
-                              ),
-                            ).then((_) => _loadUserSubjects());
-                          },
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor:
-                                Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white
-                                : AppColors.dominantPurple,
-                            side: BorderSide(
-                              color:
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.white
-                                  : AppColors.dominantPurple,
-                            ),
-                            minimumSize: const Size(0, 32),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 18,
-                              vertical: 0,
-                            ),
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          child: Text(
-                            'View Course',
-                            style: TextStyle(
-                              color:
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.white
-                                  : AppColors.dominantPurple,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-          const SizedBox(height: 18),
-        ],
+
+            // Welcome Section
+            _buildWelcomeSection(context, user, userStats, isDark),
+
+            // Quick Actions
+            _buildQuickActionsSection(context, isDark),
+
+            // Subject Progress
+            _buildSubjectProgressSection(context, isDark),
+
+            // Recent Activity
+            _buildRecentActivitySection(context, isDark),
+
+            // Bottom spacing
+            SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+          ],
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
@@ -807,8 +558,8 @@ class _HomeScreenState extends State<HomeScreen> {
         showUnselectedLabels: true,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explore'),
-          BottomNavigationBarItem(icon: Icon(Icons.quiz), label: 'Mock Test'),
+          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Study Partner'),
+          BottomNavigationBarItem(icon: Icon(Icons.quiz), label: 'CBT Tests'),
           BottomNavigationBarItem(
             icon: Icon(Icons.psychology),
             label: 'AI Tutor',
@@ -818,6 +569,294 @@ class _HomeScreenState extends State<HomeScreen> {
         type: BottomNavigationBarType.fixed,
         backgroundColor: isDark ? const Color(0xFF23243B) : Colors.white,
         elevation: 12,
+      ),
+    );
+  }
+
+  Widget _buildWelcomeSection(BuildContext context, User? user, dynamic userStats, bool isDark) {
+    return Padding(
+      padding: ResponsiveHelper.getResponsiveHorizontalPadding(context),
+      child: Card(
+        color: Colors.white,
+        elevation: 1,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+        margin: const EdgeInsets.only(bottom: 14),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Good Morning ☀️',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                user?.displayName ??
+                    user?.email?.split('@').first ??
+                    'Student',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Row(
+                children: [
+                  Text(
+                    'Popular topics: ',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: ResponsiveHelper.getResponsiveFontSize(context, 13),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      _userSubjects.isNotEmpty
+                          ? _userSubjects
+                              .map((s) => s['name'])
+                              .take(4)
+                              .join(', ')
+                          : 'Use of English',
+                      style: TextStyle(
+                        color: AppColors.dominantPurple,
+                        fontWeight: FontWeight.w600,
+                        fontSize: ResponsiveHelper.getResponsiveFontSize(context, 13),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActionsSection(BuildContext context, bool isDark) {
+    return Padding(
+      padding: ResponsiveHelper.getResponsiveHorizontalPadding(context),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _buildStatPill(
+              icon: Icons.local_fire_department,
+              label: '7d Streak',
+              color: AppColors.accentAmber,
+              isDark: false,
+            ),
+            const SizedBox(width: 10),
+            _buildStatPill(
+              icon: Icons.emoji_events,
+              label: 'Badges',
+              color: AppColors.dominantPurple,
+              isDark: false,
+            ),
+            const SizedBox(width: 10),
+            _buildStatPill(
+              icon: Icons.flag,
+              label: 'Daily Challenge',
+              color: AppColors.secondaryGray,
+              isDark: false,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubjectProgressSection(BuildContext context, bool isDark) {
+    return Padding(
+      padding: ResponsiveHelper.getResponsiveHorizontalPadding(context),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Your Subjects',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 18),
+              color: isDark ? Colors.white : AppColors.textPrimary,
+            ),
+          ),
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+          
+          // Subjects grid
+          _loadingSubjects
+              ? const Center(child: CircularProgressIndicator())
+              : _userSubjects.isEmpty
+                  ? _buildEmptySubjectsState(context, isDark)
+                  : ResponsiveHelper.responsiveGridView(
+                      context: context,
+                      children: _userSubjects.map((subject) {
+                        return SubjectCard(
+                          name: subject['name'] as String,
+                          icon: subject['icon'] as IconData,
+                          imageUrl: subject['imageUrl'] as String,
+                          accentColor: subject['color'] as Color,
+                          progressText: _getSubjectProgressText(subject['name'] as String),
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context,
+                              '/course-content',
+                              arguments: subject['name'],
+                            );
+                          },
+                        );
+                      }).toList(),
+                    ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptySubjectsState(BuildContext context, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      child: Column(
+        children: [
+          Icon(
+            Icons.subject,
+            size: ResponsiveHelper.getResponsiveIconSize(context, 60),
+            color: AppColors.textTertiary,
+          ),
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+          Text(
+            'No subjects selected yet!',
+            style: TextStyle(
+              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 18),
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : AppColors.textPrimary,
+            ),
+          ),
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context) / 2),
+          Text(
+            'Tap "Edit" above or "Select Subjects" to get started.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
+              color: AppColors.textSecondary,
+            ),
+          ),
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+          SizedBox(
+            width: ResponsiveHelper.isMobile(context) ? double.infinity : MediaQuery.of(context).size.width * 0.6,
+            height: ResponsiveHelper.getResponsiveButtonHeight(context),
+            child: ElevatedButton(
+              onPressed: () => Navigator.pushNamed(
+                context,
+                '/subject-selection',
+              ).then((_) => _loadUserSubjects()),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.dominantPurple,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(ResponsiveHelper.getResponsivePadding(context) / 2),
+                ),
+              ),
+              child: Text(
+                'Select Subjects',
+                style: TextStyle(
+                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getSubjectProgressText(String subjectName) {
+    final progress = _subjectProgress[subjectName];
+    if (progress != null) {
+      return 'Best: ${(progress['bestScore'] ?? 0).toStringAsFixed(1)} | Correct: ${progress['correct'] ?? 0} / ${progress['attempted'] ?? 0}';
+    }
+    return 'Progress: 0%';
+  }
+
+  Widget _buildRecentActivitySection(BuildContext context, bool isDark) {
+    return Padding(
+      padding: ResponsiveHelper.getResponsiveHorizontalPadding(context),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Recent Activity',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+              color: isDark
+                  ? Colors.white
+                  : AppColors.textPrimary, // High contrast for dark mode
+            ),
+          ),
+          const SizedBox(height: 10),
+          // Placeholder for recent activity items
+          // This section would typically display achievements, streaks, etc.
+          // For now, it's just a placeholder.
+          // In a real app, you'd fetch and display actual activity data.
+          // Example:
+          // _buildRecentActivityItem(
+          //   icon: Icons.emoji_events,
+          //   label: 'New Badge Earned: ${userStatsProvider.lastBadgeEarned}',
+          //   color: AppColors.dominantPurple,
+          //   isDark: isDark,
+          // ),
+          // _buildRecentActivityItem(
+          //   icon: Icons.trending_up,
+          //   label: 'Streak: ${userStatsProvider.lastStreakCount}',
+          //   color: AppColors.accentAmber,
+          //   isDark: isDark,
+          // ),
+          // _buildRecentActivityItem(
+          //   icon: Icons.lightbulb_outline,
+          //   label: 'XP Earned: ${userStatsProvider.lastXpEarned}',
+          //   color: AppColors.subjectBlue,
+          //   isDark: isDark,
+          // ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentActivityItem({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required bool isDark,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            color: color,
+            size: ResponsiveHelper.getResponsiveIconSize(context, 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: isDark ? Colors.white : AppColors.textPrimary,
+                fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -836,14 +875,14 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Row(
         children: [
-          Icon(icon, color: color, size: 20),
+          Icon(icon, color: color, size: ResponsiveHelper.getResponsiveIconSize(context, 20)),
           const SizedBox(width: 8),
           Text(
             label,
             style: TextStyle(
               color: color,
               fontWeight: FontWeight.bold,
-              fontSize: 15,
+              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 15),
             ),
           ),
         ],
@@ -908,7 +947,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ? Icon(
                               Icons.check_circle,
                               color: AppColors.dominantPurple,
-                              size: 28,
+                              size: ResponsiveHelper.getResponsiveIconSize(context, 28),
                             )
                           : null,
                     ),
@@ -919,6 +958,48 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       },
+    );
+  }
+  
+  // Animation overlays
+  Widget _buildAnimationOverlays() {
+    final userStatsProvider = Provider.of<UserStatsProvider>(context);
+    
+    return Stack(
+      children: [
+        // XP Animation
+        if (userStatsProvider.showXpAnimation)
+          Positioned.fill(
+            child: XpAnimationWidget(
+              xpEarned: userStatsProvider.lastXpEarned,
+              onAnimationComplete: () {
+                userStatsProvider.hideXpAnimation();
+              },
+            ),
+          ),
+        
+        // Streak Animation
+        if (userStatsProvider.showStreakAnimation)
+          Positioned.fill(
+            child: StreakAnimationWidget(
+              streakCount: userStatsProvider.lastStreakCount,
+              onAnimationComplete: () {
+                userStatsProvider.hideStreakAnimation();
+              },
+            ),
+          ),
+        
+        // Badge Animation
+        if (userStatsProvider.showBadgeAnimation && userStatsProvider.lastBadgeEarned != null)
+          Positioned.fill(
+            child: BadgeAnimationWidget(
+              badgeName: userStatsProvider.lastBadgeEarned!,
+              onAnimationComplete: () {
+                userStatsProvider.hideBadgeAnimation();
+              },
+            ),
+          ),
+      ],
     );
   }
 }

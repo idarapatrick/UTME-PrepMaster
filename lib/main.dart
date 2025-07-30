@@ -19,8 +19,16 @@ import 'presentation/providers/user_state.dart';
 import 'presentation/providers/subject_state.dart';
 import 'presentation/providers/test_state.dart';
 import 'presentation/providers/theme_notifier.dart';
+import 'presentation/providers/user_stats_provider.dart';
 import 'presentation/screens/life_at_intro_screen.dart';
-import 'presentation/screens/life_at_browser_screen.dart';
+import 'presentation/screens/study_partner_screen.dart';
+import 'presentation/screens/notes_screen.dart';
+import 'presentation/screens/links_screen.dart';
+import 'presentation/screens/admin/question_upload_screen.dart';
+import 'presentation/screens/admin/developer_panel_screen.dart';
+import 'presentation/screens/admin/admin_dashboard_screen.dart';
+import 'presentation/screens/auth/admin_auth_screen.dart';
+import 'presentation/screens/course_content_screen.dart';
 
 void main() async {
   
@@ -40,6 +48,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => UserState()),
         ChangeNotifierProvider(create: (_) => SubjectState()),
         ChangeNotifierProvider(create: (_) => TestState()),
+        ChangeNotifierProvider(create: (_) => UserStatsProvider()),
       ],
       child: const MyApp(),
     ),
@@ -60,6 +69,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: const AuthGate(),
       routes: {
+        '/auth': (context) => const AuthScreen(),
         '/onboarding': (context) => const OnboardingScreen(),
         '/settings': (context) => const SettingsScreen(),
         '/badges': (context) => const BadgesScreen(),
@@ -70,17 +80,57 @@ class MyApp extends StatelessWidget {
         '/home': (context) => const HomeScreen(),
         '/subject-selection': (context) => const SubjectSelectionScreen(),
         '/life-at-intro': (context) => const LifeAtIntroScreen(),
-        '/life-at-browser': (context) => const LifeAtBrowserScreen(),
+        '/study-partner': (context) => const StudyPartnerScreen(),
+        '/notes': (context) => const NotesScreen(),
+        '/links': (context) => const LinksScreen(),
+        '/course-content': (context) => const CourseContentScreen(subject: 'Mathematics'),
+        '/admin/upload-questions': (context) => const QuestionUploadScreen(),
+        '/admin/developer-panel': (context) => const DeveloperPanelScreen(),
+        '/admin/dashboard': (context) => const AdminDashboardScreen(),
+        '/admin/auth': (context) => const AdminAuthScreen(),
       },
     );
   }
 }
 
-class AuthGate extends StatelessWidget {
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
 
   @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  bool _isInitializing = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    try {
+      // Initialize user stats provider
+      final userStatsProvider = Provider.of<UserStatsProvider>(context, listen: false);
+      await userStatsProvider.initializeUserStats();
+    } catch (e) {
+      print('Error initializing app: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isInitializing = false;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isInitializing) {
+      return const SplashScreen();
+    }
+
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
