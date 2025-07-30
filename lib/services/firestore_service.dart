@@ -395,6 +395,7 @@ class FirestoreService {
  /// Get matched partners for a specific user
 
  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+ final FirestoreService _firestoreService = FirestoreService();
 
   Future<List<StudyPartner>> getMatchedPartners(String userId) async {
     try {
@@ -411,5 +412,17 @@ class FirestoreService {
       return [];
     }
   }
+
+  Stream<List<StudyPartner>> getMatchedPartnersStream() {
+    return _firestore
+        .collection('study_partners')
+        .where('isMatched', isEqualTo: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => StudyPartner.fromMap(doc.data(), doc.id))
+            .toList());
+  }
+
+ 
 
 
