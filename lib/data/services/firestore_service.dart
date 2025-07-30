@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:developer' as developer;
 import '../../domain/models/user_profile_model.dart';
+import '../../domain/models/study_partner.dart';
 import '../nigerian_universities.dart';
 
 class FirestoreService {
@@ -406,5 +407,44 @@ class FirestoreService {
           'end': now,
         };
     }
+  }
+
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  Stream<List<StudyPartner>> getMatchedPartnersStream() {
+    return _firestore
+        .collection('study_partners')
+        .where('isMatched', isEqualTo: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => StudyPartner.fromMap(doc.data(), doc.id))
+            .toList());
+  }
+
+  Future<String> findOrCreateMatch(String userId, String subject) async {
+    final query = await _firestore
+        .collection('study_rooms')
+        .where('subject', isEqualTo: subject)
+        .where('partner2', isEqualTo: null)
+        .limit(1)
+        .get();
+
+    if (query.docs.isNotEmpty) {
+      final room = query.docs.first;
+      await room.reference.update({'partner2': userId});
+      return room.id;
+    } else {
+      final roomRef = await _firestore.collection('study_rooms').add({
+        'subject': subject,
+        'partner1': userId,
+        'partner2': null,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      return roomRef.id;
+    }
+  }
+
+  Stream<DocumentSnapshot> roomStream(String roomId) {
+    return _firestore.collection('study_rooms').doc(roomId).snapshots();
   }
 }

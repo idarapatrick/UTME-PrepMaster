@@ -1,120 +1,56 @@
 import 'package:flutter/material.dart';
 
-enum StudyPartnerStatus {
-  pending,
-  matched,
-  rejected,
-  available,
-  idle,
-  studying,
-}
-
-enum StudyPartnerSubject {
-  science,
-  literature,
-  government,
-  biology,
-  chemistry,
-  mathematics,
-  economics,
-}
+enum StudyPartnerStatus { available, studying, idle }
 
 class StudyPartner {
   final String id;
   final String name;
-  StudyPartnerStatus status;
-  final StudyPartnerSubject subject;
+  final String subject; 
+  final String subjectText;
   final String goal;
-  final List<String> interests;
+  final StudyPartnerStatus status;
 
   StudyPartner({
     required this.id,
     required this.name,
-    required this.status,
-    required this.subject,
+    required this.subject, 
+    required this.subjectText,
     required this.goal,
-    required this.interests,
+    required this.status,
   });
 
-  factory StudyPartner.fromMap(Map<String, dynamic> data, String id) {
-    final statusString = data['status'] ?? 'idle';
-    final subjectString = data['subject'] ?? 'science';
-
-    StudyPartnerStatus status = StudyPartnerStatus.idle;
-    StudyPartnerSubject subject = StudyPartnerSubject.science;
-
-    for (var s in StudyPartnerStatus.values) {
-      if (s.name == statusString) {
-        status = s;
-        break;
-      }
-    }
-
-    for (var s in StudyPartnerSubject.values) {
-      if (s.name == subjectString) {
-        subject = s;
-        break;
-      }
-    }
-
-    return StudyPartner(
-      id: id,
-      name: data['name'] ?? '',
-      status: status,
-      subject: subject,
-      goal: data['goal'] ?? '',
-      interests: List<String>.from(data['interests'] ?? []),
-    );
-  }
-
-  // Helper methods for UI display
   String get statusText {
     switch (status) {
       case StudyPartnerStatus.available:
         return 'Available';
-      case StudyPartnerStatus.matched:
-        return 'Matched';
-      case StudyPartnerStatus.rejected:
-        return 'Rejected';
-      case StudyPartnerStatus.pending:
-      case StudyPartnerStatus.idle:
       case StudyPartnerStatus.studying:
-        return 'Pending';
+        return 'Studying';
+      case StudyPartnerStatus.idle:
+      default:
+        return 'Idle';
     }
   }
 
-  String get subjectText {
-    switch (subject) {
-      case StudyPartnerSubject.science:
-        return 'Science';
-      case StudyPartnerSubject.literature:
-        return 'Literature';
-      case StudyPartnerSubject.government:
-        return 'Government';
-      case StudyPartnerSubject.biology:
-        return 'Biology';
-      case StudyPartnerSubject.chemistry:
-        return 'Chemistry';
-      case StudyPartnerSubject.mathematics:
-        return 'Mathematics';
-      case StudyPartnerSubject.economics:
-        return 'Economics';
-    }
+  factory StudyPartner.fromMap(Map<String, dynamic> map, String id) {
+    return StudyPartner(
+      id: id,
+      name: map['name'] ?? '',
+      subject: map['subject'] ?? '', // <-- Add this mapping
+      subjectText: map['subjectText'] ?? '',
+      goal: map['goal'] ?? '',
+      status: _parseStatus(map['status']),
+    );
   }
 
-  Color get subjectColor {
-    switch (subject) {
-      case StudyPartnerSubject.science:
-      case StudyPartnerSubject.chemistry:
-      case StudyPartnerSubject.biology:
-        return const Color(0xFF2563EB); // Blue
-      case StudyPartnerSubject.government:
-      case StudyPartnerSubject.economics:
-        return const Color(0xFF22C55E); // Green
-      case StudyPartnerSubject.literature:
-        return const Color(0xFFEF4444); // Red
-      case StudyPartnerSubject.mathematics:
-        return const Color(0xFFF59E0B); // Amber
+  static StudyPartnerStatus _parseStatus(String? status) {
+    switch (status) {
+      case 'available':
+        return StudyPartnerStatus.available;
+      case 'studying':
+        return StudyPartnerStatus.studying;
+      case 'idle':
+      default:
+        return StudyPartnerStatus.idle;
     }
   }
 }

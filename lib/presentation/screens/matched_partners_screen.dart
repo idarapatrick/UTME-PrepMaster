@@ -1,10 +1,25 @@
 import 'package:flutter/material.dart';
-import '../models/study_partner.dart';
+import '../../domain/models/study_partner.dart';
+import '../../data/services/firestore_service.dart';
 import '../theme/app_colors.dart';
 import 'chat_screen.dart';
-import '../services/firestore_service.dart';
 
+void main() {
+  runApp(MyApp());
+}
 
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'UTME Prep Master',
+      home: Scaffold(
+        appBar: AppBar(title: Text('UTME Prep Master')),
+        body: Center(child: Text('Welcome!')),
+      ),
+    );
+  }
+}
 
 class MatchedPartnersScreen extends StatefulWidget {
   @override
@@ -83,7 +98,7 @@ class _MatchedPartnersScreenState extends State<MatchedPartnersScreen> {
           child: ListTile(
             contentPadding: const EdgeInsets.all(16),
             leading: CircleAvatar(
-              backgroundColor: getSubjectColor(partner.subject.name),
+              backgroundColor: getSubjectColor(partner.subject),
               child: Text(
                 partner.name[0],
                 style: const TextStyle(color: Colors.white),

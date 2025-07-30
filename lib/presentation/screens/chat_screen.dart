@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/study_partner.dart';
+import '../../domain/models/study_partner.dart';
 import '../theme/app_colors.dart';
 
 class ChatMessage {

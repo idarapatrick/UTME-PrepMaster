@@ -24,21 +24,10 @@ dependencies:
   url_launcher: ^6.1.10
   firebase_storage: ^13.0.0
   image_picker: ^1.0.7
-<<<<<<< HEAD
   flutter_inappwebview: ^6.0.0
   shared_preferences: ^2.2.2
  
   
-=======
-  google_sign_in: ^6.1.6
-
-
-  http: ^1.1.0
-  video_player: ^2.8.2
-  shared_preferences: ^2.2.2
-  file_picker: ^8.0.0+1
-
->>>>>>> 563132adc050a79d9fc922ee7d7b66b8f2079e18
   # For Unique ID generation
   uuid: ^4.4.0
 

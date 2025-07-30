@@ -1,3 +1,5 @@
+import 'dart:convert'; // For encoding/decoding messages
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../../data/services/ai_service.dart';
@@ -30,10 +32,14 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
     'Government',
   ];
 
+  static const String _chatHistoryKey = 'ai_tutor_chat_history';
+
   @override
   void initState() {
     super.initState();
-    _addWelcomeMessage();
+    _loadChatHistory().then((_) {
+      if (_messages.isEmpty) _addWelcomeMessage();
+    });
   }
 
   @override
@@ -67,26 +73,27 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
       );
       _isTyping = true;
     });
+    _saveChatHistory(); // Save after user message
 
     _scrollToBottom();
 
     // Simulate AI response
     AIService.getAIResponse(message).then((aiResponse) {
-  if (mounted) {
-    setState(() {
-      _isTyping = false;
-      _messages.add(
-        ChatMessage(
-          text: aiResponse,
-          isUser: false,
-          timestamp: DateTime.now(),
-        ),
-      );
+      if (mounted) {
+        setState(() {
+          _isTyping = false;
+          _messages.add(
+            ChatMessage(
+              text: aiResponse,
+              isUser: false,
+              timestamp: DateTime.now(),
+            ),
+          );
+        });
+        _saveChatHistory(); // Save after AI response
+        _scrollToBottom();
+      }
     });
-    _scrollToBottom();
-  }
-});
-
   }
 
   void _scrollToBottom() {
@@ -821,6 +828,34 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
     
     return result;
   }
+
+  Future<void> _saveChatHistory() async {
+  final prefs = await SharedPreferences.getInstance();
+  List<String> encoded = _messages.map((msg) => jsonEncode({
+    'text': msg.text,
+    'isUser': msg.isUser,
+    'timestamp': msg.timestamp.toIso8601String(),
+  })).toList();
+  await prefs.setStringList(_chatHistoryKey, encoded);
+}
+
+Future<void> _loadChatHistory() async {
+  final prefs = await SharedPreferences.getInstance();
+  List<String>? encoded = prefs.getStringList(_chatHistoryKey);
+  if (encoded != null) {
+    setState(() {
+      _messages.clear();
+      _messages.addAll(encoded.map((msg) {
+        final data = jsonDecode(msg);
+        return ChatMessage(
+          text: data['text'],
+          isUser: data['isUser'],
+          timestamp: DateTime.parse(data['timestamp']),
+        );
+      }));
+    });
+  }
+}
 }
 
 class ChatMessage {

@@ -3,40 +3,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
-<<<<<<< HEAD
-import 'theme/app_theme.dart';
-import 'screens/auth/auth_screen.dart';
-import 'screens/splash_screen.dart';
-import 'screens/onboarding_screen.dart';
-import 'screens/settings_screen.dart';
-import 'screens/badges_screen.dart';
-import 'screens/phone_verification_screen.dart';
-import 'screens/ai_tutor_screen.dart';
-import 'screens/mock_test_screen.dart';
-import 'screens/home_screen.dart';
-import 'screens/profile_screen.dart';
-import 'screens/subject_selection_screen.dart';
-import 'providers/user_state.dart';
-import 'providers/subject_state.dart';
-import 'providers/test_state.dart';
-import 'screens/life_at_intro_screen.dart';
-import 'screens/life_at_browser_screen.dart';
-import 'screens/study_partner_screen.dart';
-import 'screens/welcome_screen.dart';
-import 'screens/personal_info_screen.dart';
-import 'screens/university_selection_screen.dart';
-
-
-class ThemeNotifier extends ChangeNotifier {
-  ThemeMode _themeMode = ThemeMode.light;
-  ThemeMode get themeMode => _themeMode;
-
-  void toggleTheme(bool isDark) {
-    _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
-    notifyListeners();
-  }
-}
-=======
 import 'presentation/theme/app_theme.dart';
 import 'presentation/screens/auth/auth_screen.dart';
 import 'presentation/screens/splash_screen.dart';
@@ -63,7 +29,6 @@ import 'presentation/screens/admin/developer_panel_screen.dart';
 import 'presentation/screens/admin/admin_dashboard_screen.dart';
 import 'presentation/screens/auth/admin_auth_screen.dart';
 import 'presentation/screens/course_content_screen.dart';
->>>>>>> 563132adc050a79d9fc922ee7d7b66b8f2079e18
 
 void main() async {
   
