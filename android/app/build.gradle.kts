@@ -10,6 +10,8 @@ android {
     namespace = "com.example.utme_prep_master"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
+    
+
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -49,4 +51,5 @@ dependencies {
   implementation(platform("com.google.firebase:firebase-bom:33.16.0"))
 
   implementation("com.google.firebase:firebase-auth")
+  implementation("com.google.android.gms:play-services-auth:21.2.0")
 }

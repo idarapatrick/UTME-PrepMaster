@@ -1,39 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // <-- Added
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
-import 'theme/app_theme.dart';
-import 'screens/auth/auth_screen.dart';
-import 'screens/splash_screen.dart';
-import 'screens/onboarding_screen.dart';
-import 'screens/settings_screen.dart';
-import 'screens/badges_screen.dart';
-import 'screens/phone_verification_screen.dart';
-import 'screens/ai_tutor_screen.dart';
-import 'screens/mock_test_screen.dart';
-import 'screens/home_screen.dart';
-import 'screens/profile_screen.dart';
-import 'screens/subject_selection_screen.dart';
-import 'providers/user_state.dart';
-import 'providers/subject_state.dart';
-import 'providers/test_state.dart';
-import 'screens/life_at_intro_screen.dart';
-import 'screens/life_at_browser_screen.dart';
-import 'screens/welcome_screen.dart';
-import 'screens/personal_info_screen.dart';
-import 'screens/university_selection_screen.dart';
-
-
-class ThemeNotifier extends ChangeNotifier {
-  ThemeMode _themeMode = ThemeMode.light;
-  ThemeMode get themeMode => _themeMode;
-
-  void toggleTheme(bool isDark) {
-    _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
-    notifyListeners();
-  }
-}
+import 'presentation/theme/app_theme.dart';
+import 'presentation/screens/auth/auth_screen.dart';
+import 'presentation/screens/splash_screen.dart';
+import 'presentation/screens/onboarding_screen.dart';
+import 'presentation/screens/settings_screen.dart';
+import 'presentation/screens/badges_screen.dart';
+import 'presentation/screens/phone_verification_screen.dart';
+import 'presentation/screens/ai_tutor_screen.dart';
+import 'presentation/screens/mock_test_screen.dart';
+import 'presentation/screens/home_screen.dart';
+import 'presentation/screens/profile_screen.dart';
+import 'presentation/screens/subject_selection_screen.dart';
+import 'presentation/providers/user_state.dart';
+import 'presentation/providers/subject_state.dart';
+import 'presentation/providers/test_state.dart';
+import 'presentation/providers/theme_notifier.dart';
+import 'presentation/providers/user_stats_provider.dart';
+import 'presentation/screens/life_at_intro_screen.dart';
+import 'presentation/screens/study_partner_screen.dart';
+import 'presentation/screens/notes_screen.dart';
+import 'presentation/screens/links_screen.dart';
+import 'presentation/screens/admin/question_upload_screen.dart';
+import 'presentation/screens/admin/developer_panel_screen.dart';
+import 'presentation/screens/admin/admin_dashboard_screen.dart';
+import 'presentation/screens/auth/admin_auth_screen.dart';
+import 'presentation/screens/course_content_screen.dart';
 
 void main() async {
   
@@ -53,6 +48,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => UserState()),
         ChangeNotifierProvider(create: (_) => SubjectState()),
         ChangeNotifierProvider(create: (_) => TestState()),
+        ChangeNotifierProvider(create: (_) => UserStatsProvider()),
       ],
       child: const MyApp(),
     ),
@@ -73,6 +69,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: const AuthGate(),
       routes: {
+        '/auth': (context) => const AuthScreen(),
         '/onboarding': (context) => const OnboardingScreen(),
         '/settings': (context) => const SettingsScreen(),
         '/badges': (context) => const BadgesScreen(),
@@ -83,17 +80,57 @@ class MyApp extends StatelessWidget {
         '/home': (context) => const HomeScreen(),
         '/subject-selection': (context) => const SubjectSelectionScreen(),
         '/life-at-intro': (context) => const LifeAtIntroScreen(),
-        '/life-at-browser': (context) => const LifeAtBrowserScreen(),
+        '/study-partner': (context) => const StudyPartnerScreen(),
+        '/notes': (context) => const NotesScreen(),
+        '/links': (context) => const LinksScreen(),
+        '/course-content': (context) => const CourseContentScreen(subject: 'Mathematics'),
+        '/admin/upload-questions': (context) => const QuestionUploadScreen(),
+        '/admin/developer-panel': (context) => const DeveloperPanelScreen(),
+        '/admin/dashboard': (context) => const AdminDashboardScreen(),
+        '/admin/auth': (context) => const AdminAuthScreen(),
       },
     );
   }
 }
 
-class AuthGate extends StatelessWidget {
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
 
   @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  bool _isInitializing = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    try {
+      // Initialize user stats provider
+      final userStatsProvider = Provider.of<UserStatsProvider>(context, listen: false);
+      await userStatsProvider.initializeUserStats();
+    } catch (e) {
+      print('Error initializing app: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isInitializing = false;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isInitializing) {
+      return const SplashScreen();
+    }
+
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
