@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../services/ai_service.dart';
-
+import 'dart:convert'; // For encoding/decoding messages
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AiTutorScreen extends StatefulWidget {
   const AiTutorScreen({super.key});
@@ -29,10 +30,14 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
     'Government',
   ];
 
+  static const String _chatHistoryKey = 'chat_history';
+
   @override
   void initState() {
     super.initState();
-    _addWelcomeMessage();
+    _loadChatHistory().then((_) {
+      if (_messages.isEmpty) _addWelcomeMessage();
+    });
   }
 
   @override
@@ -42,17 +47,18 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
     super.dispose();
   }
 
- void _addWelcomeMessage() {
-  setState(() {
-    _messages.add(
-      ChatMessage(
-        text: 'Hello! I\'m your AI tutor. I can help you with any UTME subject. What would you like to learn today?',
-        isUser: false,
-        timestamp: DateTime.now(),
-      ),
-    );
-  });
-}
+  void _addWelcomeMessage() {
+    setState(() {
+      _messages.add(
+        ChatMessage(
+          text:
+              'Hello! I\'m your AI tutor. I can help you with any UTME subject. What would you like to learn today?',
+          isUser: false,
+          timestamp: DateTime.now(),
+        ),
+      );
+    });
+  }
 
   void _sendMessage() {
     if (_messageController.text.trim().isEmpty) return;
@@ -66,26 +72,27 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
       );
       _isTyping = true;
     });
+    _saveChatHistory();
 
     _scrollToBottom();
 
     // Simulate AI response
     AIService.getAIResponse(message).then((aiResponse) {
-  if (mounted) {
-    setState(() {
-      _isTyping = false;
-      _messages.add(
-        ChatMessage(
-          text: aiResponse,
-          isUser: false,
-          timestamp: DateTime.now(),
-        ),
-      );
+      if (mounted) {
+        setState(() {
+          _isTyping = false;
+          _messages.add(
+            ChatMessage(
+              text: aiResponse,
+              isUser: false,
+              timestamp: DateTime.now(),
+            ),
+          );
+        });
+        _saveChatHistory();
+        _scrollToBottom();
+      }
     });
-    _scrollToBottom();
-  }
-});
-
   }
 
   String _generateAiResponse(String userMessage) {
@@ -182,6 +189,7 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
                             timestamp: DateTime.now(),
                           ),
                         );
+                        _saveChatHistory(); // <-- Add this line
                         _scrollToBottom();
                       },
                     );
@@ -215,6 +223,34 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
         return Icons.account_balance;
       default:
         return Icons.school;
+    }
+  }
+
+  Future<void> _saveChatHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    List<String> encodedMessages = _messages.map((msg) => jsonEncode({
+          'text': msg.text,
+          'isUser': msg.isUser,
+          'timestamp': msg.timestamp.toIso8601String(),
+        })).toList();
+    await prefs.setStringList(_chatHistoryKey, encodedMessages);
+  }
+
+  Future<void> _loadChatHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    List<String>? encodedMessages = prefs.getStringList(_chatHistoryKey);
+    if (encodedMessages != null) {
+      setState(() {
+        _messages.clear();
+        _messages.addAll(encodedMessages.map((msg) {
+          final data = jsonDecode(msg);
+          return ChatMessage(
+            text: data['text'],
+            isUser: data['isUser'],
+            timestamp: DateTime.parse(data['timestamp']),
+          );
+        }));
+      });
     }
   }
 
@@ -253,9 +289,9 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
                 Text(
                   'Currently studying: $_selectedSubject',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.dominantPurple,
-                    fontWeight: FontWeight.w600,
-                  ),
+                        color: AppColors.dominantPurple,
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
               ],
             ),

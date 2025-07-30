@@ -27,6 +27,7 @@ dependencies:
   firebase_storage: ^12.4.9
   image_picker: ^1.0.7
   flutter_inappwebview: ^6.0.0
+  shared_preferences: ^2.2.2
  
   
   # For Unique ID generation
