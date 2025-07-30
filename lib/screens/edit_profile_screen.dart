@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:utme_prep_master/services/firestore_service.dart';
 import '../theme/app_colors.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:typed_data';
-import '../services/firestore_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class EditProfileScreen extends StatefulWidget {
