@@ -1,14 +1,24 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:developer' as developer;
 import '../../domain/models/user_profile_model.dart';
 import '../nigerian_universities.dart';
 
 class FirestoreService {
   static final FirebaseFirestore _db = FirebaseFirestore.instance;
-  static final FirebaseAuth _auth = FirebaseAuth.instance;
-  static final FirebaseStorage _storage = FirebaseStorage.instance;
+
+  // Initialize Firestore settings
+  static Future<void> initializeFirestore() async {
+    try {
+      // Configure Firestore settings
+      _db.settings = const Settings(
+        persistenceEnabled: true,
+        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+      );
+    } catch (e) {
+      developer.log('Error initializing Firestore: $e');
+    }
+  }
 
   // USER PROFILE METHODS
 
@@ -372,39 +382,5 @@ class FirestoreService {
       'achievements': FieldValue.arrayUnion([achievement]),
       'xp': FieldValue.increment(100), // Award XP for achievement
     });
-  }
-
-  static Future<List<String>> _getUserAchievementIds(String userId) async {
-    final doc = await _db.collection('users').doc(userId).get();
-    if (!doc.exists) return [];
-    
-    final data = doc.data()!;
-    return List<String>.from(data['achievements'] ?? []);
-  }
-
-  static Map<String, dynamic> _getDateRange(String period) {
-    final now = DateTime.now();
-    switch (period) {
-      case 'week':
-        return {
-          'start': now.subtract(const Duration(days: 7)),
-          'end': now,
-        };
-      case 'month':
-        return {
-          'start': DateTime(now.year, now.month - 1, now.day),
-          'end': now,
-        };
-      case 'year':
-        return {
-          'start': DateTime(now.year - 1, now.month, now.day),
-          'end': now,
-        };
-      default:
-        return {
-          'start': now.subtract(const Duration(days: 30)),
-          'end': now,
-        };
-    }
   }
 }
