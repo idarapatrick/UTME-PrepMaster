@@ -11,6 +11,10 @@ class AppTheme {
         secondary: AppColors.secondaryGray,
         surface: AppColors.backgroundPrimary,
         error: AppColors.errorRed,
+        onPrimary: Colors.white,
+        onSecondary: Colors.white,
+        onSurface: AppColors.textPrimary,
+        onError: Colors.white,
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.dominantPurple,
@@ -91,53 +95,61 @@ class AppTheme {
 
   static ThemeData get darkTheme {
     return ThemeData(
-      scaffoldBackgroundColor: const Color(0xFF181A20),
+      scaffoldBackgroundColor: AppColors.darkBackgroundPrimary,
       primaryColor: AppColors.dominantPurple,
       colorScheme: ColorScheme.dark(
         primary: AppColors.dominantPurple,
-        secondary: AppColors.secondaryGray,
-        surface: const Color(0xFF181A20),
+        secondary: AppColors.accentAmber,
+        surface: AppColors.darkBackgroundSecondary,
         error: AppColors.errorRed,
+        onPrimary: Colors.white,
+        onSecondary: Colors.black,
+        onSurface: AppColors.darkTextPrimary,
+        onError: Colors.white,
+        brightness: Brightness.dark,
       ),
       appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFF23243B),
+        backgroundColor: AppColors.dominantPurple,
         foregroundColor: Colors.white,
         elevation: 0,
         iconTheme: IconThemeData(color: Colors.white),
       ),
       textTheme: const TextTheme(
         displayLarge: TextStyle(
-          color: Colors.white,
+          color: AppColors.darkTextPrimary,
           fontWeight: FontWeight.bold,
         ),
         displayMedium: TextStyle(
-          color: Colors.white,
+          color: AppColors.darkTextPrimary,
           fontWeight: FontWeight.bold,
         ),
         displaySmall: TextStyle(
-          color: Colors.white,
+          color: AppColors.darkTextPrimary,
           fontWeight: FontWeight.bold,
         ),
         headlineMedium: TextStyle(
-          color: Colors.white,
+          color: AppColors.darkTextPrimary,
           fontWeight: FontWeight.w600,
         ),
         headlineSmall: TextStyle(
-          color: AppColors.textLight,
+          color: AppColors.darkTextSecondary,
           fontWeight: FontWeight.w500,
         ),
-        titleLarge: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-        bodyLarge: TextStyle(color: Colors.white),
-        bodyMedium: TextStyle(color: AppColors.textLight),
-        bodySmall: TextStyle(color: AppColors.textTertiary),
-        labelLarge: TextStyle(color: AppColors.textLight),
+        titleLarge: TextStyle(
+          color: AppColors.darkTextPrimary,
+          fontWeight: FontWeight.w600,
+        ),
+        bodyLarge: TextStyle(color: AppColors.darkTextPrimary),
+        bodyMedium: TextStyle(color: AppColors.darkTextSecondary),
+        bodySmall: TextStyle(color: AppColors.darkTextTertiary),
+        labelLarge: TextStyle(color: AppColors.darkTextLight),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFF23243B),
+        fillColor: AppColors.darkBackgroundSecondary,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.borderDark),
+          borderSide: const BorderSide(color: AppColors.darkBorderLight),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -146,8 +158,8 @@ class AppTheme {
             width: 2,
           ),
         ),
-        labelStyle: const TextStyle(color: AppColors.textLight),
-        hintStyle: const TextStyle(color: AppColors.textTertiary),
+        labelStyle: const TextStyle(color: AppColors.darkTextSecondary),
+        hintStyle: const TextStyle(color: AppColors.darkTextTertiary),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -168,8 +180,24 @@ class AppTheme {
           ),
         ),
       ),
-      dividerColor: AppColors.borderDark,
-      cardColor: const Color(0xFF23243B),
+      dividerColor: AppColors.darkBorderLight,
+      cardColor: AppColors.darkCardPrimary,
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.darkCardPrimary,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: AppColors.darkCardPrimary,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppColors.darkCardSecondary,
+        contentTextStyle: const TextStyle(color: AppColors.darkTextPrimary),
+      ),
     );
   }
 }

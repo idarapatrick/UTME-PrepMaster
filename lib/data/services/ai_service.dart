@@ -20,11 +20,11 @@ class AIService {
         final data = jsonDecode(response.body);
         return data['response'] ?? 'Sorry, I couldn\'t generate a response.';
       } else {
-        print('Error: ${response.statusCode}, ${response.body}');
+        // Error: ${response.statusCode}, ${response.body}
         return 'Sorry, something went wrong. Please try again later.';
       }
     } catch (e) {
-      print('Network error: $e');
+      // Network error
       return 'Sorry, there was a network error. Please check your connection and try again.';
     }
   }

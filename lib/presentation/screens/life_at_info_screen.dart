@@ -17,13 +17,12 @@ class LifeAtInfoScreen extends StatelessWidget {
       }
     } catch (e) {
       // Handle error gracefully
-      print('Error launching LifeAt: $e');
+      // Error launching LifeAt
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    print('DEBUG: LifeAtInfoScreen build() called');
     return Scaffold(
       backgroundColor: AppColors.backgroundPrimary,
       appBar: AppBar(

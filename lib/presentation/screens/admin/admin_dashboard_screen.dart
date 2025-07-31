@@ -41,7 +41,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         }
       }
     } catch (e) {
-      print('Error checking user role: $e');
+      // Error checking user role
     }
   }
 
@@ -58,7 +58,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading admin dashboard data: $e');
+      // Error loading admin dashboard data
       setState(() => _isLoading = false);
     }
   }
@@ -459,7 +459,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         );
       }
     } catch (e) {
-      print('Error signing out: $e');
+      // Error signing out
       // Even if there's an error, try to navigate to admin auth
       if (mounted) {
         Navigator.of(context).pushNamedAndRemoveUntil(

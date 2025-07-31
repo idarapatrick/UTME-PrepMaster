@@ -4,7 +4,7 @@ import '../../data/services/firestore_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/subject_card.dart';
 
-const List<Map<String, dynamic>> kUtmeSubjects = [
+const List<Map<String, dynamic>> utmeSubjects = [
   {
     'name': 'English',
     'icon': Icons.language,
@@ -18,30 +18,16 @@ const List<Map<String, dynamic>> kUtmeSubjects = [
   {'name': 'Physics', 'icon': Icons.science, 'color': Colors.blue},
   {'name': 'Chemistry', 'icon': Icons.bubble_chart, 'color': Colors.blue},
   {'name': 'Biology', 'icon': Icons.biotech, 'color': Colors.blue},
-  {
-    'name': 'Literature-in-English',
-    'icon': Icons.menu_book,
-    'color': Colors.red,
-  },
   {'name': 'Government', 'icon': Icons.account_balance, 'color': Colors.red},
   {'name': 'Economics', 'icon': Icons.trending_up, 'color': Colors.red},
-  {'name': 'Accounting', 'icon': Icons.receipt_long, 'color': Colors.red},
-  {'name': 'Marketing', 'icon': Icons.campaign, 'color': Colors.red},
   {'name': 'Geography', 'icon': Icons.public, 'color': Colors.red},
-  {'name': 'Computer Studies', 'icon': Icons.computer, 'color': Colors.blue},
   {
     'name': 'Christian Religious Studies',
     'icon': Icons.church,
     'color': Colors.red,
   },
   {'name': 'Islamic Studies', 'icon': Icons.mosque, 'color': Colors.red},
-  {
-    'name': 'Agricultural Science',
-    'icon': Icons.agriculture,
-    'color': Colors.blue,
-  },
   {'name': 'Commerce', 'icon': Icons.store, 'color': Colors.red},
-  {'name': 'History', 'icon': Icons.history_edu, 'color': Colors.red},
 ];
 
 class SubjectSelectionScreen extends StatefulWidget {
@@ -94,8 +80,19 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
       if (mounted) Navigator.pop(context, _selectedSubjects);
     } else {
       if (user != null) {
-        await FirestoreService.saveUserSubjects(user.uid, _selectedSubjects);
-        if (mounted) Navigator.pop(context);
+        try {
+          await FirestoreService.saveUserSubjects(user.uid, _selectedSubjects);
+          if (mounted) Navigator.pop(context);
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error saving subjects: ${e.toString()}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
       }
     }
     setState(() => _loading = false);
@@ -126,7 +123,7 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
                 padding: const EdgeInsets.only(bottom: 8),
-                children: kUtmeSubjects.map((subject) {
+                children: utmeSubjects.map((subject) {
                   final name = subject['name'] as String;
                   final icon = subject['icon'] as IconData;
                   final color = subject['color'] as Color;

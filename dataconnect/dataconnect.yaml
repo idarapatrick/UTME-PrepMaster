@@ -1,0 +1,12 @@
+specVersion: "v1"
+serviceId: "UTME-PrepMaster"
+location: "europe-central2"
+schema:
+  source: "./schema"
+  datasource:
+    postgresql:
+      database: "fdcdb"
+      cloudSql:
+        instanceId: "utme-prepmaster-fdc"
+      # schemaValidation: "COMPATIBLE"
+connectorDirs: ["./connector"]

@@ -65,9 +65,9 @@ class QuestionUploadService {
       batch.set(subjectRef, subjectData, SetOptions(merge: true));
 
       await batch.commit();
-      print('Successfully uploaded ${questions.length} questions for $subject');
+      // Successfully uploaded questions for subject
     } catch (e) {
-      print('Error uploading questions: $e');
+      // Error uploading questions
       rethrow;
     }
   }
@@ -91,7 +91,7 @@ class QuestionUploadService {
         description: description,
       );
     } catch (e) {
-      print('Error uploading questions from text: $e');
+      // Error uploading questions from text
       rethrow;
     }
   }
@@ -169,7 +169,7 @@ class QuestionUploadService {
       final snapshot = await _firestore.collection('cbt_questions').get();
       return snapshot.docs.map((doc) => doc.id).toList();
     } catch (e) {
-      print('Error getting available subjects: $e');
+      // Error getting available subjects
       return [];
     }
   }
@@ -199,7 +199,7 @@ class QuestionUploadService {
         );
       }).toList();
     } catch (e) {
-      print('Error getting questions for $subject: $e');
+      // Error getting questions for subject
       return [];
     }
   }
@@ -233,7 +233,7 @@ class QuestionUploadService {
         );
       }).toList();
     } catch (e) {
-      print('Error getting questions by difficulty: $e');
+      // Error getting questions by difficulty
       return [];
     }
   }
@@ -268,9 +268,9 @@ class QuestionUploadService {
       batch.delete(_firestore.collection('cbt_questions').doc(subject.toLowerCase()));
 
       await batch.commit();
-      print('Successfully deleted all questions for $subject');
+      // Successfully deleted all questions for subject
     } catch (e) {
-      print('Error deleting questions: $e');
+      // Error deleting questions
       rethrow;
     }
   }

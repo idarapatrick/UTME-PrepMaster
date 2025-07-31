@@ -144,15 +144,7 @@ class BadgesScreen extends StatelessWidget {
               progress: 0.7,
               totalRequired: 1,
             ),
-            _buildBadgeTile(
-              context,
-              icon: Icons.history_edu,
-              title: 'History Buff',
-              description: 'Complete all History topics',
-              isUnlocked: false,
-              progress: 0.3,
-              totalRequired: 1,
-            ),
+
           ]),
 
           const SizedBox(height: 24),
@@ -251,13 +243,13 @@ class BadgesScreen extends StatelessWidget {
       elevation: 1,
       child: ListTile(
         leading: Container(
-          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: isUnlocked
                 ? AppColors.accentAmber.withValues(alpha: 0.2)
                 : AppColors.borderLight,
             borderRadius: BorderRadius.circular(12),
           ),
+          padding: const EdgeInsets.all(12),
           child: Icon(
             icon,
             color: isUnlocked ? AppColors.accentAmber : AppColors.textTertiary,

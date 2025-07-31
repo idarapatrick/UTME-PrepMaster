@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
 import '../theme/app_colors.dart';
 import '../../data/services/firestore_service.dart';
-import '../../data/services/cbt_question_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../screens/subject_selection_screen.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import '../providers/user_stats_provider.dart';
 import '../../domain/models/test_question.dart';
-import '../utils/responsive_helper.dart';
+// Import questions from the correct directory
+import '../../data/questions/english.dart';
+import '../../data/questions/mathematics.dart';
+import '../../data/questions/physics.dart';
+import '../../data/questions/chemistry.dart';
+import '../../data/questions/biology.dart';
+import '../../data/questions/government.dart';
+import '../../data/questions/economics.dart';
+import '../../data/questions/geography.dart';
+import '../../data/questions/commerce.dart';
+import '../../data/questions/christian_studies.dart';
+import '../../data/questions/islamic_studies.dart';
+import '../screens/test_results_screen.dart'; // Added import for TestResultsScreen
 
 class MockTestScreen extends StatefulWidget {
   const MockTestScreen({super.key});
@@ -21,475 +33,210 @@ class _MockTestScreenState extends State<MockTestScreen> {
   int _timeRemaining = 0; // in seconds
   List<String> _selectedAnswers = [];
   List<bool> _answeredQuestions = [];
-  List<String> _userSubjects = [];
-  String _currentSubject = '';
-  final Map<String, List<int>> _subjectQuestionIndices = {};
-  Map<String, int> _subjectAnswered = {};
-  List<Map<String, dynamic>> _cbtHistory = [];
-  bool _showHistory = false;
 
-  List<MockTest> _availableTests = [];
+  String _currentSubject = '';
+
+  // CBT Test State
+  bool _showSubjectSelection = false;
+  final List<String> _selectedSubjects = ['English']; // English is always selected
+  List<String> _availableSubjects = [];
+  List<TestQuestion> _questions = [];
+  bool _isCbt = false; // Added to track if it's a CBT test
+  Map<String, List<int>> _subjectQuestionRanges = {};
 
   @override
   void initState() {
     super.initState();
     _loadUserSubjects();
-    _loadCbtTests();
+    _loadAvailableSubjects();
   }
 
-  Future<void> _loadCbtTests() async {
-    try {
-      final testConfigs = [
-        'full_cbt',
-        'science_cbt', 
-        'mathematics_cbt',
-        'english_cbt',
-      ];
-
-      final tests = <MockTest>[];
-
-      for (final configType in testConfigs) {
-        final config = await CbtQuestionService.getCbtTestConfig(configType);
-        
-        if (config.isNotEmpty) {
-          tests.add(MockTest(
-            id: configType,
-            title: config['title'] ?? 'CBT Test',
-            description: config['description'] ?? 'CBT Practice Test',
-            duration: config['duration'] ?? 60,
-            questions: config['questions'] ?? 40,
-            subjects: List<String>.from(config['subjects'] ?? []),
-            difficulty: 'Advanced',
-            isCbt: true,
-          ));
-        }
-      }
-
-      setState(() {
-        _availableTests = tests;
-      });
-    } catch (e) {
-      print('Error loading CBT tests: $e');
-      // Fallback to default tests
-      _availableTests = [
-        MockTest(
-          id: 'full_cbt',
-          title: 'Full CBT Mock Test',
-          description: 'Complete UTME simulation with all subjects',
-          duration: 120,
-          questions: 180,
-          subjects: ['English', 'Mathematics', 'Physics', 'Chemistry', 'Biology'],
-          difficulty: 'Advanced',
-          isCbt: true,
-        ),
-      ];
-    }
+  void _loadAvailableSubjects() {
+    final subjects = <String>[];
+    
+    // Check which subjects have questions
+    if (mathematicsQuestions.isNotEmpty) subjects.add('Mathematics');
+    if (physicsQuestions.isNotEmpty) subjects.add('Physics');
+    if (chemistryQuestions.isNotEmpty) subjects.add('Chemistry');
+    if (biologyQuestions.isNotEmpty) subjects.add('Biology');
+    if (englishQuestions.isNotEmpty) subjects.add('English');
+    if (governmentQuestions.isNotEmpty) subjects.add('Government');
+    if (economicsQuestions.isNotEmpty) subjects.add('Economics');
+    if (geographyQuestions.isNotEmpty) subjects.add('Geography');
+    if (commerceQuestions.isNotEmpty) subjects.add('Commerce');
+    if (crsQuestions.isNotEmpty) subjects.add('Christian Religious Studies');
+    if (islamicStudiesQuestions.isNotEmpty) subjects.add('Islamic Studies');
+    
+    setState(() {
+      _availableSubjects = subjects;
+    });
   }
-
-  MockTest? _currentTest;
-  List<TestQuestion> _questions = [];
-
-
 
   Future<void> _loadUserSubjects() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      final selected = await FirestoreService.loadUserSubjects(user.uid);
-      setState(() {
-        _userSubjects = selected;
-      });
-    }
-  }
-
-  void _generateQuestionsForTest(MockTest test) async {
-    _questions = [];
-    _subjectQuestionIndices.clear();
-
-    try {
-      if (test.isCbt) {
-        // CBT: Get questions from centralized service
-        for (final subject in test.subjects) {
-          final questionsPerSubject = subject == 'English' ? 60 : 40;
-          final subjectQuestions = await CbtQuestionService.getRandomQuestionsForCbt(
-            subject: subject,
-            count: questionsPerSubject,
-          );
-          
-          final startIndex = _questions.length;
-          _questions.addAll(subjectQuestions);
-          _subjectQuestionIndices[subject] = List.generate(
-            subjectQuestions.length, 
-            (i) => startIndex + i
-          );
-        }
-      } else {
-        // Specific subject tests: Get from centralized service
-        if (test.title.contains('Science')) {
-          // Mix Physics, Chemistry, Biology questions
-          final physics = await CbtQuestionService.getRandomQuestionsForCbt(
-            subject: 'Physics', 
-            count: 7
-          );
-          final chemistry = await CbtQuestionService.getRandomQuestionsForCbt(
-            subject: 'Chemistry', 
-            count: 7
-          );
-          final biology = await CbtQuestionService.getRandomQuestionsForCbt(
-            subject: 'Biology', 
-            count: 6
-          );
-          
-          _questions = [...physics, ...chemistry, ...biology];
-          _subjectQuestionIndices['Physics'] = List.generate(7, (i) => i);
-          _subjectQuestionIndices['Chemistry'] = List.generate(7, (i) => i + 7);
-          _subjectQuestionIndices['Biology'] = List.generate(6, (i) => i + 14);
-        } else {
-          // Single subject test
-          final subj = test.subjects.first;
-          final subjectQuestions = await CbtQuestionService.getRandomQuestionsForCbt(
-            subject: subj,
-            count: 20,
-          );
-          _questions = subjectQuestions;
-          _subjectQuestionIndices[subj] = List.generate(20, (i) => i);
-        }
+      try {
+        await FirestoreService.loadUserSubjects(user.uid);
+        // User subjects loaded but not used in this screen
+      } catch (e) {
+        // Error loading user subjects
       }
-    } catch (e) {
-      print('Error generating questions from Firebase: $e');
-      // Fallback to local questions
-      _questions = _getLocalQuestionsForSubject(test.subjects.first);
     }
   }
 
   List<TestQuestion> _getLocalQuestionsForSubject(String subject) {
-    // Fallback local questions if Firebase is unavailable
     switch (subject.toLowerCase()) {
       case 'mathematics':
-        return _getMathQuestions();
+        return mathematicsQuestions;
       case 'physics':
-        return _getPhysicsQuestions();
+        return physicsQuestions;
       case 'chemistry':
-        return _getChemistryQuestions();
+        return chemistryQuestions;
       case 'biology':
-        return _getBiologyQuestions();
+        return biologyQuestions;
       case 'english':
-        return _getEnglishQuestions();
+        return englishQuestions;
+      case 'government':
+        return governmentQuestions;
+      case 'economics':
+        return economicsQuestions;
+      case 'geography':
+        return geographyQuestions;
+      case 'commerce':
+        return commerceQuestions;
+      case 'christian religious studies':
+        return crsQuestions;
+      case 'islamic studies':
+        return islamicStudiesQuestions;
       default:
         return [];
     }
   }
 
-  List<TestQuestion> _getEnglishQuestions() {
-    return [
-      TestQuestion(
-        id: 'eng1',
-        question: 'What is the capital of France?',
-        options: ['Paris', 'London', 'Berlin', 'Madrid'],
-        correctAnswer: 0,
-        subject: 'English',
-        difficulty: 'Easy',
-        explanation: 'Paris is the capital of France.',
-      ),
-      TestQuestion(
-        id: 'eng2',
-        question: 'Which word means "to go"?',
-        options: ['Voyage', 'Voyager', 'Voyageur', 'Voyager'],
-        correctAnswer: 0,
-        subject: 'English',
-        difficulty: 'Easy',
-        explanation: 'Voyage means "to go".',
-      ),
-      TestQuestion(
-        id: 'eng3',
-        question: 'What is the plural of "child"?',
-        options: ['Children', 'Childs', 'Child', 'Childs'],
-        correctAnswer: 0,
-        subject: 'English',
-        difficulty: 'Easy',
-        explanation: 'Children is the plural of "child".',
-      ),
-      TestQuestion(
-        id: 'eng4',
-        question: 'Which word means "to be"?',
-        options: ['Etre', 'Etre', 'Etre', 'Etre'],
-        correctAnswer: 0,
-        subject: 'English',
-        difficulty: 'Easy',
-        explanation: 'Etre means "to be".',
-      ),
-      TestQuestion(
-        id: 'eng5',
-        question: 'What is the past tense of "go"?',
-        options: ['Went', 'Gone', 'Gone', 'Gone'],
-        correctAnswer: 0,
-        subject: 'English',
-        difficulty: 'Easy',
-        explanation: 'Went is the past tense of "go".',
-      ),
-    ];
+  void _showCbtSubjectSelection() {
+    setState(() {
+      _showSubjectSelection = true;
+    });
   }
 
-  List<TestQuestion> _getMathQuestions() {
-    return [
-      TestQuestion(
-        id: 'math1',
-        question: 'What is 2 + 2?',
-        options: ['1', '2', '3', '4'],
-        correctAnswer: 3,
-        subject: 'Mathematics',
-        difficulty: 'Easy',
-        explanation: '2 + 2 = 4.',
-      ),
-      TestQuestion(
-        id: 'math2',
-        question: 'What is 5 x 5?',
-        options: ['20', '25', '30', '35'],
-        correctAnswer: 1,
-        subject: 'Mathematics',
-        difficulty: 'Easy',
-        explanation: '5 x 5 = 25.',
-      ),
-      TestQuestion(
-        id: 'math3',
-        question: 'What is 10 - 3?',
-        options: ['5', '6', '7', '8'],
-        correctAnswer: 2,
-        subject: 'Mathematics',
-        difficulty: 'Easy',
-        explanation: '10 - 3 = 7.',
-      ),
-      TestQuestion(
-        id: 'math4',
-        question: 'What is 10 ÷ 2?',
-        options: ['4', '5', '6', '7'],
-        correctAnswer: 1,
-        subject: 'Mathematics',
-        difficulty: 'Easy',
-        explanation: '10 ÷ 2 = 5.',
-      ),
-      TestQuestion(
-        id: 'math5',
-        question: 'What is 3 x 4?',
-        options: ['10', '12', '14', '16'],
-        correctAnswer: 1,
-        subject: 'Mathematics',
-        difficulty: 'Easy',
-        explanation: '3 x 4 = 12.',
-      ),
-    ];
+  void _toggleSubject(String subject) {
+    if (subject == 'English') return; // English cannot be unselected
+    
+    setState(() {
+      if (_selectedSubjects.contains(subject)) {
+        if (_selectedSubjects.length > 1) { // Keep at least English
+          _selectedSubjects.remove(subject);
+        }
+      } else {
+        if (_selectedSubjects.length < 4) { // Max 4 subjects (English + 3 others)
+          _selectedSubjects.add(subject);
+        }
+      }
+    });
   }
 
-  List<TestQuestion> _getPhysicsQuestions() {
-    return [
-      TestQuestion(
-        id: 'phy1',
-        question: 'What is the SI unit of force?',
-        options: ['Newton', 'Joule', 'Watt', 'Pascal'],
-        correctAnswer: 0,
-        subject: 'Physics',
-        difficulty: 'Easy',
-        explanation: 'Newton is the SI unit of force.',
-      ),
-      TestQuestion(
-        id: 'phy2',
-        question: 'What is the SI unit of energy?',
-        options: ['Joule', 'Watt', 'Newton', 'Pascal'],
-        correctAnswer: 0,
-        subject: 'Physics',
-        difficulty: 'Easy',
-        explanation: 'Joule is the SI unit of energy.',
-      ),
-      TestQuestion(
-        id: 'phy3',
-        question: 'What is the SI unit of power?',
-        options: ['Watt', 'Newton', 'Joule', 'Pascal'],
-        correctAnswer: 0,
-        subject: 'Physics',
-        difficulty: 'Easy',
-        explanation: 'Watt is the SI unit of power.',
-      ),
-      TestQuestion(
-        id: 'phy4',
-        question: 'What is the SI unit of pressure?',
-        options: ['Pascal', 'Watt', 'Newton', 'Joule'],
-        correctAnswer: 0,
-        subject: 'Physics',
-        difficulty: 'Easy',
-        explanation: 'Pascal is the SI unit of pressure.',
-      ),
-      TestQuestion(
-        id: 'phy5',
-        question: 'What is the SI unit of work?',
-        options: ['Joule', 'Watt', 'Newton', 'Pascal'],
-        correctAnswer: 0,
-        subject: 'Physics',
-        difficulty: 'Easy',
-        explanation: 'Joule is the SI unit of work.',
-      ),
-    ];
-  }
-
-  List<TestQuestion> _getChemistryQuestions() {
-    return [
-      TestQuestion(
-        id: 'chem1',
-        question: 'What is the chemical symbol for water?',
-        options: ['H2O', 'CO2', 'O2', 'H2'],
-        correctAnswer: 0,
-        subject: 'Chemistry',
-        difficulty: 'Easy',
-        explanation: 'H2O is the chemical symbol for water.',
-      ),
-      TestQuestion(
-        id: 'chem2',
-        question: 'What is the chemical formula for sodium chloride?',
-        options: ['NaCl', 'H2O', 'CO2', 'O2'],
-        correctAnswer: 0,
-        subject: 'Chemistry',
-        difficulty: 'Easy',
-        explanation: 'NaCl is the chemical formula for sodium chloride.',
-      ),
-      TestQuestion(
-        id: 'chem3',
-        question: 'What is the chemical formula for carbon dioxide?',
-        options: ['CO2', 'H2O', 'O2', 'H2'],
-        correctAnswer: 0,
-        subject: 'Chemistry',
-        difficulty: 'Easy',
-        explanation: 'CO2 is the chemical formula for carbon dioxide.',
-      ),
-      TestQuestion(
-        id: 'chem4',
-        question: 'What is the chemical formula for oxygen?',
-        options: ['O2', 'H2O', 'CO2', 'H2'],
-        correctAnswer: 0,
-        subject: 'Chemistry',
-        difficulty: 'Easy',
-        explanation: 'O2 is the chemical formula for oxygen.',
-      ),
-      TestQuestion(
-        id: 'chem5',
-        question: 'What is the chemical formula for hydrogen?',
-        options: ['H2O', 'CO2', 'O2', 'H2'],
-        correctAnswer: 3,
-        subject: 'Chemistry',
-        difficulty: 'Easy',
-        explanation: 'H2 is the chemical formula for hydrogen.',
-      ),
-    ];
-  }
-
-  List<TestQuestion> _getBiologyQuestions() {
-    return [
-      TestQuestion(
-        id: 'bio1',
-        question: 'What is the largest organ in the human body?',
-        options: ['Heart', 'Brain', 'Liver', 'Lungs'],
-        correctAnswer: 2,
-        subject: 'Biology',
-        difficulty: 'Easy',
-        explanation: 'The liver is the largest organ in the human body.',
-      ),
-      TestQuestion(
-        id: 'bio2',
-        question: 'What is the chemical formula for glucose?',
-        options: ['C6H12O6', 'H2O', 'CO2', 'O2'],
-        correctAnswer: 0,
-        subject: 'Biology',
-        difficulty: 'Easy',
-        explanation: 'C6H12O6 is the chemical formula for glucose.',
-      ),
-      TestQuestion(
-        id: 'bio3',
-        question: 'What is the chemical formula for water?',
-        options: ['H2O', 'CO2', 'O2', 'H2'],
-        correctAnswer: 0,
-        subject: 'Biology',
-        difficulty: 'Easy',
-        explanation: 'H2O is the chemical formula for water.',
-      ),
-      TestQuestion(
-        id: 'bio4',
-        question: 'What is the chemical formula for carbon dioxide?',
-        options: ['CO2', 'H2O', 'O2', 'H2'],
-        correctAnswer: 0,
-        subject: 'Biology',
-        difficulty: 'Easy',
-        explanation: 'CO2 is the chemical formula for carbon dioxide.',
-      ),
-      TestQuestion(
-        id: 'bio5',
-        question: 'What is the chemical formula for oxygen?',
-        options: ['O2', 'H2O', 'CO2', 'H2'],
-        correctAnswer: 0,
-        subject: 'Biology',
-        difficulty: 'Easy',
-        explanation: 'O2 is the chemical formula for oxygen.',
-      ),
-    ];
-  }
-
-  void _startTest(MockTest test) async {
-    if (test.isCbt) {
-      // CBT: Always prompt for subject selection
-      final selected = await Navigator.push<List<String>>(
-        context,
-        MaterialPageRoute(
-          builder: (context) =>
-              const SubjectSelectionScreen(isForMockTest: true),
+  void _startCbtTest() async {
+    if (_selectedSubjects.length != 4) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select exactly 3 additional subjects (English is already selected)'),
+          backgroundColor: Colors.red,
         ),
       );
-      if (selected == null ||
-          selected.length != 4 ||
-          !selected.contains('English')) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'You must select 4 subjects (English + 3 others) to start the CBT test.',
-              ),
-            ),
-          );
-        }
-        return;
-      }
-      setState(() {
-        _userSubjects = selected;
-      });
-    } else {
-      // Specific subject tests: Use pre-configured subjects
-      setState(() {
-        _userSubjects = test.subjects;
-      });
-    }
-
-    _generateQuestionsForTest(test);
-
-    // Null safety: check if questions and indices are valid
-    if (_questions.isEmpty ||
-        _userSubjects.isEmpty ||
-        _subjectQuestionIndices.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'No questions available for the selected subjects. Please try again.',
-            ),
-          ),
-        );
-      }
       return;
     }
 
+    // Award 20 XP for starting CBT test
+    try {
+      final userStatsProvider = Provider.of<UserStatsProvider>(context, listen: false);
+      for (final subject in _selectedSubjects) {
+        await userStatsProvider.startCbtTest(subject);
+      }
+    } catch (e) {
+      // Error awarding XP, but continue with test
+    }
+
     setState(() {
-      _currentTest = test;
+      _showSubjectSelection = false;
       _isTestInProgress = true;
       _currentQuestionIndex = 0;
-      _currentSubject = _userSubjects.first;
-      _timeRemaining = test.duration * 60;
-      _selectedAnswers = List.filled(_questions.length, '');
-      _answeredQuestions = List.filled(_questions.length, false);
+      _timeRemaining = 120 * 60; // 120 minutes
+      _questions = [];
+      _selectedAnswers = [];
+      _answeredQuestions = [];
+      _isCbt = true; // Set to true for CBT
     });
+
+    _loadCbtQuestions();
+  }
+
+  void _loadCbtQuestions() {
+    final allQuestions = <TestQuestion>[];
+    final subjectQuestionRanges = <String, List<int>>{};
+    int currentIndex = 0;
+    
+    for (final subject in _selectedSubjects) {
+      final subjectQuestions = _getLocalQuestionsForSubject(subject);
+      if (subjectQuestions.isNotEmpty) {
+        // Shuffle questions and take required number
+        final shuffled = List<TestQuestion>.from(subjectQuestions);
+        shuffled.shuffle();
+        
+        int questionCount;
+        if (subject == 'English') {
+          questionCount = 60; // Take 60 questions for English
+        } else {
+          questionCount = 40; // Take 40 questions for other subjects
+        }
+        
+        final selectedQuestions = shuffled.take(questionCount).toList();
+        allQuestions.addAll(selectedQuestions);
+        
+        // Store the range of indices for this subject
+        final subjectIndices = List<int>.generate(questionCount, (i) => currentIndex + i);
+        subjectQuestionRanges[subject] = subjectIndices;
+        currentIndex += questionCount;
+      }
+    }
+    
+    setState(() {
+      _questions = allQuestions;
+      _selectedAnswers = List.filled(allQuestions.length, '');
+      _answeredQuestions = List.filled(allQuestions.length, false);
+      _subjectQuestionRanges = subjectQuestionRanges;
+    });
+    
+    _startTimer();
+  }
+
+  void _startQuiz(String subject) {
+    final subjectQuestions = _getLocalQuestionsForSubject(subject);
+    if (subjectQuestions.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No questions available for $subject'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Take 10 random questions
+    final shuffled = List<TestQuestion>.from(subjectQuestions);
+    shuffled.shuffle();
+    final quizQuestions = shuffled.take(10).toList();
+
+    setState(() {
+      _isTestInProgress = true;
+      _currentQuestionIndex = 0;
+      _timeRemaining = 20 * 60; // 20 minutes
+      _questions = quizQuestions;
+      _selectedAnswers = List.filled(quizQuestions.length, '');
+      _answeredQuestions = List.filled(quizQuestions.length, false);
+      _currentSubject = subject;
+      _isCbt = false; // Set to false for quiz
+    });
+
     _startTimer();
   }
 
@@ -506,995 +253,956 @@ class _MockTestScreenState extends State<MockTestScreen> {
     });
   }
 
+  void _selectAnswer(String answer) {
+    if (!_isTestInProgress) return;
+    
+    setState(() {
+      _selectedAnswers[_currentQuestionIndex] = answer;
+      _answeredQuestions[_currentQuestionIndex] = true;
+    });
+  }
 
+  void _nextQuestion() {
+    if (_currentQuestionIndex < _questions.length - 1) {
+      setState(() {
+        _currentQuestionIndex++;
+      });
+    }
+  }
+
+  void _previousQuestion() {
+    if (_currentQuestionIndex > 0) {
+      setState(() {
+        _currentQuestionIndex--;
+      });
+    }
+  }
+
+  // Get current subject for the current question
+  String _getCurrentSubject() {
+    for (final entry in _subjectQuestionRanges.entries) {
+      if (entry.value.contains(_currentQuestionIndex)) {
+        return entry.key;
+      }
+    }
+    return '';
+  }
+
+  // Get current question number within the current subject
+  int _getCurrentQuestionInSubject() {
+    final currentSubject = _getCurrentSubject();
+    if (currentSubject.isNotEmpty) {
+      final subjectQuestions = _subjectQuestionRanges[currentSubject]!;
+      final currentIndexInSubject = subjectQuestions.indexOf(_currentQuestionIndex);
+      return currentIndexInSubject + 1;
+    }
+    return _currentQuestionIndex + 1;
+  }
+
+  // Get total questions in the current subject
+  int _getTotalQuestionsInSubject() {
+    final currentSubject = _getCurrentSubject();
+    if (currentSubject.isNotEmpty) {
+      return _subjectQuestionRanges[currentSubject]!.length;
+    }
+    return _questions.length;
+  }
+
+  // Get next question in the same subject
+  void _nextQuestionInSubject() {
+    final currentSubject = _getCurrentSubject();
+    if (currentSubject.isNotEmpty) {
+      final subjectQuestions = _subjectQuestionRanges[currentSubject]!;
+      final currentIndexInSubject = subjectQuestions.indexOf(_currentQuestionIndex);
+      
+      if (currentIndexInSubject < subjectQuestions.length - 1) {
+        // Move to next question in same subject
+        setState(() {
+          _currentQuestionIndex = subjectQuestions[currentIndexInSubject + 1];
+        });
+      } else {
+        // Move to first question of next subject
+        final subjects = _subjectQuestionRanges.keys.toList();
+        final currentSubjectIndex = subjects.indexOf(currentSubject);
+        if (currentSubjectIndex < subjects.length - 1) {
+          final nextSubject = subjects[currentSubjectIndex + 1];
+          final nextSubjectQuestions = _subjectQuestionRanges[nextSubject]!;
+          setState(() {
+            _currentQuestionIndex = nextSubjectQuestions.first;
+          });
+        }
+      }
+    }
+  }
+
+  // Get previous question in the same subject
+  void _previousQuestionInSubject() {
+    final currentSubject = _getCurrentSubject();
+    if (currentSubject.isNotEmpty) {
+      final subjectQuestions = _subjectQuestionRanges[currentSubject]!;
+      final currentIndexInSubject = subjectQuestions.indexOf(_currentQuestionIndex);
+      
+      if (currentIndexInSubject > 0) {
+        // Move to previous question in same subject
+        setState(() {
+          _currentQuestionIndex = subjectQuestions[currentIndexInSubject - 1];
+        });
+      } else {
+        // Move to last question of previous subject
+        final subjects = _subjectQuestionRanges.keys.toList();
+        final currentSubjectIndex = subjects.indexOf(currentSubject);
+        if (currentSubjectIndex > 0) {
+          final previousSubject = subjects[currentSubjectIndex - 1];
+          final previousSubjectQuestions = _subjectQuestionRanges[previousSubject]!;
+          setState(() {
+            _currentQuestionIndex = previousSubjectQuestions.last;
+          });
+        }
+      }
+    }
+  }
 
   void _submitTest() async {
     setState(() {
       _isTestInProgress = false;
     });
 
-    // Calculate per-subject scores
-    Map<String, int> correctPerSubject = {};
-    Map<String, int> attemptedPerSubject = {};
-    for (final subject in _userSubjects) {
-      correctPerSubject[subject] = 0;
-      attemptedPerSubject[subject] = 0;
-    }
-
-    for (int i = 0; i < _questions.length; i++) {
-      final question = _questions[i];
-      final selected = _selectedAnswers[i];
-      final correct = question.options[question.correctAnswer];
-      final isCorrect = selected == correct;
-      attemptedPerSubject[question.subject] =
-          (attemptedPerSubject[question.subject] ?? 0) +
-          (selected.isNotEmpty ? 1 : 0);
-      if (isCorrect) {
-        correctPerSubject[question.subject] =
-            (correctPerSubject[question.subject] ?? 0) + 1;
-      }
-    }
-
-    double totalScore = 0;
-    List<Map<String, dynamic>> subjectResults = [];
-
-    if (_currentTest!.isCbt) {
-      // CBT grading: 400-point scale
-      for (final subject in _userSubjects) {
-        int correct = correctPerSubject[subject] ?? 0;
-        int attempted = attemptedPerSubject[subject] ?? 0;
-        double score;
-        if (subject == 'English') {
-          score = correct * 1.67;
-        } else {
-          score = correct * 2.5;
-        }
-        totalScore += score;
-        subjectResults.add({
-          'subject': subject,
-          'correct': correct,
-          'attempted': attempted,
-          'score': score,
-        });
-      }
+    final correctAnswers = _calculateCorrectAnswers();
+    final isCbt = _currentSubject.isEmpty; // If no specific subject, it's CBT
+    
+    double score;
+    if (isCbt) {
+      // CBT: graded over 400
+      score = (correctAnswers / _questions.length) * 400;
     } else {
-      // Quiz grading: 20-point scale (1 mark per question)
-      for (final subject in _userSubjects) {
-        int correct = correctPerSubject[subject] ?? 0;
-        int attempted = attemptedPerSubject[subject] ?? 0;
-        double score = correct.toDouble();
-        totalScore += score;
-        subjectResults.add({
-          'subject': subject,
-          'correct': correct,
-          'attempted': attempted,
-          'score': score,
-        });
-      }
+      // Quiz: graded over 20 (2 marks per question)
+      score = correctAnswers * 2.0;
     }
 
-    // Save/update subject progress
+    // Save results
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      for (final subject in _userSubjects) {
-        final prev = await FirestoreService.loadSubjectProgress(
-          user.uid,
-          subject,
-        );
-        double bestScore = prev != null && prev['bestScore'] != null
-            ? prev['bestScore']
-            : 0;
-        final currentScore = subjectResults.firstWhere(
-          (r) => r['subject'] == subject,
-        )['score'];
-        if (currentScore > bestScore) bestScore = currentScore;
-        await FirestoreService.saveSubjectProgress(
-          user.uid,
-          {subject: bestScore},
-        );
-      }
-
-      // Save test result
-      await FirestoreService.saveMockTestResult(
-        user.uid,
-        'Mock Test',
-        totalScore.toInt(),
-        _questions.length,
-        Duration(minutes: _timeRemaining),
-        subjectResults,
-      );
+      try {
+        if (isCbt) {
+          await FirestoreService.saveCbtResult(
+            user.uid,
+            'cbt_test',
+            score.toInt(),
+            correctAnswers,
+            _questions.length,
+            120 * 60 - _timeRemaining,
+          );
+        } else {
+          await FirestoreService.saveQuizResult(
+            user.uid,
+            _currentSubject,
+            score.toInt(),
+            _questions.length,
+            Duration(seconds: 20 * 60 - _timeRemaining),
+          );
+        }
+          } catch (e) {
+      // Error saving results
+    }
     }
 
-    _showResults(subjectResults, totalScore);
+    // Show results
+    if (mounted) {
+      _showResults(correctAnswers, score, isCbt);
+    }
   }
 
-  void _showResults(
-    List<Map<String, dynamic>> subjectResults,
-    double totalScore,
-  ) {
-    final isCbt = _currentTest!.isCbt;
+  int _calculateCorrectAnswers() {
+    int correct = 0;
+    for (int i = 0; i < _questions.length; i++) {
+      if (_selectedAnswers[i] == _questions[i].options[_questions[i].correctAnswer]) {
+        correct++;
+      }
+    }
+    return correct;
+  }
 
-    if (isCbt) {
-      // CBT test - show dialog with history
-      final maxScore = 400;
-      final testType = 'CBT Mock Test';
-
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Row(
-              children: [
-                Icon(
-                  totalScore >= 280 ? Icons.emoji_events : Icons.school,
-                  color: totalScore >= 280
-                      ? AppColors.accentAmber
-                      : AppColors.dominantPurple,
+  void _showResults(int correctAnswers, double score, bool isCbt) async {
+    // Show grading screen first
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.dominantPurple,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        content: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Grading...',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
-                const SizedBox(width: 8),
-                Text('$testType Results'),
-              ],
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ...subjectResults.map(
-                  (r) => Text(
-                    '${r['subject']}: ${r['score'].toStringAsFixed(2)} marks (${r['correct']} correct)',
-                  ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Please wait while we calculate your results',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Total Score: ${totalScore.toStringAsFixed(2)} / $maxScore',
-                ),
-                const SizedBox(height: 16),
-                if (_cbtHistory.isNotEmpty) ...[
-                  const Text(
-                    'Last 10 CBT Test Scores:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  ..._cbtHistory.asMap().entries.map(
-                    (entry) => Text(
-                      '${entry.key + 1}. ${entry.value['totalScore'].toStringAsFixed(2)} / 400',
-                    ),
-                  ),
-                ],
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Back to Tests'),
+                textAlign: TextAlign.center,
               ),
             ],
-          );
-        },
-      );
-    } else {
-      // Quiz test - navigate to quiz results screen
-      Navigator.push(
+          ),
+        ),
+      ),
+    );
+
+    // Simulate grading time (2-4 seconds)
+    await Future.delayed(Duration(seconds: 2 + (DateTime.now().millisecond % 3)));
+
+    // Close grading dialog
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+
+    // Navigate to results screen
+    if (mounted) {
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => QuizResultsScreen(
-            subjectResults: subjectResults,
-            totalScore: totalScore,
-            testTitle: _currentTest!.title,
+          builder: (context) => TestResultsScreen(
+            correctAnswers: correctAnswers,
+            totalQuestions: _questions.length,
+            score: score,
+            isCbt: isCbt,
+            selectedSubjects: _selectedSubjects,
+            timeElapsed: isCbt ? 120 * 60 - _timeRemaining : 20 * 60 - _timeRemaining,
+            subjectScores: _calculateSubjectScores(),
           ),
         ),
       );
     }
   }
 
+  Map<String, double> _calculateSubjectScores() {
+    if (!_isCbt) return {};
+    
+    final Map<String, double> subjectScores = {};
+    final Map<String, int> subjectCorrect = {};
+    final Map<String, int> subjectTotal = {};
+    
+    for (int i = 0; i < _questions.length; i++) {
+      final question = _questions[i];
+      final subject = _getQuestionSubject(i);
+      
+      if (subject != null) {
+        subjectTotal[subject] = (subjectTotal[subject] ?? 0) + 1;
+        if (_selectedAnswers[i] == question.options[question.correctAnswer]) {
+          subjectCorrect[subject] = (subjectCorrect[subject] ?? 0) + 1;
+        }
+      }
+    }
+    
+    for (final subject in subjectTotal.keys) {
+      final correct = subjectCorrect[subject] ?? 0;
+      final total = subjectTotal[subject] ?? 1;
+      subjectScores[subject] = (correct / total) * 100;
+    }
+    
+    return subjectScores;
+  }
 
+  String? _getQuestionSubject(int questionIndex) {
+    // This is a simplified mapping - in a real app, questions would have subject tags
+    if (questionIndex < 60) return 'English';
+    if (questionIndex < 100) return _selectedSubjects.length > 1 ? _selectedSubjects[1] : null;
+    if (questionIndex < 140) return _selectedSubjects.length > 2 ? _selectedSubjects[2] : null;
+    if (questionIndex < 180) return _selectedSubjects.length > 3 ? _selectedSubjects[3] : null;
+    return null;
+  }
 
   String _formatTime(int seconds) {
-    int hours = seconds ~/ 3600;
-    int minutes = (seconds % 3600) ~/ 60;
-    int secs = seconds % 60;
-
-    if (hours > 0) {
-      return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
-    } else {
-      return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
-    }
+    final minutes = seconds ~/ 60;
+    final remainingSeconds = seconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark
-        ? const Color(0xFF181A20)
-        : AppColors.backgroundPrimary;
+    if (_isTestInProgress) {
+      return _buildTestInterface();
+    }
+
+    if (_showSubjectSelection) {
+      return _buildSubjectSelectionInterface();
+    }
 
     return Scaffold(
-      backgroundColor: bgColor,
       appBar: AppBar(
-        title: Text(
-          'Mock Tests',
-          style: TextStyle(
-            fontSize: ResponsiveHelper.getResponsiveFontSize(context, 20),
-          ),
-        ),
+        title: const Text('Mock Tests'),
         backgroundColor: AppColors.dominantPurple,
         foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: ResponsiveHelper.responsiveSingleChildScrollView(
-        context: context,
-        child: Padding(
-          padding: ResponsiveHelper.getResponsiveEdgeInsets(context),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header Section
-              _buildHeaderSection(context, isDark),
-              
-              SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
-              
-              // Available Tests
-              _buildAvailableTestsSection(context, isDark),
-              
-              SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
-              
-              // Test History
-              _buildTestHistorySection(context, isDark),
-            ],
-          ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/home',
+              (route) => false,
+            );
+          },
         ),
       ),
-    );
-  }
-
-  Widget _buildHeaderSection(BuildContext context, bool isDark) {
-    return ResponsiveHelper.responsiveCard(
-      context: context,
-      color: isDark ? const Color(0xFF23243B) : Colors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Practice Tests',
-            style: TextStyle(
-              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 24),
-              fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : AppColors.textPrimary,
-            ),
-          ),
-          
-          SizedBox(height: ResponsiveHelper.getResponsivePadding(context) / 2),
-          
-          Text(
-            'Choose a test to practice and improve your UTME skills',
-            style: TextStyle(
-              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAvailableTestsSection(BuildContext context, bool isDark) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Available Tests',
-          style: TextStyle(
-            fontSize: ResponsiveHelper.getResponsiveFontSize(context, 20),
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : AppColors.textPrimary,
-          ),
-        ),
-        
-        SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
-        
-        ResponsiveHelper.responsiveGridView(
-          context: context,
-          children: _availableTests.map((test) => _buildTestCard(context, test, isDark)).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTestCard(BuildContext context, MockTest test, bool isDark) {
-    return ResponsiveHelper.responsiveCard(
-      context: context,
-      color: isDark ? const Color(0xFF23243B) : Colors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.quiz,
-                color: AppColors.dominantPurple,
-                size: ResponsiveHelper.getResponsiveIconSize(context, 24),
-              ),
-              
-              SizedBox(width: ResponsiveHelper.getResponsivePadding(context) / 2),
-              
-              Expanded(
-                child: Text(
-                  test.title,
-                  style: TextStyle(
-                    fontSize: ResponsiveHelper.getResponsiveFontSize(context, 18),
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : AppColors.textPrimary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          
-          SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
-          
-          Text(
-            test.description,
-            style: TextStyle(
-              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
-              color: AppColors.textSecondary,
-            ),
-          ),
-          
-          SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
-          
-          // Test Details
-          Row(
-            children: [
-              _buildTestDetail(
-                context,
-                Icons.timer,
-                '${test.duration} min',
-                isDark,
-              ),
-              
-              SizedBox(width: ResponsiveHelper.getResponsivePadding(context)),
-              
-              _buildTestDetail(
-                context,
-                Icons.question_answer,
-                '${test.questions} questions',
-                isDark,
-              ),
-              
-              SizedBox(width: ResponsiveHelper.getResponsivePadding(context)),
-              
-              _buildTestDetail(
-                context,
-                Icons.subject,
-                test.subjects.length > 1 ? '${test.subjects.length} subjects' : test.subjects.first,
-                isDark,
-              ),
-            ],
-          ),
-          
-          SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
-          
-          // Start Button
-          ResponsiveHelper.responsiveButton(
-            context: context,
-            text: 'Start Test',
-            onPressed: () => _startTest(test),
-            backgroundColor: AppColors.dominantPurple,
-            foregroundColor: Colors.white,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTestDetail(BuildContext context, IconData icon, String text, bool isDark) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          icon,
-          size: ResponsiveHelper.getResponsiveIconSize(context, 16),
-          color: AppColors.textSecondary,
-        ),
-        
-        SizedBox(width: ResponsiveHelper.getResponsivePadding(context) / 4),
-        
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: ResponsiveHelper.getResponsiveFontSize(context, 12),
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTestHistorySection(BuildContext context, bool isDark) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Test History',
+            const Text(
+              'Available Tests',
               style: TextStyle(
-                fontSize: ResponsiveHelper.getResponsiveFontSize(context, 20),
+                fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // CBT Test Option
+            Card(
+              margin: const EdgeInsets.only(bottom: 16),
+              child: ListTile(
+                title: const Text('CBT Test'),
+                subtitle: const Text('180 questions (60 English + 40 each from 3 subjects), 120 minutes, graded over 400'),
+                trailing: ElevatedButton(
+                  onPressed: _showCbtSubjectSelection,
+                  child: const Text('Start CBT'),
+                ),
               ),
             ),
             
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _showHistory = !_showHistory;
-                });
-              },
-              child: Text(
-                _showHistory ? 'Hide' : 'Show',
-                style: TextStyle(
-                  color: AppColors.dominantPurple,
-                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
-                ),
+            const Text(
+              'Subject Quizzes',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '10 random questions, 20 minutes, graded over 20',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            Expanded(
+              child: ListView.builder(
+                itemCount: _availableSubjects.length,
+                itemBuilder: (context, index) {
+                  final subject = _availableSubjects[index];
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      title: Text(subject),
+                      subtitle: Text('10 questions, 20 minutes'),
+                      trailing: ElevatedButton(
+                        onPressed: () => _startQuiz(subject),
+                        child: const Text('Start Quiz'),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],
         ),
-        
-        if (_showHistory) ...[
-          SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
-          
-          ResponsiveHelper.responsiveListView(
-            context: context,
-            children: _cbtHistory.map((test) => _buildHistoryCard(context, test, isDark)).toList(),
-          ),
-        ],
-      ],
+      ),
     );
   }
 
-  Widget _buildHistoryCard(BuildContext context, Map<String, dynamic> test, bool isDark) {
-    return ResponsiveHelper.responsiveCard(
-      context: context,
-      color: isDark ? const Color(0xFF23243B) : Colors.white,
-      child: Row(
-        children: [
-          Container(
-            width: ResponsiveHelper.getResponsiveIconSize(context, 50),
-            height: ResponsiveHelper.getResponsiveIconSize(context, 50),
-            decoration: BoxDecoration(
-              color: AppColors.dominantPurple.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(ResponsiveHelper.getResponsiveBorderRadius(context)),
+  Widget _buildSubjectSelectionInterface() {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Select Subjects for CBT'),
+        backgroundColor: AppColors.dominantPurple,
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            setState(() {
+              _showSubjectSelection = false;
+            });
+          },
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Select 3 additional subjects (English is already selected)',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            child: Icon(
-              Icons.quiz,
-              color: AppColors.dominantPurple,
-              size: ResponsiveHelper.getResponsiveIconSize(context, 24),
+            const SizedBox(height: 16),
+            
+            // Selected subjects
+            Wrap(
+              spacing: 8,
+              children: _selectedSubjects.map((subject) {
+                final isEnglish = subject == 'English';
+                return Chip(
+                  label: Text(subject),
+                  backgroundColor: isEnglish ? Colors.grey : AppColors.dominantPurple,
+                  deleteIcon: isEnglish ? null : const Icon(Icons.close),
+                  onDeleted: isEnglish ? null : () => _toggleSubject(subject),
+                );
+              }).toList(),
             ),
-          ),
-          
-          SizedBox(width: ResponsiveHelper.getResponsivePadding(context)),
-          
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  test['title'] ?? 'Mock Test',
-                  style: TextStyle(
-                    fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : AppColors.textPrimary,
-                  ),
+            
+            const SizedBox(height: 24),
+            const Text(
+              'Available Subjects',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            Expanded(
+              child: ListView.builder(
+                itemCount: _availableSubjects.length,
+                itemBuilder: (context, index) {
+                  final subject = _availableSubjects[index];
+                  final isSelected = _selectedSubjects.contains(subject);
+                  final isEnglish = subject == 'English';
+                  
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      title: Text(subject),
+                      subtitle: Text(isEnglish ? 'Compulsory' : 'Optional'),
+                      trailing: isEnglish 
+                        ? const Icon(Icons.lock, color: Colors.grey)
+                        : Checkbox(
+                            value: isSelected,
+                            onChanged: (value) => _toggleSubject(subject),
+                          ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _selectedSubjects.length == 4 ? _startCbtTest : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.dominantPurple,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                
-                SizedBox(height: ResponsiveHelper.getResponsivePadding(context) / 4),
-                
-                Text(
-                  'Score: ${test['score'] ?? 0}%',
-                  style: TextStyle(
-                    fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
+                child: const Text('Start CBT Test'),
+              ),
             ),
-          ),
-          
-          Icon(
-            Icons.arrow_forward_ios,
-            color: AppColors.textSecondary,
-            size: ResponsiveHelper.getResponsiveIconSize(context, 16),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildTestInterface() {
-    final subjectTabs = _userSubjects;
-    if (_currentSubject.isEmpty ||
-        !_subjectQuestionIndices.containsKey(_currentSubject) ||
-        _subjectQuestionIndices[_currentSubject] == null ||
-        _subjectQuestionIndices[_currentSubject]!.isEmpty ||
-        _questions.isEmpty) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('Mock Test'),
-          backgroundColor: AppColors.dominantPurple,
-          foregroundColor: Colors.white,
-        ),
-        body: const Center(
-          child: Text(
-            'No questions available for this test. Please select your subjects and try again.',
-            style: TextStyle(fontSize: 16),
-            textAlign: TextAlign.center,
-          ),
+    if (_questions.isEmpty) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
         ),
       );
     }
-    final currentIndices = _subjectQuestionIndices[_currentSubject]!;
-    final currentIndex = _currentQuestionIndex;
-    final currentQuestion = _questions[currentIndices[currentIndex]];
-    _subjectAnswered = {
-      for (var s in _userSubjects)
-        s: _subjectQuestionIndices[s]!
-            .where((i) => _selectedAnswers[i].isNotEmpty)
-            .length,
-    };
-    return PopScope(
-      canPop: false,
-      onPopInvoked: (didPop) async {
-        if (didPop) return;
-        // Show confirmation dialog before allowing back navigation
-        final shouldPop = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Exit Test?'),
-            content: const Text(
-              'Are you sure you want to exit the test? Your progress will be lost.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Exit'),
-              ),
-            ],
-          ),
-        );
-        if (shouldPop == true) {
-          if (mounted) {
-            Navigator.of(context).pop();
-          }
-        }
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(_currentTest!.title),
-          backgroundColor: AppColors.dominantPurple,
-          foregroundColor: Colors.white,
-          automaticallyImplyLeading: false, // Prevent back button
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.history),
-              tooltip: 'View History',
-              onPressed: () async {
-                await _loadCbtHistory();
-                setState(() => _showHistory = true);
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.check_circle),
-              tooltip: 'Submit',
-              onPressed: () async {
-                showDialog(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (context) => const Center(
-                    child: Card(
-                      color: Colors.white,
-                      margin: EdgeInsets.symmetric(horizontal: 60),
-                      child: Padding(
-                        padding: EdgeInsets.all(32),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            CircularProgressIndicator(),
-                            SizedBox(height: 16),
-                            Text(
-                              'Grading...',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-                final result = await _submitTestAndGetResults();
-                if (result != null) {
-                  if (mounted) {
-                    Navigator.of(context).pop(); // Dismiss loading dialog
 
-                    if (_currentTest!.isCbt) {
-                      // CBT test - use CBT results screen with history
-                      await _loadCbtHistory(orderByScore: false);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ResultsScreen(
-                            subjectResults: result['subjectResults'],
-                            totalScore: result['totalScore'],
-                            cbtHistory: _cbtHistory,
-                          ),
-                        ),
-                      );
-                    } else {
-                      // Quiz test - use quiz results screen
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => QuizResultsScreen(
-                            subjectResults: result['subjectResults'],
-                            totalScore: result['totalScore'],
-                            testTitle: _currentTest!.title,
-                          ),
-                        ),
-                      );
-                    }
-                  }
-                }
-              },
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: _timeRemaining < 300
-                    ? Colors.red
-                    : AppColors.accentAmber,
-                borderRadius: BorderRadius.circular(16),
+    final currentQuestion = _questions[_currentQuestionIndex];
+    final progress = (_currentQuestionIndex + 1) / _questions.length;
+    final isCbt = _currentSubject.isEmpty;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(isCbt ? 'CBT Test' : '$_currentSubject Quiz'),
+        backgroundColor: AppColors.dominantPurple,
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Exit Test?'),
+                content: const Text('Are you sure you want to exit? Your progress will be lost.'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      setState(() {
+                        _isTestInProgress = false;
+                        _showSubjectSelection = false;
+                      });
+                    },
+                    child: const Text('Exit'),
+                  ),
+                ],
               ),
-              child: Text(
-                _formatTime(_timeRemaining),
-                style: const TextStyle(
+            );
+          },
+        ),
+        actions: [
+          // Professional Timer Container
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.timer,
                   color: Colors.white,
-                  fontWeight: FontWeight.bold,
+                  size: 16,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  _formatTime(_timeRemaining),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Calculator Button
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            child: IconButton(
+              onPressed: _showCalculator,
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.accentAmber,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.calculate,
+                  color: Colors.white,
+                  size: 20,
                 ),
               ),
             ),
-            const SizedBox(width: 8),
-          ],
-        ),
-        body: Column(
-          children: [
-            // Subject Tabs (moved out of AppBar)
-            Container(
-              color: AppColors.dominantPurple,
-              child: Row(
-                children: subjectTabs
-                    .map(
-                      (s) => Expanded(
-                        child: GestureDetector(
-                          onTap: () => setState(() {
-                            _currentSubject = s;
-                            _currentQuestionIndex = 0;
-                          }),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              border: Border(
-                                bottom: BorderSide(
-                                  color: _currentSubject == s
-                                      ? AppColors.accentAmber
-                                      : Colors.transparent,
-                                  width: 3,
-                                ),
-                              ),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Progress bar
+          LinearProgressIndicator(
+            value: progress,
+            backgroundColor: Colors.grey[300],
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.dominantPurple),
+          ),
+          
+          // Subject Tabs (only for CBT)
+          if (isCbt) _buildSubjectTabs(),
+          
+          // Question counter
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  isCbt 
+                    ? '${_getCurrentSubject()} - Question ${_getCurrentQuestionInSubject()} of ${_getTotalQuestionsInSubject()}'
+                    : 'Question ${_currentQuestionIndex + 1} of ${_questions.length}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  '${(progress * 100).toInt()}%',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.dominantPurple,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Question
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    currentQuestion.question,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Options
+                  ...currentQuestion.options.map((option) {
+                    final isSelected = _selectedAnswers[_currentQuestionIndex] == option;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: GestureDetector(
+                        onTap: () => _selectAnswer(option),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: isSelected ? AppColors.dominantPurple : Colors.grey[100],
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isSelected ? AppColors.dominantPurple : Colors.grey[300]!,
                             ),
-                            child: Column(
-                              children: [
-                                Text(
-                                  s,
-                                  style: TextStyle(
-                                    color: _currentSubject == s
-                                        ? AppColors.accentAmber
-                                        : Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  '${_subjectAnswered[s]}/${_subjectQuestionIndices[s]!.length}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
+                          ),
+                          child: Text(
+                            option,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: isSelected ? Colors.white : Colors.black,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                             ),
                           ),
                         ),
                       ),
-                    )
-                    .toList(),
+                    );
+                  }),
+                ],
               ),
             ),
-            LinearProgressIndicator(
-              value:
-                  (_currentQuestionIndex + 1) /
-                  _subjectQuestionIndices[_currentSubject]!.length,
-              backgroundColor: AppColors.borderLight,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                AppColors.dominantPurple,
-              ),
+          ),
+          
+          // Navigation buttons
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Previous button
+                ElevatedButton(
+                  onPressed: _isCbt ? _previousQuestionInSubject : (_currentQuestionIndex > 0 ? _previousQuestion : null),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey[300],
+                    foregroundColor: Colors.black,
+                  ),
+                  child: const Text('Previous'),
+                ),
+                
+                // Submit button (always available)
+                ElevatedButton(
+                  onPressed: _submitTest,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Submit'),
+                ),
+                
+                // Next button
+                ElevatedButton(
+                  onPressed: _isCbt ? _nextQuestionInSubject : (_currentQuestionIndex < _questions.length - 1 ? _nextQuestion : null),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.dominantPurple,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Next'),
+                ),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSubjectTabs() {
+    return Container(
+      height: 50,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _subjectQuestionRanges.length,
+        itemBuilder: (context, index) {
+          final subject = _subjectQuestionRanges.keys.elementAt(index);
+          final questionIndices = _subjectQuestionRanges[subject]!;
+          final isCurrentSubject = questionIndices.contains(_currentQuestionIndex);
+          
+          // Calculate progress for this subject
+          final answeredInSubject = questionIndices.where((index) => _answeredQuestions[index]).length;
+          final totalInSubject = questionIndices.length;
+          
+          return Container(
+            margin: const EdgeInsets.only(right: 8),
+            child: ElevatedButton(
+              onPressed: () {
+                // Jump to first unanswered question of this subject, or first question if all answered
+                final firstUnansweredIndex = questionIndices.firstWhere(
+                  (index) => !_answeredQuestions[index],
+                  orElse: () => questionIndices.first,
+                );
+                setState(() {
+                  _currentQuestionIndex = firstUnansweredIndex;
+                });
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isCurrentSubject ? AppColors.dominantPurple : Colors.grey[200],
+                foregroundColor: isCurrentSubject ? Colors.white : Colors.black,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Question ${_currentQuestionIndex + 1} of ${_subjectQuestionIndices[_currentSubject]!.length}',
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    subject,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: isCurrentSubject ? FontWeight.bold : FontWeight.normal,
+                    ),
                   ),
                   Text(
-                    _currentSubject,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.dominantPurple,
-                      fontWeight: FontWeight.w600,
+                    '$answeredInSubject/$totalInSubject',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: isCurrentSubject ? Colors.white70 : Colors.black54,
                     ),
                   ),
                 ],
               ),
             ),
-            Expanded(
-              child: Container(
-                color: Colors.transparent,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        currentQuestion.question,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 24),
-                      ...List.generate(
-                        currentQuestion.options.length,
-                        (i) => _buildOption(
-                          currentQuestion.options[i],
-                          i,
-                          currentQuestion,
-                          currentIndices[currentIndex],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            SafeArea(
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border(top: BorderSide(color: AppColors.borderLight)),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: _currentQuestionIndex > 0
-                            ? () => setState(() => _currentQuestionIndex--)
-                            : null,
-                        child: const Text('Previous'),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed:
-                            _currentQuestionIndex <
-                                _subjectQuestionIndices[_currentSubject]!
-                                        .length -
-                                    1
-                            ? () => setState(() => _currentQuestionIndex++)
-                            : null,
-                        child: const Text('Next'),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildOption(
-    String option,
-    int index,
-    TestQuestion question,
-    int globalIndex,
-  ) {
-    bool isSelected = _selectedAnswers[globalIndex] == option;
-    return InkWell(
-      onTap: () => setState(() {
-        _selectedAnswers[globalIndex] = option;
-        _answeredQuestions[globalIndex] = true;
-      }),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.dominantPurple
-              : AppColors.backgroundSecondary,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected
-                ? AppColors.dominantPurple
-                : AppColors.borderLight,
+  void _showCalculator() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const CalculatorWidget(),
+    );
+  }
+}
+
+class CalculatorWidget extends StatefulWidget {
+  const CalculatorWidget({super.key});
+
+  @override
+  State<CalculatorWidget> createState() => _CalculatorWidgetState();
+}
+
+class _CalculatorWidgetState extends State<CalculatorWidget> {
+  String _display = '0';
+  String _operation = '';
+  double _firstNumber = 0;
+  bool _isNewNumber = true;
+
+  void _onNumberPressed(String number) {
+    setState(() {
+      if (_isNewNumber) {
+        _display = number;
+        _isNewNumber = false;
+      } else {
+        _display = _display + number;
+      }
+    });
+  }
+
+  void _onOperationPressed(String operation) {
+    setState(() {
+      _firstNumber = double.parse(_display);
+      _operation = operation;
+      _isNewNumber = true;
+    });
+  }
+
+  void _calculate() {
+    if (_operation.isEmpty) return;
+    
+    final secondNumber = double.parse(_display);
+    double result = 0;
+    
+    switch (_operation) {
+      case '+':
+        result = _firstNumber + secondNumber;
+        break;
+      case '-':
+        result = _firstNumber - secondNumber;
+        break;
+      case '×':
+        result = _firstNumber * secondNumber;
+        break;
+      case '÷':
+        result = _firstNumber / secondNumber;
+        break;
+      case 'log':
+        result = log(secondNumber) / ln10;
+        break;
+      case 'ln':
+        result = log(secondNumber);
+        break;
+      case 'sin':
+        result = sin(secondNumber * pi / 180);
+        break;
+      case 'cos':
+        result = cos(secondNumber * pi / 180);
+        break;
+      case 'tan':
+        result = tan(secondNumber * pi / 180);
+        break;
+    }
+    
+    setState(() {
+      _display = result.toString();
+      _operation = '';
+      _isNewNumber = true;
+    });
+  }
+
+  void _clear() {
+    setState(() {
+      _display = '0';
+      _operation = '';
+      _firstNumber = 0;
+      _isNewNumber = true;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.7,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        children: [
+          // Display
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  _operation.isNotEmpty ? '$_firstNumber $_operation' : '',
+                  style: const TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+                Text(
+                  _display,
+                  style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+          
+          // Calculator buttons
+          Expanded(
+            child: GridView.count(
+              crossAxisCount: 4,
+              padding: const EdgeInsets.all(16),
+              children: [
+                // Scientific functions
+                _buildButton('C', Colors.red, _clear),
+                _buildButton('log', Colors.orange, () => _onOperationPressed('log')),
+                _buildButton('ln', Colors.orange, () => _onOperationPressed('ln')),
+                _buildButton('÷', Colors.orange, () => _onOperationPressed('÷')),
+                
+                _buildButton('sin', Colors.orange, () => _onOperationPressed('sin')),
+                _buildButton('cos', Colors.orange, () => _onOperationPressed('cos')),
+                _buildButton('tan', Colors.orange, () => _onOperationPressed('tan')),
+                _buildButton('×', Colors.orange, () => _onOperationPressed('×')),
+                
+                // Numbers and basic operations
+                _buildButton('7', Colors.grey[300]!, () => _onNumberPressed('7')),
+                _buildButton('8', Colors.grey[300]!, () => _onNumberPressed('8')),
+                _buildButton('9', Colors.grey[300]!, () => _onNumberPressed('9')),
+                _buildButton('-', Colors.orange, () => _onOperationPressed('-')),
+                
+                _buildButton('4', Colors.grey[300]!, () => _onNumberPressed('4')),
+                _buildButton('5', Colors.grey[300]!, () => _onNumberPressed('5')),
+                _buildButton('6', Colors.grey[300]!, () => _onNumberPressed('6')),
+                _buildButton('+', Colors.orange, () => _onOperationPressed('+')),
+                
+                _buildButton('1', Colors.grey[300]!, () => _onNumberPressed('1')),
+                _buildButton('2', Colors.grey[300]!, () => _onNumberPressed('2')),
+                _buildButton('3', Colors.grey[300]!, () => _onNumberPressed('3')),
+                _buildButton('=', Colors.green, _calculate, isLarge: true),
+                
+                _buildButton('0', Colors.grey[300]!, () => _onNumberPressed('0'), isLarge: true),
+                _buildButton('.', Colors.grey[300]!, () => _onNumberPressed('.')),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildButton(String text, Color color, VoidCallback onPressed, {bool isLarge = false}) {
+    return Container(
+      margin: const EdgeInsets.all(4),
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
           ),
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                color: isSelected ? Colors.white : AppColors.borderLight,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: isSelected
-                  ? Icon(Icons.check, size: 16, color: AppColors.dominantPurple)
-                  : null,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                '${String.fromCharCode(65 + index)}. $option',
-                style: TextStyle(
-                  color: isSelected ? Colors.white : AppColors.textPrimary,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                ),
-              ),
-            ),
-          ],
+        child: Text(
+          text,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
       ),
     );
-  }
-
-  Future<void> _loadCbtHistory({bool orderByScore = true}) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      final query = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('mock_tests')
-          .orderBy(
-            orderByScore ? 'totalScore' : 'takenAt',
-            descending: !orderByScore,
-          )
-          .limit(10)
-          .get();
-      _cbtHistory = query.docs.map((d) => d.data()).toList();
-    }
-  }
-
-  Future<Map<String, dynamic>?> _submitTestAndGetResults() async {
-    setState(() {
-      _isTestInProgress = false;
-    });
-    Map<String, int> correctPerSubject = {};
-    Map<String, int> attemptedPerSubject = {};
-    for (final subject in _userSubjects) {
-      correctPerSubject[subject] = 0;
-      attemptedPerSubject[subject] = 0;
-    }
-    for (int i = 0; i < _questions.length; i++) {
-      final question = _questions[i];
-      final selected = _selectedAnswers[i];
-      final correct = question.options[question.correctAnswer];
-      final isCorrect = selected == correct;
-      attemptedPerSubject[question.subject] =
-          (attemptedPerSubject[question.subject] ?? 0) +
-          (selected.isNotEmpty ? 1 : 0);
-      if (isCorrect) {
-        correctPerSubject[question.subject] =
-            (correctPerSubject[question.subject] ?? 0) + 1;
-      }
-    }
-    double totalScore = 0;
-    List<Map<String, dynamic>> subjectResults = [];
-    if (_currentTest != null && _currentTest!.isCbt) {
-      for (final subject in _userSubjects) {
-        int correct = correctPerSubject[subject] ?? 0;
-        int attempted = attemptedPerSubject[subject] ?? 0;
-        double score;
-        if (subject == 'English') {
-          score = correct * 1.67;
-        } else {
-          score = correct * 2.5;
-        }
-        totalScore += score;
-        subjectResults.add({
-          'subject': subject,
-          'correct': correct,
-          'attempted': attempted,
-          'score': score,
-        });
-        final user = FirebaseAuth.instance.currentUser;
-        if (user != null) {
-          final prev = await FirestoreService.loadSubjectProgress(
-            user.uid,
-            subject,
-          );
-          double bestScore = prev != null && prev['bestScore'] != null
-              ? prev['bestScore']
-              : 0;
-          if (score > bestScore) bestScore = score;
-          await FirestoreService.saveSubjectProgress(
-            user.uid,
-            {subject: bestScore},
-          );
-        }
-      }
-    } else {
-      for (final subject in _userSubjects) {
-        int correct = correctPerSubject[subject] ?? 0;
-        int attempted = attemptedPerSubject[subject] ?? 0;
-        double score = correct.toDouble();
-        totalScore += score;
-        subjectResults.add({
-          'subject': subject,
-          'correct': correct,
-          'attempted': attempted,
-          'score': score,
-        });
-        final user = FirebaseAuth.instance.currentUser;
-        if (user != null) {
-          final prev = await FirestoreService.loadSubjectProgress(
-            user.uid,
-            subject,
-          );
-          double bestScore = prev != null && prev['bestScore'] != null
-              ? prev['bestScore']
-              : 0;
-          if (score > bestScore) bestScore = score;
-          await FirestoreService.saveSubjectProgress(
-            user.uid,
-            {subject: bestScore},
-          );
-        }
-      }
-    }
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      await FirestoreService.saveMockTestResult(
-        user.uid,
-        'Mock Test',
-        totalScore.toInt(),
-        _questions.length,
-        Duration(minutes: _timeRemaining),
-        subjectResults,
-      );
-    }
-    return {'subjectResults': subjectResults, 'totalScore': totalScore};
   }
 }
 
@@ -1518,466 +1226,4 @@ class MockTest {
     required this.difficulty,
     required this.isCbt,
   });
-}
-
-class TestResultsScreen extends StatelessWidget {
-  final List<TestQuestion> questions;
-  final List<String> selectedAnswers;
-
-  const TestResultsScreen({
-    super.key,
-    required this.questions,
-    required this.selectedAnswers,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Test Results'),
-        backgroundColor: AppColors.dominantPurple,
-        foregroundColor: Colors.white,
-      ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: questions.length,
-        itemBuilder: (context, index) {
-          TestQuestion question = questions[index];
-          String selectedAnswer = selectedAnswers[index];
-          bool isCorrect =
-              selectedAnswer == question.options[question.correctAnswer];
-
-          return Card(
-            margin: const EdgeInsets.only(bottom: 16),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        isCorrect ? Icons.check_circle : Icons.cancel,
-                        color: isCorrect ? Colors.green : Colors.red,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Question ${index + 1}',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(question.question),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Your Answer: $selectedAnswer',
-                    style: TextStyle(
-                      color: isCorrect ? Colors.green : Colors.red,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  if (!isCorrect) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      'Correct Answer: ${question.options[question.correctAnswer]}',
-                      style: const TextStyle(
-                        color: Colors.green,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 8),
-                  Text(
-                    'Explanation: ${question.explanation}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class QuizResultsScreen extends StatelessWidget {
-  final List<Map<String, dynamic>> subjectResults;
-  final double totalScore;
-  final String testTitle;
-
-  const QuizResultsScreen({
-    super.key,
-    required this.subjectResults,
-    required this.totalScore,
-    required this.testTitle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('$testTitle Results'),
-        backgroundColor: AppColors.dominantPurple,
-        foregroundColor: Colors.white,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Total Score Badge
-            Card(
-              color: AppColors.dominantPurple,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 18,
-                ),
-                child: Column(
-                  children: [
-                    Icon(
-                      totalScore >= 14 ? Icons.emoji_events : Icons.school,
-                      color: totalScore >= 14
-                          ? AppColors.accentAmber
-                          : Colors.white,
-                      size: 36,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Total Score',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${totalScore.toStringAsFixed(2)} / 20',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 28,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            // Subject Results
-            ...subjectResults.map(
-              (r) => Card(
-                color: r['score'] >= 14
-                    ? AppColors.accentAmber.withOpacity(0.15)
-                    : Theme.of(context).cardColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                elevation: 2,
-                margin: const EdgeInsets.only(bottom: 16),
-                child: ListTile(
-                  leading: Icon(
-                    r['score'] >= 14 ? Icons.check_circle : Icons.school,
-                    color: r['score'] >= 14
-                        ? AppColors.accentAmber
-                        : AppColors.dominantPurple,
-                    size: 32,
-                  ),
-                  title: Text(
-                    r['subject'],
-                    style: TextStyle(
-                      color: AppColors.dominantPurple,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                  subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Row(
-                      children: [
-                        Text(
-                          '${r['score'].toStringAsFixed(2)} marks',
-                          style: TextStyle(
-                            color: r['score'] >= 14
-                                ? AppColors.accentAmber
-                                : AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Text('(${r['correct']} correct)'),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.dominantPurple,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'Back to Mock Tests',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class ResultsScreen extends StatelessWidget {
-  final List<Map<String, dynamic>> subjectResults;
-  final double totalScore;
-  final List<Map<String, dynamic>> cbtHistory;
-  const ResultsScreen({
-    super.key,
-    required this.subjectResults,
-    required this.totalScore,
-    required this.cbtHistory,
-  });
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('UTME Mock Test Results'),
-        backgroundColor: AppColors.dominantPurple,
-        foregroundColor: Colors.white,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Total Score Badge
-            Card(
-              color: AppColors.dominantPurple,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 18,
-                ),
-                child: Column(
-                  children: [
-                    const Icon(
-                      Icons.emoji_events,
-                      color: AppColors.accentAmber,
-                      size: 36,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Total Score',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${totalScore.toStringAsFixed(2)} / 400',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 28,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            // Subject Results
-            ...subjectResults.map(
-              (r) => Card(
-                color: r['score'] >= 70
-                    ? AppColors.accentAmber.withOpacity(0.15)
-                    : Theme.of(context).cardColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                elevation: 2,
-                margin: const EdgeInsets.only(bottom: 16),
-                child: ListTile(
-                  leading: Icon(
-                    r['score'] >= 70 ? Icons.check_circle : Icons.school,
-                    color: r['score'] >= 70
-                        ? AppColors.accentAmber
-                        : AppColors.dominantPurple,
-                    size: 32,
-                  ),
-                  title: Text(
-                    r['subject'],
-                    style: TextStyle(
-                      color: AppColors.dominantPurple,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                  subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Row(
-                      children: [
-                        Text(
-                          '${r['score'].toStringAsFixed(2)} marks',
-                          style: TextStyle(
-                            color: r['score'] >= 70
-                                ? AppColors.accentAmber
-                                : AppColors.textPrimary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Text('(${r['correct']} correct)'),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            // History Section
-            if (cbtHistory.isNotEmpty) ...[
-              Card(
-                color: AppColors.backgroundSecondary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                elevation: 1,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Last 10 Mock Test Scores:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      ...cbtHistory.asMap().entries.map((entry) {
-                        final i = entry.key;
-                        final h = entry.value;
-                        DateTime? date;
-                        if (h['takenAt'] != null) {
-                          try {
-                            date = h['takenAt'] is DateTime
-                                ? h['takenAt']
-                                : h['takenAt'].toDate();
-                          } catch (_) {}
-                        }
-                        final dateStr = date != null
-                            ? '${date.day.toString().padLeft(2, '0')} ${_monthName(date.month)} ${date.year}, ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}'
-                            : '';
-                        return Row(
-                          children: [
-                            Icon(
-                              Icons.history,
-                              color: AppColors.dominantPurple,
-                              size: 18,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              '${i + 1}. ',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              '${h['totalScore'].toStringAsFixed(2)} / 400',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            if (dateStr.isNotEmpty) ...[
-                              const SizedBox(width: 8),
-                              Text(
-                                dateStr,
-                                style: const TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ],
-                        );
-                      }),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.dominantPurple,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'Back to Mock Tests',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _monthName(int month) {
-    const months = [
-      '',
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return months[month];
-  }
 }

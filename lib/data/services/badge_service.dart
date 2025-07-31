@@ -208,9 +208,9 @@ class BadgeService {
       }
       
       await batch.commit();
-      print('Sample badges initialized successfully');
+      // Sample badges initialized successfully
     } catch (e) {
-      print('Error initializing sample badges: $e');
+      // Error initializing sample badges
     }
   }
 
@@ -223,7 +223,7 @@ class BadgeService {
         ...doc.data(),
       }).toList();
     } catch (e) {
-      print('Error getting badges: $e');
+      // Error getting badges
       return [];
     }
   }
@@ -240,7 +240,7 @@ class BadgeService {
       }
       return null;
     } catch (e) {
-      print('Error getting badge: $e');
+      // Error getting badge
       return null;
     }
   }

@@ -1,141 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_colors.dart';
 import '../providers/user_stats_provider.dart';
 import '../../data/services/firestore_service.dart';
-import '../../data/utme_subjects.dart';
-import '../widgets/achievement_badge.dart';
-import '../widgets/streak_animation_widget.dart';
-import '../widgets/xp_animation_widget.dart';
 import '../utils/responsive_helper.dart';
-import '../widgets/subject_card.dart';
-import '../widgets/badge_animation_widget.dart';
-import 'profile_screen.dart';
-import 'course_content_screen.dart';
-import 'life_at_info_screen.dart';
+import '../widgets/xp_animation_widget.dart';
+import '../widgets/streak_animation_widget.dart';
 import 'study_partner_screen.dart';
 
-const List<Map<String, dynamic>> kUtmeSubjects = [
-  {
-    'name': 'English',
-    'icon': Icons.language,
-    'color': AppColors.dominantPurple,
-  },
-  {
-    'name': 'Mathematics',
-    'icon': Icons.calculate,
-    'color': AppColors.subjectBlue,
-  },
-  {'name': 'Physics', 'icon': Icons.science, 'color': AppColors.subjectBlue},
-  {
-    'name': 'Chemistry',
-    'icon': Icons.bubble_chart,
-    'color': AppColors.subjectBlue,
-  },
-  {'name': 'Biology', 'icon': Icons.biotech, 'color': AppColors.subjectBlue},
-  {
-    'name': 'Literature-in-English',
-    'icon': Icons.menu_book,
-    'color': AppColors.subjectRed,
-  },
-  {
-    'name': 'Government',
-    'icon': Icons.account_balance,
-    'color': AppColors.subjectGreen,
-  },
-  {
-    'name': 'Economics',
-    'icon': Icons.trending_up,
-    'color': AppColors.subjectGreen,
-  },
-  {
-    'name': 'Accounting',
-    'icon': Icons.receipt_long,
-    'color': AppColors.subjectGreen,
-  },
-  {
-    'name': 'Marketing',
-    'icon': Icons.campaign,
-    'color': AppColors.subjectGreen,
-  },
-  {'name': 'Geography', 'icon': Icons.public, 'color': AppColors.subjectGreen},
-  {
-    'name': 'Computer Studies',
-    'icon': Icons.computer,
-    'color': AppColors.subjectBlue,
-  },
-  {
-    'name': 'Christian Religious Studies',
-    'icon': Icons.church,
-    'color': AppColors.subjectRed,
-  },
-  {
-    'name': 'Islamic Studies',
-    'icon': Icons.mosque,
-    'color': AppColors.subjectRed,
-  },
-  {
-    'name': 'Agricultural Science',
-    'icon': Icons.agriculture,
-    'color': AppColors.subjectGreen,
-  },
-  {'name': 'Commerce', 'icon': Icons.store, 'color': AppColors.subjectGreen},
-  {'name': 'History', 'icon': Icons.history_edu, 'color': AppColors.subjectRed},
-];
-
-// Add a map of subject name to image URL at the top:
-const Map<String, String> kSubjectImages = {
-  'English':
-      'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=400&q=80',
-  'Mathematics':
-      'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=400&q=80',
-  'Physics':
-      'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80',
-  'Chemistry':
-      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80',
-  'Biology':
-      'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80',
-  'Literature-in-English':
-      'https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=400&q=80',
-  'Government':
-      'https://images.unsplash.com/photo-1503676382389-4809596d5290?auto=format&fit=crop&w=400&q=80',
-  'Economics':
-      'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80',
-  'Accounting':
-      'https://images.unsplash.com/photo-1515168833906-d2a3b82b1a48?auto=format&fit=crop&w=400&q=80',
-  'Marketing':
-      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80',
-  'Geography':
-      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80',
-  'Computer Studies':
-      'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=400&q=80',
-  'Christian Religious Studies':
-      'https://images.unsplash.com/photo-1465101178521-c1a9136a3b99?auto=format&fit=crop&w=400&q=80',
-  'Islamic Studies':
-      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80',
-  'Agricultural Science':
-      'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80',
-  'Commerce':
-      'https://images.unsplash.com/photo-1515168833906-d2a3b82b1a48?auto=format&fit=crop&w=400&q=80',
-  'History':
-      'https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=400&q=80',
-};
-
+// Avatar gallery URLs
 const List<String> kAvatarGallery = [
-  // DiceBear Avatars (boy, girl, hijabi, various skin tones)
-  'https://api.dicebear.com/7.x/adventurer/svg?seed=boy1',
-  'https://api.dicebear.com/7.x/adventurer/svg?seed=boy2',
-  'https://api.dicebear.com/7.x/adventurer/svg?seed=boy3',
-  'https://api.dicebear.com/7.x/adventurer/svg?seed=girl1',
-  'https://api.dicebear.com/7.x/adventurer/svg?seed=girl2',
-  'https://api.dicebear.com/7.x/adventurer/svg?seed=hijabi1',
-  'https://api.dicebear.com/7.x/adventurer/svg?seed=hijabi2',
-  'https://api.dicebear.com/7.x/adventurer/svg?seed=boy4',
-  'https://api.dicebear.com/7.x/adventurer/svg?seed=girl3',
-  'https://api.dicebear.com/7.x/adventurer/svg?seed=boy5',
-  'https://api.dicebear.com/7.x/adventurer/svg?seed=girl4',
+  'assets/avatars/avatar1.png',
+  'assets/avatars/avatar2.png',
+  'assets/avatars/avatar3.png',
+  'assets/avatars/avatar4.png',
+  'assets/avatars/avatar5.png',
+  'assets/avatars/avatar6.png',
+  'assets/avatars/avatar7.png',
+  'assets/avatars/avatar8.png',
 ];
 
 class HomeScreen extends StatefulWidget {
@@ -147,85 +30,239 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-  int _carouselIndex = 0;
   List<Map<String, dynamic>> _userSubjects = [];
   bool _loadingSubjects = true;
-  Map<String, Map<String, dynamic>> _subjectProgress = {};
   String? _avatarUrl;
+  int _streakDays = 0;
+  int _badgeCount = 0;
+  int _totalXp = 0;
+  final int _dailyChallengeXp = 250;
+  int _currentCarouselIndex = 0;
+  final PageController _carouselController = PageController();
+  final Map<String, Map<String, dynamic>> _subjectProgress = {};
+
+  // Animation states
+  bool _showXpAnimation = false;
+  bool _showStreakAnimation = false;
+  int _lastXpEarned = 0;
+  int _lastStreakCount = 0;
 
   @override
   void initState() {
     super.initState();
     _loadUserSubjects();
-    _loadAvatar();
-    // Initialize user stats
+    _loadUserAvatar();
+    _loadUserStats();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final userStatsProvider = Provider.of<UserStatsProvider>(context, listen: false);
       userStatsProvider.initializeUserStats();
+      // Check daily login for streak tracking
+      userStatsProvider.checkDailyLogin();
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Listen to user stats changes
+    final userStatsProvider = Provider.of<UserStatsProvider>(context);
+    if (userStatsProvider.userStats != null) {
+      final stats = userStatsProvider.userStats!;
+      
+      // Update local stats
+      setState(() {
+        _totalXp = stats.totalXp;
+        _streakDays = stats.currentStreak;
+        _badgeCount = stats.earnedBadges.length;
+      });
+
+      // Handle animations
+      if (userStatsProvider.showXpAnimation) {
+        setState(() {
+          _showXpAnimation = true;
+          _lastXpEarned = userStatsProvider.lastXpEarned;
+        });
+        
+        // Hide animation after completion
+        Future.delayed(const Duration(seconds: 3), () {
+          if (mounted) {
+            setState(() {
+              _showXpAnimation = false;
+            });
+            userStatsProvider.hideXpAnimation();
+          }
+        });
+      }
+
+      if (userStatsProvider.showStreakAnimation) {
+        setState(() {
+          _showStreakAnimation = true;
+          _lastStreakCount = userStatsProvider.lastStreakCount;
+        });
+        
+        // Hide animation after completion
+        Future.delayed(const Duration(seconds: 3), () {
+          if (mounted) {
+            setState(() {
+              _showStreakAnimation = false;
+            });
+            userStatsProvider.hideStreakAnimation();
+          }
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _carouselController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadUserSubjects() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      final selected = await FirestoreService.loadUserSubjects(user.uid);
-      final progress = <String, Map<String, dynamic>>{};
-      for (final subject in selected) {
-        final data = await FirestoreService.loadSubjectProgress(user.uid, subject);
-        if (data != null) progress[subject] = data;
+      try {
+        final subjects = await FirestoreService.loadUserSubjects(user.uid);
+        if (subjects.isNotEmpty) {
+          final subjectData = subjects.map((subjectName) {
+            return {
+              'name': subjectName,
+              'icon': _getSubjectIcon(subjectName),
+              'color': _getSubjectColor(subjectName),
+            };
+          }).toList();
+
+          setState(() {
+            _userSubjects = subjectData;
+            _loadingSubjects = false;
+          });
+
+          // Load progress for each subject
+          for (final subject in subjectData) {
+            await _loadSubjectProgress(user.uid, subject['name'] as String);
+          }
+        } else {
+          setState(() {
+            _userSubjects = [];
+            _loadingSubjects = false;
+          });
+        }
+      } catch (e) {
+        // Error loading subjects
+        setState(() {
+          _userSubjects = [];
+          _loadingSubjects = false;
+        });
       }
+    } else {
       setState(() {
-        _userSubjects = kUtmeSubjects
-            .where((s) => selected.contains(s['name']))
-            .toList();
-        _subjectProgress = progress;
+        _userSubjects = [];
         _loadingSubjects = false;
       });
-    } else {
-      setState(() => _loadingSubjects = false);
     }
   }
 
-  Future<void> _loadAvatar() async {
+  Future<void> _loadSubjectProgress(String userId, String subjectName) async {
+    try {
+      final progress = await FirestoreService.getSubjectProgress(userId, subjectName);
+      setState(() {
+        _subjectProgress[subjectName] = progress ?? {};
+      });
+    } catch (e) {
+      // Error loading progress for subject
+    }
+  }
+
+  Future<void> _loadUserStats() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      final doc = await FirestoreService.getUserProfile(user.uid);
-      setState(() {
-        _avatarUrl = doc?['photoUrl'] as String?;
-      });
+      try {
+        final userData = await FirestoreService.getUserProfile(user.uid);
+        setState(() {
+          _streakDays = userData?['streakDays'] ?? 0;
+          _badgeCount = userData?['badgeCount'] ?? 0;
+          _totalXp = userData?['totalXp'] ?? 0;
+        });
+          } catch (e) {
+      // Error loading user stats
+    }
+    }
+  }
+
+  IconData _getSubjectIcon(String subjectName) {
+    switch (subjectName) {
+      case 'English':
+        return Icons.language;
+      case 'Mathematics':
+        return Icons.calculate;
+      case 'Physics':
+        return Icons.science;
+      case 'Chemistry':
+        return Icons.bubble_chart;
+      case 'Biology':
+        return Icons.biotech;
+      case 'Government':
+        return Icons.account_balance;
+      case 'Economics':
+        return Icons.trending_up;
+      case 'Geography':
+        return Icons.public;
+      case 'Christian Religious Studies':
+        return Icons.church;
+      case 'Islamic Studies':
+        return Icons.mosque;
+      case 'Commerce':
+        return Icons.store;
+      default:
+        return Icons.book;
+    }
+  }
+
+  Color _getSubjectColor(String subjectName) {
+    switch (subjectName) {
+      case 'English':
+        return AppColors.dominantPurple;
+      case 'Mathematics':
+      case 'Physics':
+      case 'Chemistry':
+      case 'Biology':
+        return AppColors.subjectBlue;
+      case 'Christian Religious Studies':
+      case 'Islamic Studies':
+        return AppColors.subjectRed;
+      default:
+        return AppColors.subjectGreen;
+    }
+  }
+
+  Future<void> _loadUserAvatar() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        final userData = await FirestoreService.getUserProfile(user.uid);
+        setState(() {
+          _avatarUrl = userData?['avatarUrl'];
+        });
+          } catch (e) {
+      // Error loading avatar
+    }
     }
   }
 
   Future<void> _setAvatar(String url) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      await FirestoreService.updateUserProfile(user.uid, {'avatarUrl': url});
-      setState(() {
-        _avatarUrl = url;
-      });
+      try {
+        await FirestoreService.updateUserProfile(user.uid, {'avatarUrl': url});
+        setState(() {
+          _avatarUrl = url;
+        });
+          } catch (e) {
+      // Error setting avatar
+    }
     }
   }
-
-  final List<Map<String, String>> _carouselItems = [
-    {
-      'title': "Today's CBT Challenge",
-      'subtitle': 'Complete a mock CBT test for 250 XP',
-      'image':
-          'https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      'title': 'LifeAt Study',
-      'subtitle': 'Focus with Pomodoro timer & background music',
-      'image':
-          'https://images.unsplash.com/photo-1503676382389-4809596d5290?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      'title': 'AI Tutor',
-      'subtitle': 'Get instant help with tough questions.',
-      'image':
-          'https://images.unsplash.com/photo-1503676382389-4809596d5290?auto=format&fit=crop&w=600&q=80',
-    },
-  ];
 
   void _onNavTap(int index) {
     setState(() {
@@ -233,7 +270,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     switch (index) {
       case 0:
-        // Already on home screen
         break;
       case 1:
         Navigator.push(
@@ -248,179 +284,59 @@ class _HomeScreenState extends State<HomeScreen> {
         Navigator.pushNamed(context, '/ai-tutor');
         break;
       case 4:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ProfileScreen()),
-        );
+        Navigator.pushNamed(context, '/profile');
         break;
     }
   }
 
-  void _onCarouselItemTap(int index) {
-    switch (index) {
-      case 0: // Today's Challenge
-        Navigator.pushNamed(context, '/mock-test');
-        break;
-      case 1: // LifeAt Study
-        print('DEBUG: LifeAt carousel item tapped');
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const LifeAtInfoScreen()),
-        );
-        break;
-      case 2: // AI Tutor
-        Navigator.pushNamed(context, '/ai-tutor');
-        break;
-    }
-  }
-
-  Widget mainProgressCard(Color cardColor, Color textColor) {
-    final mainSubject = _userSubjects.isNotEmpty ? _userSubjects.first : null;
-    if (mainSubject == null) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Card(
-        color: cardColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        elevation: 3,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                mainSubject['name'],
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: textColor,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'UTME Subject',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 18),
-              Row(
-                children: [
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      SizedBox(
-                        width: 60,
-                        height: 60,
-                        child: CircularProgressIndicator(
-                          value:
-                              _subjectProgress[mainSubject['name']] != null &&
-                                  (_subjectProgress[mainSubject['name']]!['attempted'] ??
-                                          0) >
-                                      0
-                              ? (_subjectProgress[mainSubject['name']]!['attempted'] /
-                                    (mainSubject['name'] == 'English'
-                                        ? 60
-                                        : 40))
-                              : 0,
-                          strokeWidth: 6,
-                          backgroundColor: AppColors.borderLight,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            AppColors.dominantPurple,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        _subjectProgress[mainSubject['name']] != null &&
-                                (_subjectProgress[mainSubject['name']]!['attempted'] ??
-                                        0) >
-                                    0
-                            ? '${((_subjectProgress[mainSubject['name']]!['attempted'] / (mainSubject['name'] == 'English' ? 60 : 40)) * 100).toStringAsFixed(0)}%'
-                            : '0%',
-                        style: TextStyle(
-                          color: textColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(width: 24),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CourseContentScreen(
-                              subject: mainSubject['name'],
-                            ),
-                          ),
-                        ).then((_) => _loadUserSubjects());
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.accentAmber,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text('Continue Learning'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  OutlinedButton(
-                    onPressed: () async {
-                      final user = FirebaseAuth.instance.currentUser;
-                      if (user != null) {
-                        await FirestoreService.saveSubjectProgress(
-                          user.uid,
-                          {mainSubject['name']: 0.0},
-                        );
-                        setState(
-                          () => _subjectProgress[mainSubject['name']] = {
-                            'attempted': 0,
-                            'correct': 0,
-                            'bestScore': 0,
-                          },
-                        );
-                      }
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.dominantPurple,
-                      side: const BorderSide(color: AppColors.dominantPurple),
-                    ),
-                    child: const Text('Reset Progress'),
-                  ),
-                ],
-              ),
-            ],
+  void _onStatPillTap(String type) {
+    switch (type) {
+      case 'streak':
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_streakDays > 0 
+                ? 'You have a $_streakDays day study streak!' 
+                : 'Start your study streak today!'),
+            backgroundColor: AppColors.accentAmber,
           ),
-        ),
-      ),
-    );
+        );
+        break;
+      case 'badges':
+        Navigator.pushNamed(context, '/badges');
+        break;
+      case 'xp':
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Total XP: $_totalXp'),
+            backgroundColor: AppColors.dominantPurple,
+          ),
+        );
+        break;
+    }
+  }
+
+  void _onTodayChallengeTap() {
+    Navigator.pushNamed(context, '/mock-test');
+  }
+
+  void _onCarouselPageChanged(int index) {
+    setState(() {
+      _currentCarouselIndex = index;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark
-        ? const Color(0xFF181A20)
-        : AppColors.backgroundSecondary;
-    final cardColor = Colors.white;
-    
-    // Get user stats provider
-    final userStatsProvider = Provider.of<UserStatsProvider>(context);
-    final userStats = userStatsProvider.userStats;
 
     return Scaffold(
-      backgroundColor: bgColor,
+      backgroundColor: AppColors.getBackgroundPrimary(context),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: AppColors.dominantPurple,
         titleSpacing: 0,
-        automaticallyImplyLeading: false, // Prevent back arrow from showing
+        automaticallyImplyLeading: false,
         title: Padding(
           padding: ResponsiveHelper.getResponsiveHorizontalPadding(context),
           child: Row(
@@ -442,142 +358,170 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         actions: [
-          Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: ResponsiveHelper.isMobile(context) ? 4 : 8
+          IconButton(
+            icon: Icon(
+              Icons.notifications_none, 
+              size: ResponsiveHelper.getResponsiveIconSize(context, 22)
             ),
-            child: Center(
-              child: IconButton(
-                icon: Icon(
-                  Icons.notifications_none, 
-                  size: ResponsiveHelper.getResponsiveIconSize(context, 22)
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Notifications coming soon!'),
+                  backgroundColor: AppColors.dominantPurple,
                 ),
-                tooltip: 'Notifications',
-                onPressed: () {},
-                splashRadius: ResponsiveHelper.getResponsiveIconSize(context, 22),
-              ),
-            ),
+              );
+            },
           ),
           Padding(
             padding: EdgeInsets.only(
               right: ResponsiveHelper.isMobile(context) ? 12 : 16, 
               left: 0
             ),
-            child: Center(
-              child: GestureDetector(
-                onTap: () {
-                  _showAvatarGallery(context);
-                },
-                child: CircleAvatar(
-                  radius: ResponsiveHelper.getResponsiveIconSize(context, 16),
-                  backgroundColor: Colors.white,
-                  backgroundImage: _avatarUrl != null && _avatarUrl!.isNotEmpty
-                      ? NetworkImage(_avatarUrl!)
-                      : null,
-                  child: _avatarUrl == null || _avatarUrl!.isEmpty
-                      ? Icon(
-                          Icons.person,
-                          color: AppColors.dominantPurple,
-                          size: ResponsiveHelper.getResponsiveIconSize(context, 18),
-                        )
-                      : null,
-                ),
+            child: GestureDetector(
+              onTap: () => _showAvatarGallery(context),
+              child: CircleAvatar(
+                radius: ResponsiveHelper.getResponsiveIconSize(context, 16),
+                backgroundColor: Colors.white,
+                backgroundImage: _avatarUrl != null && _avatarUrl!.isNotEmpty
+                    ? AssetImage(_avatarUrl!)
+                    : null,
+                child: _avatarUrl == null || _avatarUrl!.isEmpty
+                    ? Icon(
+                        Icons.person,
+                        color: AppColors.dominantPurple,
+                        size: ResponsiveHelper.getResponsiveIconSize(context, 18),
+                      )
+                    : null,
               ),
             ),
           ),
         ],
       ),
-      body: ResponsiveHelper.responsiveSingleChildScrollView(
-        context: context,
-        child: Column(
-          children: [
-            // Search Bar
-            Padding(
-              padding: EdgeInsets.only(
-                top: ResponsiveHelper.getResponsivePadding(context), 
-                bottom: ResponsiveHelper.getResponsivePadding(context) / 2
-              ),
-              child: Material(
-                elevation: 3,
-                borderRadius: BorderRadius.circular(14),
-                child: TextField(
-                  readOnly: true,
-                  onTap: () {},
-                  style: TextStyle(
-                    color: AppColors.textPrimary, 
-                    fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16)
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                // Search Bar
+                Padding(
+                  padding: EdgeInsets.only(
+                    top: ResponsiveHelper.getResponsivePadding(context), 
+                    bottom: ResponsiveHelper.getResponsivePadding(context) / 2,
+                    left: ResponsiveHelper.getResponsivePadding(context),
+                    right: ResponsiveHelper.getResponsivePadding(context),
                   ),
-                  decoration: InputDecoration(
-                    hintText: 'Search subjects, topics, resources...',
-                    hintStyle: TextStyle(
-                      color: AppColors.textTertiary,
-                      fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
-                    ),
-                    prefixIcon: Icon(
-                      Icons.search, 
-                      color: AppColors.textTertiary,
-                      size: ResponsiveHelper.getResponsiveIconSize(context, 20),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding: EdgeInsets.symmetric(
-                      vertical: ResponsiveHelper.getResponsiveTextFieldHeight(context) / 3,
-                      horizontal: ResponsiveHelper.getResponsivePadding(context),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide.none,
+                  child: Material(
+                    elevation: 3,
+                    borderRadius: BorderRadius.circular(14),
+                    child: TextField(
+                      readOnly: true,
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Search functionality coming soon!'),
+                            backgroundColor: AppColors.dominantPurple,
+                          ),
+                        );
+                      },
+                      style: TextStyle(
+                        color: AppColors.getTextPrimary(context), 
+                        fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16)
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Search subjects, topics, resources...',
+                        hintStyle: TextStyle(
+                          color: AppColors.getTextSecondary(context),
+                          fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search, 
+                          color: AppColors.getTextSecondary(context),
+                          size: ResponsiveHelper.getResponsiveIconSize(context, 20),
+                        ),
+                        filled: true,
+                        fillColor: AppColors.getCardColor(context),
+                        contentPadding: EdgeInsets.symmetric(
+                          vertical: ResponsiveHelper.getResponsiveTextFieldHeight(context) / 3,
+                          horizontal: ResponsiveHelper.getResponsivePadding(context),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
+
+                // Welcome Section
+                _buildWelcomeSection(context, user),
+
+                // Carousel Section
+                _buildCarouselSection(context),
+
+                // Stats Section
+                _buildQuickActionsSection(context),
+
+                // Subject Progress
+                _buildSubjectProgressSection(context),
+
+                SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+              ],
             ),
-
-            // Welcome Section
-            _buildWelcomeSection(context, user, userStats, isDark),
-
-            // Quick Actions
-            _buildQuickActionsSection(context, isDark),
-
-            // Subject Progress
-            _buildSubjectProgressSection(context, isDark),
-
-            // Recent Activity
-            _buildRecentActivitySection(context, isDark),
-
-            // Bottom spacing
-            SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
-          ],
-        ),
+          ),
+                     if (_showXpAnimation)
+             Positioned(
+               top: MediaQuery.of(context).size.height * 0.3,
+               left: MediaQuery.of(context).size.width * 0.5 - 50,
+               child: XpAnimationWidget(
+                 xpEarned: _lastXpEarned,
+                 onAnimationComplete: () {
+                   setState(() {
+                     _showXpAnimation = false;
+                   });
+                 },
+               ),
+             ),
+           if (_showStreakAnimation)
+             Positioned(
+               top: MediaQuery.of(context).size.height * 0.4,
+               left: MediaQuery.of(context).size.width * 0.5 - 80,
+               child: StreakAnimationWidget(
+                 streakCount: _lastStreakCount,
+                 onAnimationComplete: () {
+                   setState(() {
+                     _showStreakAnimation = false;
+                   });
+                 },
+               ),
+             ),
+        ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onNavTap,
         selectedItemColor: AppColors.dominantPurple,
-        unselectedItemColor: AppColors.secondaryGray,
+        unselectedItemColor: AppColors.getTextSecondary(context),
         showUnselectedLabels: true,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Study Partner'),
           BottomNavigationBarItem(icon: Icon(Icons.quiz), label: 'CBT Tests'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.psychology),
-            label: 'AI Tutor',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.psychology), label: 'AI Tutor'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
         type: BottomNavigationBarType.fixed,
-        backgroundColor: isDark ? const Color(0xFF23243B) : Colors.white,
+        backgroundColor: AppColors.getCardColor(context),
         elevation: 12,
       ),
     );
   }
 
-  Widget _buildWelcomeSection(BuildContext context, User? user, dynamic userStats, bool isDark) {
+  Widget _buildWelcomeSection(BuildContext context, User? user) {
     return Padding(
       padding: ResponsiveHelper.getResponsiveHorizontalPadding(context),
       child: Card(
-        color: Colors.white,
+        color: AppColors.getCardColor(context),
         elevation: 1,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
@@ -591,7 +535,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Text(
                 'Good Morning ☀️',
                 style: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: AppColors.getTextSecondary(context),
                   fontWeight: FontWeight.w500,
                   fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
                 ),
@@ -602,7 +546,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     user?.email?.split('@').first ??
                     'Student',
                 style: TextStyle(
-                  color: AppColors.textPrimary,
+                  color: AppColors.getTextPrimary(context),
                   fontWeight: FontWeight.bold,
                   fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
                 ),
@@ -613,7 +557,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text(
                     'Popular topics: ',
                     style: TextStyle(
-                      color: AppColors.textSecondary,
+                      color: AppColors.getTextSecondary(context),
                       fontSize: ResponsiveHelper.getResponsiveFontSize(context, 13),
                     ),
                   ),
@@ -621,10 +565,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Text(
                       _userSubjects.isNotEmpty
                           ? _userSubjects
-                              .map((s) => s['name'])
+                              .map((s) => s['name'] as String? ?? 'Unknown')
                               .take(4)
                               .join(', ')
-                          : 'Use of English',
+                          : 'English (Required)',
                       style: TextStyle(
                         color: AppColors.dominantPurple,
                         fontWeight: FontWeight.w600,
@@ -642,76 +586,433 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildQuickActionsSection(BuildContext context, bool isDark) {
-    return Padding(
-      padding: ResponsiveHelper.getResponsiveHorizontalPadding(context),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            _buildStatPill(
-              icon: Icons.local_fire_department,
-              label: '7d Streak',
-              color: AppColors.accentAmber,
-              isDark: false,
-            ),
-            const SizedBox(width: 10),
-            _buildStatPill(
-              icon: Icons.emoji_events,
-              label: 'Badges',
-              color: AppColors.dominantPurple,
-              isDark: false,
-            ),
-            const SizedBox(width: 10),
-            _buildStatPill(
-              icon: Icons.flag,
-              label: 'Daily Challenge',
-              color: AppColors.secondaryGray,
-              isDark: false,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSubjectProgressSection(BuildContext context, bool isDark) {
+  Widget _buildCarouselSection(BuildContext context) {
     return Padding(
       padding: ResponsiveHelper.getResponsiveHorizontalPadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Your Subjects',
+            'Quick Actions',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: ResponsiveHelper.getResponsiveFontSize(context, 18),
-              color: isDark ? Colors.white : AppColors.textPrimary,
+              color: AppColors.getTextPrimary(context),
             ),
           ),
           SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
-          
-          // Subjects grid
-          _loadingSubjects
-              ? const Center(child: CircularProgressIndicator())
-              : _userSubjects.isEmpty
-                  ? _buildEmptySubjectsState(context, isDark)
-                  : ResponsiveHelper.responsiveGridView(
+          SizedBox(
+            height: 120,
+            child: PageView.builder(
+              controller: _carouselController,
+              onPageChanged: _onCarouselPageChanged,
+              itemCount: 3,
+              itemBuilder: (context, index) {
+                switch (index) {
+                  case 0:
+                    return _buildCarouselCard(
                       context: context,
+                      title: 'Study Streaks',
+                      subtitle: 'Keep your momentum going',
+                      imageUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=400&q=80',
+                      color: AppColors.accentAmber,
+                      onTap: () => Navigator.pushNamed(context, '/profile'),
+                    );
+                  case 1:
+                    return _buildCarouselCard(
+                      context: context,
+                      title: 'AI Tutor',
+                      subtitle: 'Get personalized help',
+                      imageUrl: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=400&q=80',
+                      color: AppColors.dominantPurple,
+                      onTap: () => Navigator.pushNamed(context, '/ai-tutor'),
+                    );
+                  case 2:
+                    return _buildCarouselCard(
+                      context: context,
+                      title: 'Study Partner',
+                      subtitle: 'Find study buddies',
+                      imageUrl: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=400&q=80',
+                      color: AppColors.subjectBlue,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const StudyPartnerScreen()),
+                      ),
+                    );
+                  default:
+                    return const SizedBox.shrink();
+                }
+              },
+            ),
+          ),
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+          // Carousel indicators
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(3, (index) {
+              return Container(
+                width: 8,
+                height: 8,
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                decoration: BoxDecoration(
+                  color: index == _currentCarouselIndex 
+                      ? AppColors.dominantPurple 
+                      : AppColors.getTextSecondary(context),
+                  shape: BoxShape.circle,
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCarouselCard({
+    required BuildContext context,
+    required String title,
+    required String subtitle,
+    required String imageUrl,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: double.infinity,
+          constraints: const BoxConstraints(maxHeight: 100),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark 
+                ? [
+                    AppColors.darkCardPrimary,
+                    AppColors.darkCardSecondary,
+                  ]
+                : [
+                    color.withValues(alpha: 0.1),
+                    color.withValues(alpha: 0.05),
+                  ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDark 
+                ? AppColors.darkBorderLight
+                : color.withValues(alpha: 0.2),
+              width: 1,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.image,
+                            color: color,
+                            size: ResponsiveHelper.getResponsiveIconSize(context, 24),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          color: AppColors.getTextPrimary(context),
+                          fontWeight: FontWeight.bold,
+                          fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          color: AppColors.getTextSecondary(context),
+                          fontSize: ResponsiveHelper.getResponsiveFontSize(context, 12),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  color: color,
+                  size: ResponsiveHelper.getResponsiveIconSize(context, 14),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActionsSection(BuildContext context) {
+    return Padding(
+      padding: ResponsiveHelper.getResponsiveHorizontalPadding(context),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Your Stats',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 18),
+              color: AppColors.getTextPrimary(context),
+            ),
+          ),
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildStatPill(
+                  icon: Icons.local_fire_department,
+                  label: _streakDays > 0 ? '${_streakDays}d Streak' : 'Start Streak',
+                  color: AppColors.accentAmber,
+                  isDark: Theme.of(context).brightness == Brightness.dark,
+                  onTap: () => _onStatPillTap('streak'),
+                ),
+                const SizedBox(width: 10),
+                _buildStatPill(
+                  icon: Icons.emoji_events,
+                  label: '$_badgeCount Badges',
+                  color: AppColors.dominantPurple,
+                  isDark: Theme.of(context).brightness == Brightness.dark,
+                  onTap: () => _onStatPillTap('badges'),
+                ),
+                const SizedBox(width: 10),
+                _buildStatPill(
+                  icon: Icons.star,
+                  label: '$_totalXp XP',
+                  color: AppColors.subjectBlue,
+                  isDark: Theme.of(context).brightness == Brightness.dark,
+                  onTap: () => _onStatPillTap('xp'),
+                ),
+                const SizedBox(width: 16),
+                _buildTodayChallengeCard(context),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTodayChallengeCard(BuildContext context) {
+    return GestureDetector(
+      onTap: _onTodayChallengeTap,
+      child: Container(
+        width: 200,
+        height: 100,
+        constraints: const BoxConstraints(maxHeight: 100),
+        decoration: BoxDecoration(
+          color: AppColors.dominantPurple,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Today\'s Challenge',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Complete a mock test for $_dailyChallengeXp XP',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: ResponsiveHelper.getResponsiveFontSize(context, 12),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.headphones,
+                  color: Colors.white,
+                  size: ResponsiveHelper.getResponsiveIconSize(context, 20),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubjectProgressSection(BuildContext context) {
+    return Padding(
+      padding: ResponsiveHelper.getResponsiveHorizontalPadding(context),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Subjects',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 18),
+                  color: AppColors.getTextPrimary(context),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pushNamed(context, '/subject-selection')
+                    .then((_) => _loadUserSubjects()),
+                child: Text(
+                  'Edit',
+                  style: TextStyle(
+                    color: AppColors.dominantPurple,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+          
+          _loadingSubjects
+              ? Center(
+                  child: Column(
+                    children: [
+                      const CircularProgressIndicator(),
+                      SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+                      Text(
+                        'Loading your subjects...',
+                        style: TextStyle(
+                          color: AppColors.getTextSecondary(context),
+                          fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : _userSubjects.isEmpty
+                  ? _buildEmptySubjectsState(context)
+                  : Column(
                       children: _userSubjects.map((subject) {
-                        return SubjectCard(
-                          name: subject['name'] as String,
-                          icon: subject['icon'] as IconData,
-                          imageUrl: subject['imageUrl'] as String,
-                          accentColor: subject['color'] as Color,
-                          progressText: _getSubjectProgressText(subject['name'] as String),
-                          onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              '/course-content',
-                              arguments: subject['name'],
-                            );
-                          },
+                        final progress = _subjectProgress[subject['name']];
+                        final progressText = progress != null 
+                            ? 'Best: ${(progress['bestScore'] ?? 0).toStringAsFixed(1)} | Correct: ${progress['correct'] ?? 0} / ${progress['attempted'] ?? 0}'
+                            : 'Progress: 0%';
+                        
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          color: AppColors.getCardColor(context),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: ListTile(
+                            leading: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: (subject['color'] as Color).withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                subject['icon'] ?? Icons.help_outline,
+                                color: subject['color'] ?? Colors.grey,
+                                size: ResponsiveHelper.getResponsiveIconSize(context, 20),
+                              ),
+                            ),
+                            title: Text(
+                              subject['name'] ?? 'Unknown Subject',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+                              ),
+                            ),
+                            subtitle: Text(
+                              progressText,
+                              style: TextStyle(
+                                color: AppColors.getTextSecondary(context),
+                                fontSize: ResponsiveHelper.getResponsiveFontSize(context, 12),
+                              ),
+                            ),
+                            trailing: ElevatedButton(
+                              onPressed: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  '/course-content',
+                                  arguments: subject['name'] ?? '',
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.dominantPurple,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: Text(
+                                'View Course',
+                                style: TextStyle(
+                                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 12),
+                                ),
+                              ),
+                            ),
+                          ),
                         );
                       }).toList(),
                     ),
@@ -720,7 +1021,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildEmptySubjectsState(BuildContext context, bool isDark) {
+  Widget _buildEmptySubjectsState(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 24),
       child: Column(
@@ -728,24 +1029,24 @@ class _HomeScreenState extends State<HomeScreen> {
           Icon(
             Icons.subject,
             size: ResponsiveHelper.getResponsiveIconSize(context, 60),
-            color: AppColors.textTertiary,
+            color: AppColors.getTextTertiary(context),
           ),
           SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
           Text(
-            'No subjects selected yet!',
+            'Select Your Subjects',
             style: TextStyle(
               fontSize: ResponsiveHelper.getResponsiveFontSize(context, 18),
               fontWeight: FontWeight.bold,
-              color: isDark ? Colors.white : AppColors.textPrimary,
+              color: AppColors.getTextPrimary(context),
             ),
           ),
           SizedBox(height: ResponsiveHelper.getResponsivePadding(context) / 2),
           Text(
-            'Tap "Edit" above or "Select Subjects" to get started.',
+            'English is required. Choose 3 additional subjects to get started.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
-              color: AppColors.textSecondary,
+              color: AppColors.getTextSecondary(context),
             ),
           ),
           SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
@@ -778,114 +1079,35 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  String _getSubjectProgressText(String subjectName) {
-    final progress = _subjectProgress[subjectName];
-    if (progress != null) {
-      return 'Best: ${(progress['bestScore'] ?? 0).toStringAsFixed(1)} | Correct: ${progress['correct'] ?? 0} / ${progress['attempted'] ?? 0}';
-    }
-    return 'Progress: 0%';
-  }
-
-  Widget _buildRecentActivitySection(BuildContext context, bool isDark) {
-    return Padding(
-      padding: ResponsiveHelper.getResponsiveHorizontalPadding(context),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Recent Activity',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
-              color: isDark
-                  ? Colors.white
-                  : AppColors.textPrimary, // High contrast for dark mode
-            ),
-          ),
-          const SizedBox(height: 10),
-          // Placeholder for recent activity items
-          // This section would typically display achievements, streaks, etc.
-          // For now, it's just a placeholder.
-          // In a real app, you'd fetch and display actual activity data.
-          // Example:
-          // _buildRecentActivityItem(
-          //   icon: Icons.emoji_events,
-          //   label: 'New Badge Earned: ${userStatsProvider.lastBadgeEarned}',
-          //   color: AppColors.dominantPurple,
-          //   isDark: isDark,
-          // ),
-          // _buildRecentActivityItem(
-          //   icon: Icons.trending_up,
-          //   label: 'Streak: ${userStatsProvider.lastStreakCount}',
-          //   color: AppColors.accentAmber,
-          //   isDark: isDark,
-          // ),
-          // _buildRecentActivityItem(
-          //   icon: Icons.lightbulb_outline,
-          //   label: 'XP Earned: ${userStatsProvider.lastXpEarned}',
-          //   color: AppColors.subjectBlue,
-          //   isDark: isDark,
-          // ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRecentActivityItem({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required bool isDark,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            color: color,
-            size: ResponsiveHelper.getResponsiveIconSize(context, 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: isDark ? Colors.white : AppColors.textPrimary,
-                fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildStatPill({
     required IconData icon,
     required String label,
     required Color color,
     required bool isDark,
+    required VoidCallback onTap,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-      decoration: BoxDecoration(
-        color: isDark ? color.withValues(alpha: 0.18) : color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: ResponsiveHelper.getResponsiveIconSize(context, 20)),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.bold,
-              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 15),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        decoration: BoxDecoration(
+          color: isDark ? color.withValues(alpha: 0.18) : color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: ResponsiveHelper.getResponsiveIconSize(context, 20)),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.bold,
+                fontSize: ResponsiveHelper.getResponsiveFontSize(context, 15),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -937,12 +1159,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       await _setAvatar(url);
                       if (mounted) {
                         Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Avatar updated successfully!'),
+                            backgroundColor: AppColors.dominantPurple,
+                          ),
+                        );
                       }
                     },
                     child: CircleAvatar(
                       radius: 32,
                       backgroundColor: Colors.white,
-                      backgroundImage: NetworkImage(url),
+                      backgroundImage: AssetImage(url),
                       child: _avatarUrl == url
                           ? Icon(
                               Icons.check_circle,
@@ -958,48 +1186,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       },
-    );
-  }
-  
-  // Animation overlays
-  Widget _buildAnimationOverlays() {
-    final userStatsProvider = Provider.of<UserStatsProvider>(context);
-    
-    return Stack(
-      children: [
-        // XP Animation
-        if (userStatsProvider.showXpAnimation)
-          Positioned.fill(
-            child: XpAnimationWidget(
-              xpEarned: userStatsProvider.lastXpEarned,
-              onAnimationComplete: () {
-                userStatsProvider.hideXpAnimation();
-              },
-            ),
-          ),
-        
-        // Streak Animation
-        if (userStatsProvider.showStreakAnimation)
-          Positioned.fill(
-            child: StreakAnimationWidget(
-              streakCount: userStatsProvider.lastStreakCount,
-              onAnimationComplete: () {
-                userStatsProvider.hideStreakAnimation();
-              },
-            ),
-          ),
-        
-        // Badge Animation
-        if (userStatsProvider.showBadgeAnimation && userStatsProvider.lastBadgeEarned != null)
-          Positioned.fill(
-            child: BadgeAnimationWidget(
-              badgeName: userStatsProvider.lastBadgeEarned!,
-              onAnimationComplete: () {
-                userStatsProvider.hideBadgeAnimation();
-              },
-            ),
-          ),
-      ],
     );
   }
 }

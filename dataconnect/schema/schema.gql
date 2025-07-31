@@ -1,0 +1,44 @@
+type User @table {
+  displayName: String!
+  createdAt: Timestamp!
+  email: String
+  photoUrl: String
+}
+
+type Exam @table {
+  name: String!
+  examDate: Date!
+  createdAt: Timestamp!
+  description: String
+  targetScore: Int
+  user: User!
+}
+
+type StudyTopic @table {
+  name: String!
+  createdAt: Timestamp!
+  description: String
+  priority: String
+  masteryLevel: String
+  exam: Exam!
+}
+
+type StudyMaterial @table {
+  title: String!
+  type: String!
+  createdAt: Timestamp!
+  content: String
+  url: String
+  filePath: String
+  studyTopic: StudyTopic!
+}
+
+type StudySession @table {
+  startTime: Timestamp!
+  durationMinutes: Int!
+  createdAt: Timestamp!
+  notes: String
+  user: User!
+  exam: Exam!
+  studyTopic: StudyTopic
+}

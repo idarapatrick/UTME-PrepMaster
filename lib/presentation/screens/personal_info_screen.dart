@@ -29,15 +29,29 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     }
   }
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate() &&
-        _selectedDate != null &&
-        _selectedGender != null) {
-      Navigator.pushNamed(context, '/university-selection');
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please complete all fields')),
-      );
+  Future<void> _submit() async {
+    final formState = _formKey.currentState;
+    if (formState == null || !formState.validate() &&
+        _selectedDate != null) {
+      return;
+    }
+
+    try {
+      // Save personal info logic here
+      await Future.delayed(const Duration(seconds: 1)); // Simulate save
+      
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/subject-selection');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error saving personal info: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -141,7 +155,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                 const SizedBox(height: 32),
 
                 ElevatedButton(
-                  onPressed: _submitForm,
+                  onPressed: _submit,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.deepPurple,
                     padding: const EdgeInsets.symmetric(vertical: 16),

@@ -45,7 +45,10 @@ class UserStatsProvider extends ChangeNotifier {
   // Initialize user stats
   Future<void> initializeUserStats() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      // No user found, skipping user stats initialization
+      return;
+    }
 
     _setLoading(true);
     try {
@@ -139,8 +142,8 @@ class UserStatsProvider extends ChangeNotifier {
         _showBadgeAnimation = true;
         notifyListeners();
         
-        // Hide animation after 4 seconds
-        Future.delayed(const Duration(seconds: 4), () {
+        // Hide animation after 3 seconds
+        Future.delayed(const Duration(seconds: 3), () {
           _showBadgeAnimation = false;
           notifyListeners();
         });
@@ -163,7 +166,7 @@ class UserStatsProvider extends ChangeNotifier {
       );
       notifyListeners();
     } catch (e) {
-      print('Error loading recent sessions: $e');
+      // Error loading recent sessions
     }
   }
 
@@ -234,6 +237,53 @@ class UserStatsProvider extends ChangeNotifier {
       );
     } catch (e) {
       _setError('Failed to complete quiz: $e');
+    }
+  }
+
+  // Enhanced Quiz Completion with new XP system
+  Future<void> completeQuizWithNewSystem({
+    required String subjectId,
+    required int totalQuestions,
+    required int correctAnswers,
+    required int timeSpentMinutes,
+  }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      await _repository.completeQuiz(
+        user.uid,
+        subjectId,
+        correctAnswers: correctAnswers,
+        totalQuestions: totalQuestions,
+        timeSpentMinutes: timeSpentMinutes,
+      );
+    } catch (e) {
+      _setError('Failed to complete quiz: $e');
+    }
+  }
+
+  // CBT Test Start (20 XP for starting CBT)
+  Future<void> startCbtTest(String subjectId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      await _repository.startCbtTest(user.uid, subjectId);
+    } catch (e) {
+      _setError('Failed to start CBT test: $e');
+    }
+  }
+
+  // Daily Login Check
+  Future<void> checkDailyLogin() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      await _repository.checkDailyLogin(user.uid);
+    } catch (e) {
+      _setError('Failed to check daily login: $e');
     }
   }
 
@@ -355,9 +405,9 @@ class UserStatsProvider extends ChangeNotifier {
       };
 
       await prefs.setString('user_stats_${user.uid}', jsonEncode(stateData));
-      print('State saved to local storage');
+      // State saved to local storage
     } catch (e) {
-      print('Error saving state to local storage: $e');
+      // Error saving state to local storage
     }
   }
 
@@ -369,7 +419,7 @@ class UserStatsProvider extends ChangeNotifier {
 
       final stateJson = prefs.getString('user_stats_${user.uid}');
       if (stateJson != null) {
-        final stateData = jsonDecode(stateJson) as Map<String, dynamic>;
+        final stateData = jsonDecode(stateJson);
         
         if (stateData['userStats'] != null) {
           _userStats = UserStats.fromMap(stateData['userStats'], user.uid);
@@ -382,10 +432,10 @@ class UserStatsProvider extends ChangeNotifier {
         }
         
         notifyListeners();
-        print('State loaded from local storage');
+        // State loaded from local storage
       }
     } catch (e) {
-      print('Error loading state from local storage: $e');
+      // Error loading state from local storage
     }
   }
 

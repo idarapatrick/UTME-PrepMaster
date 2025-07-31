@@ -21,21 +21,34 @@ class _NotesScreenState extends State<NotesScreen> {
   }
 
   Future<void> _loadNotes() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      final notesSnap = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('library_notes')
-          .orderBy('timestamp', descending: true)
-          .get();
-      
-      setState(() {
-        _notes = notesSnap.docs.map((d) => {'id': d.id, ...d.data()}).toList();
-        _isLoading = false;
-      });
-    } else {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final notesSnap = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('library_notes')
+            .orderBy('timestamp', descending: true)
+            .get();
+        
+        setState(() {
+          _notes = notesSnap.docs.map((d) => {'id': d.id, ...d.data()}).toList();
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      // Handle error gracefully
       setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading notes: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -98,16 +111,35 @@ class _NotesScreenState extends State<NotesScreen> {
     );
     
     if (note != null && note.trim().isNotEmpty) {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('library_notes')
-          .add({
-        'note': note.trim(),
-        'timestamp': FieldValue.serverTimestamp(),
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-      _loadNotes();
+      try {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('library_notes')
+            .add({
+          'note': note.trim(),
+          'timestamp': FieldValue.serverTimestamp(),
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+        await _loadNotes();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Note added successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error adding note: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -171,13 +203,32 @@ class _NotesScreenState extends State<NotesScreen> {
     );
     
     if (note != null && note.trim().isNotEmpty) {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('library_notes')
-          .doc(docId)
-          .update({'note': note.trim()});
-      _loadNotes();
+      try {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('library_notes')
+            .doc(docId)
+            .update({'note': note.trim()});
+        await _loadNotes();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Note updated successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error updating note: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -208,13 +259,32 @@ class _NotesScreenState extends State<NotesScreen> {
     );
     
     if (confirm == true) {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('library_notes')
-          .doc(docId)
-          .delete();
-      _loadNotes();
+      try {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('library_notes')
+            .doc(docId)
+            .delete();
+        await _loadNotes();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Note deleted successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error deleting note: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -244,9 +314,7 @@ class _NotesScreenState extends State<NotesScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      backgroundColor: isDark
-          ? const Color(0xFF181A20)
-          : AppColors.backgroundPrimary,
+      backgroundColor: AppColors.getBackgroundPrimary(context),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
@@ -334,17 +402,21 @@ class _NotesScreenState extends State<NotesScreen> {
         ? _formatTime(timestamp.toDate())
         : 'Now';
     
-    // Generate a color based on note content
+    // Generate a color based on note content with better contrast
     final colors = [
-      Colors.yellow.shade100,
-      Colors.green.shade100,
-      Colors.blue.shade100,
-      Colors.purple.shade100,
-      Colors.orange.shade100,
-      Colors.pink.shade100,
+      isDark ? Colors.amber.shade700 : Colors.amber.shade100,
+      isDark ? Colors.green.shade700 : Colors.green.shade100,
+      isDark ? Colors.blue.shade700 : Colors.blue.shade100,
+      isDark ? Colors.purple.shade700 : Colors.purple.shade100,
+      isDark ? Colors.orange.shade700 : Colors.orange.shade100,
+      isDark ? Colors.pink.shade700 : Colors.pink.shade100,
     ];
     final colorIndex = noteText.length % colors.length;
     final cardColor = colors[colorIndex];
+    
+    // Determine text color based on background luminance
+    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.textPrimary;
+    final secondaryTextColor = isDark ? AppColors.darkTextSecondary : AppColors.textSecondary;
     
     return Card(
       color: cardColor,
@@ -363,7 +435,7 @@ class _NotesScreenState extends State<NotesScreen> {
                 children: [
                   Icon(
                     Icons.sticky_note_2,
-                    color: Colors.black87,
+                    color: textColor,
                     size: 18,
                   ),
                   const SizedBox(width: 8),
@@ -371,7 +443,7 @@ class _NotesScreenState extends State<NotesScreen> {
                     child: Text(
                       timeString,
                       style: TextStyle(
-                        color: Colors.black54,
+                        color: secondaryTextColor,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
@@ -380,7 +452,7 @@ class _NotesScreenState extends State<NotesScreen> {
                   PopupMenuButton<String>(
                     icon: Icon(
                       Icons.more_vert,
-                      color: Colors.black54,
+                      color: secondaryTextColor,
                       size: 18,
                     ),
                     onSelected: (value) {
@@ -391,22 +463,23 @@ class _NotesScreenState extends State<NotesScreen> {
                       }
                     },
                     itemBuilder: (context) => [
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'edit',
                         child: Row(
                           children: [
-                            Icon(Icons.edit, size: 16),
-                            SizedBox(width: 8),
-                            Text('Edit'),
+                            Icon(Icons.edit, size: 16, color: AppColors.getTextPrimary(context)),
+                            const SizedBox(width: 8),
+                            Text('Edit', style: TextStyle(color: AppColors.getTextPrimary(context))),
                           ],
                         ),
                       ),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'delete',
                         child: Row(
                           children: [
-                            Icon(Icons.delete, size: 16),
-                            Text('Delete'),
+                            Icon(Icons.delete, size: 16, color: AppColors.errorRed),
+                            const SizedBox(width: 8),
+                            Text('Delete', style: TextStyle(color: AppColors.errorRed)),
                           ],
                         ),
                       ),
@@ -419,7 +492,7 @@ class _NotesScreenState extends State<NotesScreen> {
                 child: Text(
                   noteText,
                   style: TextStyle(
-                    color: Colors.black87,
+                    color: textColor,
                     fontSize: 14,
                     height: 1.4,
                   ),
@@ -442,14 +515,14 @@ class _NotesScreenState extends State<NotesScreen> {
           Icon(
             Icons.note_add,
             size: 80,
-            color: AppColors.textSecondary,
+            color: AppColors.getTextSecondary(context),
           ),
           const SizedBox(height: 24),
           Text(
             'No Notes Yet',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: AppColors.getTextPrimary(context),
             ),
           ),
           const SizedBox(height: 12),
@@ -457,7 +530,7 @@ class _NotesScreenState extends State<NotesScreen> {
             'Start taking notes to keep track of important information',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: AppColors.textSecondary,
+              color: AppColors.getTextSecondary(context),
             ),
           ),
         ],

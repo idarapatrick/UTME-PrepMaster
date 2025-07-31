@@ -33,7 +33,7 @@ class _DeveloperPanelScreenState extends State<DeveloperPanelScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading developer panel data: $e');
+      // Error loading developer panel data
       setState(() => _isLoading = false);
     }
   }

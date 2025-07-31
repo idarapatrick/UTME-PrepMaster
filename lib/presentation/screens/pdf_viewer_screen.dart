@@ -112,10 +112,10 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
                   canShowScrollHead: true,
                   canShowScrollStatus: true,
                   onDocumentLoaded: (PdfDocumentLoadedDetails details) {
-                    print('PDF loaded successfully: ${details.document.pages.count} pages');
+                    // PDF loaded successfully
                   },
                   onDocumentLoadFailed: (PdfDocumentLoadFailedDetails details) {
-                    print('PDF load failed: ${details.error}');
+                    // PDF load failed
                     setState(() {
                       _errorMessage = 'Failed to load PDF: ${details.error}';
                     });

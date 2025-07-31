@@ -5,327 +5,131 @@ import 'package:provider/provider.dart';
 import '../providers/theme_notifier.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/responsive_helper.dart';
+import '../../data/services/auth_service.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Settings',
-          style: TextStyle(
-            fontSize: ResponsiveHelper.getResponsiveFontSize(context, 20),
-          ),
-        ),
-        backgroundColor: AppColors.dominantPurple,
-        foregroundColor: Colors.white,
-      ),
-      body: ResponsiveHelper.responsiveListView(
-        context: context,
-        children: [
-          // Profile Section
-          _buildSection(context, 'Profile', [
-            _buildSettingTile(
-              context,
-              icon: Icons.person_outline,
-              title: 'Update your personal information',
-              subtitle: '',
-              onTap: () {},
-              cardColor: isDark ? const Color(0xFF23243B) : Colors.white,
-              textColor: isDark ? Colors.white : AppColors.textPrimary,
-              iconColor: AppColors.dominantPurple,
-            ),
-            _buildSettingTile(
-              context,
-              icon: Icons.phone_outlined,
-              title: '+234 801 234 5678',
-              subtitle: '',
-              onTap: () {},
-              cardColor: isDark ? const Color(0xFF23243B) : Colors.white,
-              textColor: isDark ? Colors.white : AppColors.textPrimary,
-              iconColor: AppColors.dominantPurple,
-            ),
-          ]),
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
 
-          SizedBox(height: ResponsiveHelper.getResponsivePadding(context) * 1.5),
+class _SettingsScreenState extends State<SettingsScreen> {
+  bool _isDarkMode = false;
+  bool _notificationsEnabled = true;
+  bool _soundEnabled = true;
 
-          // Preferences Section
-          _buildSection(context, 'Preferences', [
-            _buildSettingTile(
-              context,
-              icon: Icons.notifications_outlined,
-              title: 'Manage your notification preferences',
-              subtitle: '',
-              onTap: () {},
-              cardColor: isDark ? const Color(0xFF23243B) : Colors.white,
-              textColor: isDark ? Colors.white : AppColors.textPrimary,
-              iconColor: AppColors.dominantPurple,
-            ),
-            SwitchListTile(
-              value: Theme.of(context).brightness == Brightness.dark,
-              onChanged: (value) {
-                Provider.of<ThemeNotifier>(
-                  context,
-                  listen: false,
-                ).toggleTheme(value);
-              },
-              secondary: Icon(
-                Icons.dark_mode_outlined,
-                color: AppColors.dominantPurple,
-                size: ResponsiveHelper.getResponsiveIconSize(context, 24),
-              ),
-              title: Text(
-                'Dark Mode',
-                style: TextStyle(
-                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
-                ),
-              ),
-              subtitle: Text(
-                'Switch between light and dark themes',
-                style: TextStyle(
-                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
-                ),
-              ),
-              activeColor: AppColors.dominantPurple,
-            ),
-            _buildSettingTile(
-              context,
-              icon: Icons.language_outlined,
-              title: 'English',
-              subtitle: '',
-              onTap: () {},
-              cardColor: isDark ? const Color(0xFF23243B) : Colors.white,
-              textColor: isDark ? Colors.white : AppColors.textPrimary,
-              iconColor: AppColors.dominantPurple,
-            ),
-          ]),
-
-          SizedBox(height: ResponsiveHelper.getResponsivePadding(context) * 1.5),
-
-          // Study Section
-          _buildSection(context, 'Study', [
-            _buildSettingTile(
-              context,
-              icon: Icons.timer_outlined,
-              title: 'Set daily study reminders',
-              subtitle: '',
-              onTap: () {},
-              cardColor: isDark ? const Color(0xFF23243B) : Colors.white,
-              textColor: isDark ? Colors.white : AppColors.textPrimary,
-              iconColor: AppColors.dominantPurple,
-            ),
-            _buildSettingTile(
-              context,
-              icon: Icons.analytics_outlined,
-              title: 'View your study progress',
-              subtitle: '',
-              onTap: () {},
-              cardColor: isDark ? const Color(0xFF23243B) : Colors.white,
-              textColor: isDark ? Colors.white : AppColors.textPrimary,
-              iconColor: AppColors.dominantPurple,
-            ),
-          ]),
-
-          SizedBox(height: ResponsiveHelper.getResponsivePadding(context) * 1.5),
-
-          // Support Section
-          _buildSection(context, 'Support', [
-            _buildSettingTile(
-              context,
-              icon: Icons.help_outline,
-              title: 'Help & FAQ',
-              subtitle: 'Get help and find answers',
-              onTap: () {},
-              cardColor: isDark ? const Color(0xFF23243B) : Colors.white,
-              textColor: isDark ? Colors.white : AppColors.textPrimary,
-              iconColor: AppColors.dominantPurple,
-            ),
-            _buildSettingTile(
-              context,
-              icon: Icons.feedback_outlined,
-              title: 'Send Feedback',
-              subtitle: 'Help us improve the app',
-              onTap: () {},
-              cardColor: isDark ? const Color(0xFF23243B) : Colors.white,
-              textColor: isDark ? Colors.white : AppColors.textPrimary,
-              iconColor: AppColors.dominantPurple,
-            ),
-            _buildSettingTile(
-              context,
-              icon: Icons.star_outline,
-              title: 'Rate the App',
-              subtitle: 'Rate us on the app store',
-              onTap: () {},
-              cardColor: isDark ? const Color(0xFF23243B) : Colors.white,
-              textColor: isDark ? Colors.white : AppColors.textPrimary,
-              iconColor: AppColors.dominantPurple,
-            ),
-          ]),
-
-          SizedBox(height: ResponsiveHelper.getResponsivePadding(context) * 1.5),
-
-          // Account Section
-          _buildSection(context, 'Account', [
-            _buildSettingTile(
-              context,
-              icon: Icons.privacy_tip_outlined,
-              title: 'Privacy Policy',
-              subtitle: 'Read our privacy policy',
-              onTap: () {
-                // TODO: Navigate to privacy policy
-              },
-              cardColor: isDark ? const Color(0xFF23243B) : Colors.white,
-              textColor: isDark ? Colors.white : AppColors.textPrimary,
-              iconColor: AppColors.dominantPurple,
-            ),
-            _buildSettingTile(
-              context,
-              icon: Icons.description_outlined,
-              title: 'Terms of Service',
-              subtitle: 'Read our terms of service',
-              onTap: () {
-                // TODO: Navigate to terms of service
-              },
-              cardColor: isDark ? const Color(0xFF23243B) : Colors.white,
-              textColor: isDark ? Colors.white : AppColors.textPrimary,
-              iconColor: AppColors.dominantPurple,
-            ),
-          ]),
-          
-          SizedBox(height: ResponsiveHelper.getResponsivePadding(context) * 1.5),
-          
-          // Sign Out Button
-          Padding(
-            padding: ResponsiveHelper.getResponsiveHorizontalPadding(context),
-            child: SizedBox(
-              width: double.infinity,
-              height: ResponsiveHelper.getResponsiveButtonHeight(context),
-              child: OutlinedButton.icon(
-                icon: Icon(
-                  Icons.logout, 
-                  color: AppColors.dominantPurple,
-                  size: ResponsiveHelper.getResponsiveIconSize(context, 20),
-                ),
-                label: Text(
-                  'Sign Out',
-                  style: TextStyle(
-                    fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
-                  ),
-                ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.dominantPurple,
-                  side: const BorderSide(color: AppColors.dominantPurple),
-                  padding: EdgeInsets.symmetric(
-                    vertical: ResponsiveHelper.getResponsivePadding(context),
-                  ),
-                ),
-                onPressed: () => _showLogoutDialog(context),
-              ),
-            ),
-          ),
-          
-          SizedBox(height: ResponsiveHelper.getResponsivePadding(context) * 2),
-        ],
-      ),
-    );
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
   }
 
-  Widget _buildSection(
-    BuildContext context,
-    String title,
-    List<Widget> children,
-  ) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = Theme.of(context).cardColor;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: ResponsiveHelper.getResponsiveHorizontalPadding(context),
-          child: Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: AppColors.dominantPurple,
-              fontWeight: FontWeight.w600,
-              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
-            ),
-          ),
-        ),
-        Container(
-          margin: ResponsiveHelper.getResponsiveHorizontalPadding(context),
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(ResponsiveHelper.getResponsivePadding(context) / 2),
-            border: Border.all(
-              color: isDark ? AppColors.borderDark : AppColors.borderLight,
-            ),
-          ),
-          child: Column(children: children),
-        ),
-      ],
-    );
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isDarkMode = prefs.getBool('isDarkMode') ?? false;
+      _notificationsEnabled = prefs.getBool('notificationsEnabled') ?? true;
+      _soundEnabled = prefs.getBool('soundEnabled') ?? true;
+    });
   }
 
-  Widget _buildSettingTile(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-    required Color cardColor,
-    required Color textColor,
-    required Color iconColor,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final tileColor = cardColor;
-    return Card(
-      color: tileColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(ResponsiveHelper.getResponsivePadding(context) / 2),
-      ),
-      elevation: 1,
-      child: ListTile(
-        leading: Icon(
-          icon, 
-          color: iconColor, 
-          size: ResponsiveHelper.getResponsiveIconSize(context, 28)
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            color: textColor, 
-            fontWeight: FontWeight.w500,
-            fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
-          ),
-        ),
-        subtitle: subtitle.isNotEmpty
-            ? Text(
-                subtitle,
-                style: TextStyle(
-                  color: textColor.withValues(alpha: 0.7),
-                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
-                ),
-              )
-            : null,
-        onTap: onTap,
-        trailing: Icon(
-          Icons.arrow_forward_ios, 
-          size: ResponsiveHelper.getResponsiveIconSize(context, 18)
-        ),
-      ),
-    );
+  Future<void> _saveSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isDarkMode', _isDarkMode);
+    await prefs.setBool('notificationsEnabled', _notificationsEnabled);
+    await prefs.setBool('soundEnabled', _soundEnabled);
   }
 
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
+  Future<void> _logout() async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      
+      if (mounted) {
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          '/auth',
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error logging out: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _showDeleteAccountDialog(BuildContext context) {
+    return showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Logout'),
-          content: const Text('Are you sure you want to logout?'),
+          title: Row(
+            children: [
+              Icon(
+                Icons.warning,
+                color: Colors.red,
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              const Text('Delete Account'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Are you sure you want to delete your account?',
+                style: TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.warning_amber,
+                          color: Colors.red,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'This action cannot be undone!',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      '• Your account will be permanently deleted\n'
+                      '• All your data will be removed\n'
+                      '• Progress and achievements will be lost\n'
+                      '• You will need to create a new account to use the app again',
+                      style: TextStyle(fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -334,9 +138,13 @@ class SettingsScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () async {
                 Navigator.of(context).pop();
-                await _performLogout(context);
+                await _performDeleteAccount(context);
               },
-              child: const Text('Logout'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Delete Account'),
             ),
           ],
         );
@@ -344,31 +152,366 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _performLogout(BuildContext context) async {
+  Future<void> _performDeleteAccount(BuildContext context) async {
     try {
-      // Sign out from Firebase Auth
-      await FirebaseAuth.instance.signOut();
+      final authService = AuthService();
       
-      // Clear all session data from SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const AlertDialog(
+            content: Row(
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(width: 16),
+                Text('Deleting account...'),
+              ],
+            ),
+          );
+        },
+      );
+
+      // Perform account deletion
+      final result = await authService.deleteAccount();
       
-      // Navigate to onboarding screen
+      // Close loading dialog
       if (context.mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          '/onboarding',
-          (route) => false, // Remove all previous routes from the stack
-        );
+        Navigator.of(context).pop();
+      }
+
+      if (result.isSuccess) {
+        // Show success message
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result.message),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+        
+        // Clear SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.clear();
+        
+        // Navigate to onboarding screen
+        if (context.mounted) {
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            '/onboarding',
+            (route) => false,
+          );
+        }
+      } else {
+        // Show error message
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result.message),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } catch (e) {
-      print('Error during logout: $e');
-      // Even if there's an error, try to navigate to onboarding
+      // Close loading dialog if still showing
       if (context.mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          '/onboarding',
-          (route) => false,
+        Navigator.of(context).pop();
+      }
+      
+      // Show error message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete account: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
+  }
+
+  Widget _buildSection(BuildContext context, String title, List<Widget> children) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppColors.getTextPrimary(context),
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...children,
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  Widget _buildSettingTile({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+    Color? cardColor,
+    Color? textColor,
+    Color? iconColor,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Card(
+      color: cardColor ?? AppColors.getCardColor(context),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        leading: Icon(
+          icon,
+          color: iconColor ?? AppColors.dominantPurple,
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: textColor ?? AppColors.getTextPrimary(context),
+          ),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: TextStyle(
+            color: textColor?.withValues(alpha: 0.7) ?? AppColors.getTextSecondary(context),
+          ),
+        ),
+        trailing: Icon(
+          Icons.arrow_forward_ios,
+          size: 16,
+          color: AppColors.getTextSecondary(context),
+        ),
+        onTap: onTap,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Settings'),
+        backgroundColor: AppColors.dominantPurple,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      backgroundColor: AppColors.getBackgroundPrimary(context),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(ResponsiveHelper.getResponsivePadding(context)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // App Settings Section
+            _buildSection(context, 'App Settings', [
+              Card(
+                color: AppColors.getCardColor(context),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ListTile(
+                  leading: Icon(
+                    Icons.dark_mode,
+                    color: AppColors.dominantPurple,
+                  ),
+                  title: Text(
+                    'Dark Mode',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.getTextPrimary(context),
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Switch between light and dark themes',
+                    style: TextStyle(
+                      color: AppColors.getTextSecondary(context),
+                    ),
+                  ),
+                  trailing: Switch(
+                    value: _isDarkMode,
+                    onChanged: (value) async {
+                      setState(() {
+                        _isDarkMode = value;
+                      });
+                      await _saveSettings();
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Theme changed to ${value ? 'dark' : 'light'} mode. Restart app to see changes.'),
+                            backgroundColor: AppColors.dominantPurple,
+                          ),
+                        );
+                      }
+                    },
+                    activeColor: AppColors.dominantPurple,
+                  ),
+                ),
+              ),
+              Card(
+                color: AppColors.getCardColor(context),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ListTile(
+                  leading: Icon(
+                    Icons.notifications,
+                    color: AppColors.dominantPurple,
+                  ),
+                  title: Text(
+                    'Notifications',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.getTextPrimary(context),
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Enable push notifications',
+                    style: TextStyle(
+                      color: AppColors.getTextSecondary(context),
+                    ),
+                  ),
+                  trailing: Switch(
+                    value: _notificationsEnabled,
+                    onChanged: (value) async {
+                      setState(() {
+                        _notificationsEnabled = value;
+                      });
+                      await _saveSettings();
+                    },
+                    activeColor: AppColors.dominantPurple,
+                  ),
+                ),
+              ),
+              Card(
+                color: AppColors.getCardColor(context),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ListTile(
+                  leading: Icon(
+                    Icons.volume_up,
+                    color: AppColors.dominantPurple,
+                  ),
+                  title: Text(
+                    'Sound Effects',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.getTextPrimary(context),
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Enable app sound effects',
+                    style: TextStyle(
+                      color: AppColors.getTextSecondary(context),
+                    ),
+                  ),
+                  trailing: Switch(
+                    value: _soundEnabled,
+                    onChanged: (value) async {
+                      setState(() {
+                        _soundEnabled = value;
+                      });
+                      await _saveSettings();
+                    },
+                    activeColor: AppColors.dominantPurple,
+                  ),
+                ),
+              ),
+            ]),
+
+            // Account Management Section
+            _buildSection(context, 'Account Management', [
+              _buildSettingTile(
+                context: context,
+                icon: Icons.logout,
+                title: 'Logout',
+                subtitle: 'Sign out of your account',
+                onTap: _logout,
+                cardColor: isDark ? const Color(0xFF23243B) : Colors.white,
+                textColor: AppColors.getTextPrimary(context),
+                iconColor: AppColors.dominantPurple,
+              ),
+              _buildSettingTile(
+                context: context,
+                icon: Icons.delete_forever,
+                title: 'Delete Account',
+                subtitle: 'Permanently delete your account and all data',
+                onTap: () => _showDeleteAccountDialog(context),
+                cardColor: isDark ? const Color(0xFF23243B) : Colors.white,
+                textColor: Colors.red,
+                iconColor: Colors.red,
+              ),
+            ]),
+
+            // App Information Section
+            _buildSection(context, 'App Information', [
+              _buildSettingTile(
+                context: context,
+                icon: Icons.info,
+                title: 'About',
+                subtitle: 'App version and information',
+                onTap: () {
+                  showAboutDialog(
+                    context: context,
+                    applicationName: 'UTME PrepMaster',
+                    applicationVersion: '1.0.0',
+                    applicationIcon: Icon(
+                      Icons.school,
+                      color: AppColors.dominantPurple,
+                      size: 48,
+                    ),
+                    children: [
+                      Text(
+                        'UTME PrepMaster is your comprehensive study companion for UTME success. '
+                        'Access practice tests, AI tutoring, and track your progress.',
+                        style: TextStyle(color: AppColors.getTextSecondary(context)),
+                      ),
+                    ],
+                  );
+                },
+              ),
+              _buildSettingTile(
+                context: context,
+                icon: Icons.privacy_tip,
+                title: 'Privacy Policy',
+                subtitle: 'Read our privacy policy',
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Privacy Policy - Coming Soon'),
+                      backgroundColor: AppColors.dominantPurple,
+                    ),
+                  );
+                },
+              ),
+              _buildSettingTile(
+                context: context,
+                icon: Icons.description,
+                title: 'Terms of Service',
+                subtitle: 'Read our terms of service',
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Terms of Service - Coming Soon'),
+                      backgroundColor: AppColors.dominantPurple,
+                    ),
+                  );
+                },
+              ),
+            ]),
+          ],
+        ),
+      ),
+    );
   }
 }

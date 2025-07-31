@@ -13,8 +13,8 @@ class _LifeAtStudyScreenState extends State<LifeAtStudyScreen>
   late AnimationController _timerController;
   late AnimationController _pulseController;
   
-  int _pomodoroMinutes = 25;
-  int _breakMinutes = 5;
+  final int _pomodoroMinutes = 25;
+  final int _breakMinutes = 5;
   int _currentSeconds = 0;
   bool _isRunning = false;
   bool _isBreak = false;

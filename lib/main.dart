@@ -3,8 +3,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
+import 'config/firebase_options.dart';
 import 'presentation/theme/app_theme.dart';
 import 'presentation/screens/auth/auth_screen.dart';
+import 'presentation/screens/auth/otp_verification_screen.dart';
 import 'presentation/screens/splash_screen.dart';
 import 'presentation/screens/onboarding_screen.dart';
 import 'presentation/screens/settings_screen.dart';
@@ -29,11 +31,28 @@ import 'presentation/screens/admin/developer_panel_screen.dart';
 import 'presentation/screens/admin/admin_dashboard_screen.dart';
 import 'presentation/screens/auth/admin_auth_screen.dart';
 import 'presentation/screens/course_content_screen.dart';
+import 'presentation/screens/leaderboard_screen.dart';
+import 'presentation/screens/edit_profile_screen.dart';
+import 'presentation/screens/my_library_screen.dart';
+import 'presentation/screens/auth/google_signup_completion_screen.dart';
+import 'presentation/screens/auth/email_verification_screen.dart';
 
 void main() async {
-  
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  
+  // Check if Firebase is already initialized to prevent duplicate app error
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    // If Firebase is already initialized, just continue
+    if (e.toString().contains('duplicate-app')) {
+      // Firebase is already initialized, continue
+    } else {
+      rethrow; // Re-throw other errors
+    }
+  }
 
   // Enable Firestore offline caching
   FirebaseFirestore.instance.settings = const Settings(
@@ -70,6 +89,20 @@ class MyApp extends StatelessWidget {
       home: const AuthGate(),
       routes: {
         '/auth': (context) => const AuthScreen(),
+        '/otp-verification': (context) => OtpVerificationScreen(),
+        '/email-verification': (context) {
+          final args = ModalRoute.of(context)?.settings.arguments;
+          if (args is Map<String, dynamic>) {
+            return EmailVerificationScreen(
+              email: args['email'] as String?,
+              isNewUser: args['isNewUser'] as bool? ?? false,
+            );
+          } else if (args is String) {
+            return EmailVerificationScreen(email: args);
+          } else {
+            return const EmailVerificationScreen();
+          }
+        },
         '/onboarding': (context) => const OnboardingScreen(),
         '/settings': (context) => const SettingsScreen(),
         '/badges': (context) => const BadgesScreen(),
@@ -88,6 +121,13 @@ class MyApp extends StatelessWidget {
         '/admin/developer-panel': (context) => const DeveloperPanelScreen(),
         '/admin/dashboard': (context) => const AdminDashboardScreen(),
         '/admin/auth': (context) => const AdminAuthScreen(),
+        '/leaderboard': (context) => const LeaderboardScreen(),
+        '/edit-profile': (context) => const EditProfileScreen(),
+        '/my-library': (context) => const MyLibraryScreen(),
+        '/google-signup-completion': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as User;
+          return GoogleSignupCompletionScreen(googleUser: args);
+        },
       },
     );
   }
@@ -111,11 +151,20 @@ class _AuthGateState extends State<AuthGate> {
 
   Future<void> _initializeApp() async {
     try {
-      // Initialize user stats provider
-      final userStatsProvider = Provider.of<UserStatsProvider>(context, listen: false);
-      await userStatsProvider.initializeUserStats();
+      // Wait a bit for Firebase to fully initialize
+      await Future.delayed(const Duration(milliseconds: 1000));
+      
+      // Initialize user stats provider in the background
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        try {
+          final userStatsProvider = Provider.of<UserStatsProvider>(context, listen: false);
+          userStatsProvider.initializeUserStats();
+        } catch (e) {
+          // Ignore user stats initialization errors
+        }
+      });
     } catch (e) {
-      print('Error initializing app: $e');
+      // Error initializing app
     } finally {
       if (mounted) {
         setState(() {
@@ -137,56 +186,29 @@ class _AuthGateState extends State<AuthGate> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const SplashScreen();
         }
-        if (snapshot.hasData) {
+        
+        if (snapshot.hasData && snapshot.data != null) {
+          final user = snapshot.data!;
+          
+          // Check if email is verified for all users (both Google and email/password)
+          if (!user.emailVerified) {
+            // Redirect to email verification screen
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.of(context).pushReplacementNamed('/email-verification', arguments: {
+                'email': user.email,
+                'isNewUser': false, // Existing user
+              });
+            });
+            return const SplashScreen();
+          }
+          
+          // User is authenticated and verified, go to home
           return const HomeScreen();
         }
-        return const AuthScreen();
+        
+        // No user, show onboarding screen first
+        return const OnboardingScreen();
       },
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('Welcome Screen'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
     );
   }
 }

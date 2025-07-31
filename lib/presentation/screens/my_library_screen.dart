@@ -65,187 +65,6 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
 
   // Remove _uploadPdf and PDF upload logic
 
-  Future<void> _addNote() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-    String? note = await showDialog<String>(
-      context: context,
-      builder: (context) {
-        String temp = '';
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Row(
-            children: [
-              Icon(Icons.note_add, color: AppColors.dominantPurple),
-              const SizedBox(width: 8),
-              const Text('Add Note'),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                autofocus: true,
-                onChanged: (v) => temp = v,
-                maxLines: 4,
-                decoration: InputDecoration(
-                  hintText: 'Write your study note...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: AppColors.dominantPurple),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context, temp),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.dominantPurple,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-    if (note != null && note.trim().isNotEmpty) {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('library_notes')
-          .add({
-        'note': note.trim(),
-        'timestamp': FieldValue.serverTimestamp(),
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-      _loadLibrary();
-    }
-  }
-
-  Future<void> _addLink() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-    
-    Map<String, String>? result = await showDialog<Map<String, String>>(
-      context: context,
-      builder: (context) {
-        String title = '';
-        String link = '';
-        String description = '';
-        
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Row(
-            children: [
-              Icon(Icons.link, color: AppColors.dominantPurple),
-              const SizedBox(width: 8),
-              const Text('Add Study Link'),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                autofocus: true,
-                onChanged: (v) => title = v,
-                decoration: InputDecoration(
-                  hintText: 'Link title...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: AppColors.dominantPurple),
-                  ),
-                  prefixIcon: Icon(Icons.title, color: AppColors.textSecondary),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                onChanged: (v) => link = v,
-                decoration: InputDecoration(
-                  hintText: 'Paste study resource link...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: AppColors.dominantPurple),
-                  ),
-                  prefixIcon: Icon(Icons.link, color: AppColors.textSecondary),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                onChanged: (v) => description = v,
-                maxLines: 2,
-                decoration: InputDecoration(
-                  hintText: 'Link description...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: AppColors.dominantPurple),
-                  ),
-                  prefixIcon: Icon(Icons.description, color: AppColors.textSecondary),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context, {
-                'title': title,
-                'link': link,
-                'description': description,
-              }),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.dominantPurple,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
-    );
-    
-    if (result != null && result['link']?.trim().isNotEmpty == true) {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('library_links')
-          .add({
-        'title': result['title']?.trim() ?? 'Untitled',
-        'link': result['link']?.trim() ?? '',
-        'description': result['description']?.trim() ?? '',
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-      _loadLibrary();
-    }
-  }
-
   Future<void> _deletePdf(String docId) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -472,7 +291,6 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Library'),
@@ -480,35 +298,33 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      backgroundColor: isDark
-          ? const Color(0xFF181A20)
-          : AppColors.backgroundPrimary,
+      backgroundColor: AppColors.getBackgroundPrimary(context),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header with stats
-            _buildHeader(context, isDark),
+            _buildHeader(context),
             const SizedBox(height: 24),
             
             // PDFs Section
-            _buildPdfSection(context, isDark),
+            _buildPdfSection(context),
             const SizedBox(height: 24),
             
             // Notes Section
-            _buildNotesSection(context, isDark),
+            _buildNotesSection(context),
             const SizedBox(height: 24),
             
             // Links Section
-            _buildLinksSection(context, isDark),
+            _buildLinksSection(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context, bool isDark) {
+  Widget _buildHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -555,7 +371,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
     );
   }
 
-  Widget _buildPdfSection(BuildContext context, bool isDark) {
+  Widget _buildPdfSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -566,7 +382,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
               'Literature PDFs',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: AppColors.getTextPrimary(context),
               ),
             ),
             Container(
@@ -590,7 +406,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
         
         // Default UTME Literature PDF
         Card(
-          color: isDark ? const Color(0xFF23243B) : Colors.white,
+          color: AppColors.getCardColor(context),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -607,28 +423,28 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                 size: 24,
               ),
             ),
-                         title: Text(
-               'Last Days at Forcados High School',
-               style: TextStyle(
-                 fontWeight: FontWeight.bold,
-                 color: AppColors.textPrimary,
-               ),
-             ),
-             subtitle: Text(
-               'UTME 2025 Literature Text',
-               style: TextStyle(
-                 color: AppColors.textSecondary,
-                 fontSize: 12,
-               ),
-             ),
+            title: Text(
+              'Last Days at Forcados High School',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: AppColors.getTextPrimary(context),
+              ),
+            ),
+            subtitle: Text(
+              'UTME 2025 Literature Text',
+              style: TextStyle(
+                color: AppColors.getTextSecondary(context),
+                fontSize: 12,
+              ),
+            ),
             trailing: IconButton(
               icon: Icon(
                 Icons.download,
                 color: AppColors.dominantPurple,
               ),
-                             onPressed: () {
-                 _openPdf('assets/pdfs/last_days_at_forcados_high_school.pdf');
-               },
+              onPressed: () {
+                _openPdf('assets/pdfs/last_days_at_forcados_high_school.pdf');
+              },
             ),
           ),
         ),
@@ -639,12 +455,12 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
             'Additional PDFs',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: AppColors.getTextPrimary(context),
             ),
           ),
           const SizedBox(height: 8),
           ..._pdfDocs.map((pdf) => Card(
-            color: isDark ? const Color(0xFF23243B) : Colors.white,
+            color: AppColors.getCardColor(context),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -665,7 +481,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                 pdf['fileName'],
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: AppColors.getTextPrimary(context),
                 ),
               ),
               trailing: IconButton(
@@ -682,7 +498,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
     );
   }
 
-  Widget _buildNotesSection(BuildContext context, bool isDark) {
+  Widget _buildNotesSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -693,7 +509,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
               'Study Notes',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: AppColors.getTextPrimary(context),
               ),
             ),
             TextButton(
@@ -718,7 +534,6 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
         if (_noteDocs.isEmpty)
           _buildEmptyState(
             context,
-            isDark,
             Icons.note_add,
             'No Notes Yet',
             'Start taking notes to keep track of important information',
@@ -727,7 +542,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
           Column(
             children: [
               // Show only first 2 notes as preview
-              ..._noteDocs.take(2).map((note) => _buildNoteCard(context, isDark, note)),
+              ..._noteDocs.take(2).map((note) => _buildNoteCard(context, note)),
               if (_noteDocs.length > 2)
                 Padding(
                   padding: const EdgeInsets.all(16),
@@ -755,24 +570,29 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
     );
   }
 
-  Widget _buildNoteCard(BuildContext context, bool isDark, Map<String, dynamic> note) {
+  Widget _buildNoteCard(BuildContext context, Map<String, dynamic> note) {
     final noteText = note['note'] as String;
     final timestamp = note['timestamp'] as Timestamp?;
     final timeString = timestamp != null 
         ? _formatTime(timestamp.toDate())
         : 'Now';
     
-    // Generate a color based on note content
+    // Generate a color based on note content with better contrast
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final colors = [
-      Colors.yellow.shade100,
-      Colors.green.shade100,
-      Colors.blue.shade100,
-      Colors.purple.shade100,
-      Colors.orange.shade100,
-      Colors.pink.shade100,
+      isDark ? Colors.amber.shade700 : Colors.amber.shade100,
+      isDark ? Colors.green.shade700 : Colors.green.shade100,
+      isDark ? Colors.blue.shade700 : Colors.blue.shade100,
+      isDark ? Colors.purple.shade700 : Colors.purple.shade100,
+      isDark ? Colors.orange.shade700 : Colors.orange.shade100,
+      isDark ? Colors.pink.shade700 : Colors.pink.shade100,
     ];
     final colorIndex = noteText.length % colors.length;
     final cardColor = colors[colorIndex];
+    
+    // Determine text color based on background luminance
+    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.textPrimary;
+    final secondaryTextColor = isDark ? AppColors.darkTextSecondary : AppColors.textSecondary;
     
     return Card(
       color: cardColor,
@@ -791,7 +611,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                 children: [
                   Icon(
                     Icons.sticky_note_2,
-                    color: Colors.black87,
+                    color: textColor,
                     size: 18,
                   ),
                   const SizedBox(width: 8),
@@ -799,7 +619,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                     child: Text(
                       timeString,
                       style: TextStyle(
-                        color: Colors.black54,
+                        color: secondaryTextColor,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
@@ -808,7 +628,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                   PopupMenuButton<String>(
                     icon: Icon(
                       Icons.more_vert,
-                      color: Colors.black54,
+                      color: secondaryTextColor,
                       size: 18,
                     ),
                     onSelected: (value) {
@@ -819,22 +639,23 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                       }
                     },
                     itemBuilder: (context) => [
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'edit',
                         child: Row(
                           children: [
-                            Icon(Icons.edit, size: 16),
-                            SizedBox(width: 8),
-                            Text('Edit'),
+                            Icon(Icons.edit, size: 16, color: AppColors.getTextPrimary(context)),
+                            const SizedBox(width: 8),
+                            Text('Edit', style: TextStyle(color: AppColors.getTextPrimary(context))),
                           ],
                         ),
                       ),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'delete',
                         child: Row(
                           children: [
-                            Icon(Icons.delete, size: 16),
-                            Text('Delete'),
+                            Icon(Icons.delete, size: 16, color: AppColors.errorRed),
+                            const SizedBox(width: 8),
+                            Text('Delete', style: TextStyle(color: AppColors.errorRed)),
                           ],
                         ),
                       ),
@@ -847,7 +668,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                 child: Text(
                   noteText,
                   style: TextStyle(
-                    color: Colors.black87,
+                    color: textColor,
                     fontSize: 14,
                     height: 1.4,
                   ),
@@ -862,7 +683,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
     );
   }
 
-  Widget _buildLinksSection(BuildContext context, bool isDark) {
+  Widget _buildLinksSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -873,7 +694,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
               'Study Links',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: AppColors.getTextPrimary(context),
               ),
             ),
             TextButton(
@@ -898,7 +719,6 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
         if (_linkDocs.isEmpty)
           _buildEmptyState(
             context,
-            isDark,
             Icons.link,
             'No Links Yet',
             'Save important study resources and links here',
@@ -907,7 +727,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
           Column(
             children: [
               // Show only first 2 links as preview
-              ..._linkDocs.take(2).map((link) => _buildLinkRow(context, isDark, link)),
+              ..._linkDocs.take(2).map((link) => _buildLinkRow(context, link)),
               if (_linkDocs.length > 2)
                 Padding(
                   padding: const EdgeInsets.all(16),
@@ -935,69 +755,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
     );
   }
 
-  Widget _buildLinksTable(BuildContext context, bool isDark) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF23243B) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderLight),
-      ),
-      child: Column(
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColors.dominantPurple.withValues(alpha: 0.1),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
-              ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    'Title',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.dominantPurple,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    'Link',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.dominantPurple,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 3,
-                  child: Text(
-                    'Description',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.dominantPurple,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 40), // Space for actions
-              ],
-            ),
-          ),
-          // Rows
-          ..._linkDocs.map((link) => _buildLinkRow(context, isDark, link)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLinkRow(BuildContext context, bool isDark, Map<String, dynamic> link) {
+  Widget _buildLinkRow(BuildContext context, Map<String, dynamic> link) {
     final title = link['title'] ?? 'Untitled';
     final url = link['link'] ?? '';
     final description = link['description'] ?? '';
@@ -1006,7 +764,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
     return Container(
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: AppColors.borderLight),
+          bottom: BorderSide(color: AppColors.getBorderLight(context)),
         ),
       ),
       child: Padding(
@@ -1019,7 +777,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                 title,
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: AppColors.getTextPrimary(context),
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -1053,7 +811,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
               child: Text(
                 description,
                 style: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: AppColors.getTextSecondary(context),
                   fontSize: 12,
                 ),
                 maxLines: 2,
@@ -1063,7 +821,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
             PopupMenuButton<String>(
               icon: Icon(
                 Icons.more_vert,
-                color: AppColors.textSecondary,
+                color: AppColors.getTextSecondary(context),
                 size: 18,
               ),
               onSelected: (value) {
@@ -1076,32 +834,33 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                 }
               },
               itemBuilder: (context) => [
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'open',
                   child: Row(
                     children: [
-                      Icon(Icons.open_in_new, size: 16),
-                      SizedBox(width: 8),
-                      Text('Open'),
+                      Icon(Icons.open_in_new, size: 16, color: AppColors.getTextPrimary(context)),
+                      const SizedBox(width: 8),
+                      Text('Open', style: TextStyle(color: AppColors.getTextPrimary(context))),
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'edit',
                   child: Row(
                     children: [
-                      Icon(Icons.edit, size: 16),
-                      SizedBox(width: 8),
-                      Text('Edit'),
+                      Icon(Icons.edit, size: 16, color: AppColors.getTextPrimary(context)),
+                      const SizedBox(width: 8),
+                      Text('Edit', style: TextStyle(color: AppColors.getTextPrimary(context))),
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'delete',
                   child: Row(
                     children: [
-                      Icon(Icons.delete, size: 16),
-                      Text('Delete'),
+                      Icon(Icons.delete, size: 16, color: AppColors.errorRed),
+                      const SizedBox(width: 8),
+                      Text('Delete', style: TextStyle(color: AppColors.errorRed)),
                     ],
                   ),
                 ),
@@ -1113,16 +872,14 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
     );
   }
 
-
-
-  Widget _buildEmptyState(BuildContext context, bool isDark, IconData icon, String title, String subtitle) {
+  Widget _buildEmptyState(BuildContext context, IconData icon, String title, String subtitle) {
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF23243B) : Colors.white,
+        color: AppColors.getCardColor(context),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.borderLight,
+          color: AppColors.getBorderLight(context),
           width: 1,
         ),
       ),
@@ -1131,14 +888,14 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
           Icon(
             icon,
             size: 48,
-            color: AppColors.textSecondary,
+            color: AppColors.getTextSecondary(context),
           ),
           const SizedBox(height: 16),
           Text(
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: AppColors.getTextPrimary(context),
             ),
           ),
           const SizedBox(height: 8),
@@ -1146,7 +903,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
             subtitle,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.textSecondary,
+              color: AppColors.getTextSecondary(context),
             ),
           ),
         ],

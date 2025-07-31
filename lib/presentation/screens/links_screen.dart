@@ -22,9 +22,9 @@ class _LinksScreenState extends State<LinksScreen> {
   }
 
   Future<void> _loadLinks() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      try {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
         final linksSnap = await FirebaseFirestore.instance
             .collection('users')
             .doc(user.uid)
@@ -41,13 +41,22 @@ class _LinksScreenState extends State<LinksScreen> {
         if (_links.isEmpty) {
           await _addSampleLinks();
         }
-      } catch (e) {
-        print('Error loading links: $e');
-        // Add sample links on error
-        await _addSampleLinks();
+      } else {
+        setState(() => _isLoading = false);
       }
-    } else {
+    } catch (e) {
+      // Handle error gracefully
       setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading links: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      // Add sample links on error
+      await _addSampleLinks();
     }
   }
 
@@ -91,7 +100,15 @@ class _LinksScreenState extends State<LinksScreen> {
       // Reload links
       await _loadLinks();
     } catch (e) {
-      print('Error adding sample links: $e');
+      // Error adding sample links
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error adding sample links: ${e.toString()}'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
     }
   }
 
@@ -192,17 +209,36 @@ class _LinksScreenState extends State<LinksScreen> {
     );
     
     if (result != null && result['link']?.trim().isNotEmpty == true) {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('library_links')
-          .add({
-        'title': result['title']?.trim() ?? 'Untitled',
-        'link': result['link']?.trim() ?? '',
-        'description': result['description']?.trim() ?? '',
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-      _loadLinks();
+      try {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('library_links')
+            .add({
+          'title': result['title']?.trim() ?? 'Untitled',
+          'link': result['link']?.trim() ?? '',
+          'description': result['description']?.trim() ?? '',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+        await _loadLinks();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Link added successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error adding link: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -306,17 +342,36 @@ class _LinksScreenState extends State<LinksScreen> {
     );
     
     if (result != null && result['link']?.trim().isNotEmpty == true) {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('library_links')
-          .doc(docId)
-          .update({
-        'title': result['title']?.trim() ?? 'Untitled',
-        'link': result['link']?.trim() ?? '',
-        'description': result['description']?.trim() ?? '',
-      });
-      _loadLinks();
+      try {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('library_links')
+            .doc(docId)
+            .update({
+          'title': result['title']?.trim() ?? 'Untitled',
+          'link': result['link']?.trim() ?? '',
+          'description': result['description']?.trim() ?? '',
+        });
+        await _loadLinks();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Link updated successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error updating link: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -347,54 +402,75 @@ class _LinksScreenState extends State<LinksScreen> {
     );
     
     if (confirm == true) {
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .collection('library_links')
-          .doc(docId)
-          .delete();
-      _loadLinks();
+      try {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('library_links')
+            .doc(docId)
+            .delete();
+        await _loadLinks();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Link deleted successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error deleting link: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 
   Future<void> _openLink(String url) async {
     try {
-      print('DEBUG: Attempting to open URL: $url');
       final uri = Uri.parse(url);
-      print('DEBUG: Parsed URI: $uri');
-      
       final canLaunch = await canLaunchUrl(uri);
-      print('DEBUG: Can launch URL: $canLaunch');
       
       if (canLaunch) {
         final launched = await launchUrl(
           uri, 
           mode: LaunchMode.externalApplication,
         );
-        print('DEBUG: Launch result: $launched');
         
         if (!launched) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to open: $url'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+        }
+      } else {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Failed to open: $url'),
+              content: Text('Could not open: $url'),
+              backgroundColor: Colors.red,
             ),
           );
         }
-      } else {
-        print('DEBUG: Cannot launch URL: $url');
+      }
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Could not open: $url'),
+            content: Text('Error opening link: $e'),
+            backgroundColor: Colors.red,
           ),
         );
       }
-    } catch (e) {
-      print('DEBUG: Error opening URL: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error opening link: $e'),
-        ),
-      );
     }
   }
 
@@ -418,9 +494,7 @@ class _LinksScreenState extends State<LinksScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      backgroundColor: isDark
-          ? const Color(0xFF181A20)
-          : AppColors.backgroundPrimary,
+      backgroundColor: AppColors.getBackgroundPrimary(context),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
@@ -479,24 +553,11 @@ class _LinksScreenState extends State<LinksScreen> {
                 ),
               ],
             ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            onPressed: () => _openLink('https://www.google.com'),
-            backgroundColor: AppColors.accentAmber,
-            child: const Icon(Icons.open_in_new, color: Colors.white),
-            heroTag: 'test',
-          ),
-          const SizedBox(height: 16),
-          FloatingActionButton(
-            onPressed: _addLink,
-            backgroundColor: AppColors.dominantPurple,
-            foregroundColor: Colors.white,
-            child: const Icon(Icons.add),
-            heroTag: 'add',
-          ),
-        ],
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addLink,
+        backgroundColor: AppColors.dominantPurple,
+        foregroundColor: Colors.white,
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -505,9 +566,9 @@ class _LinksScreenState extends State<LinksScreen> {
     return Container(
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF23243B) : Colors.white,
+        color: AppColors.getCardColor(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderLight),
+        border: Border.all(color: AppColors.getBorderLight(context)),
       ),
       child: Column(
         children: [
@@ -581,7 +642,7 @@ class _LinksScreenState extends State<LinksScreen> {
     return Container(
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: AppColors.borderLight),
+          bottom: BorderSide(color: AppColors.getBorderLight(context)),
         ),
       ),
       child: Padding(
@@ -594,7 +655,7 @@ class _LinksScreenState extends State<LinksScreen> {
                 title,
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: AppColors.getTextPrimary(context),
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -604,12 +665,12 @@ class _LinksScreenState extends State<LinksScreen> {
               child: InkWell(
                 onTap: () => _openLink(url),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppColors.dominantPurple.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(color: AppColors.dominantPurple.withValues(alpha: 0.3)),
                   ),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   child: Text(
                     domain,
                     style: TextStyle(
@@ -628,7 +689,7 @@ class _LinksScreenState extends State<LinksScreen> {
               child: Text(
                 description,
                 style: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: AppColors.getTextSecondary(context),
                   fontSize: 12,
                 ),
                 maxLines: 2,
@@ -638,7 +699,7 @@ class _LinksScreenState extends State<LinksScreen> {
             PopupMenuButton<String>(
               icon: Icon(
                 Icons.more_vert,
-                color: AppColors.textSecondary,
+                color: AppColors.getTextSecondary(context),
                 size: 18,
               ),
               onSelected: (value) {
@@ -651,32 +712,33 @@ class _LinksScreenState extends State<LinksScreen> {
                 }
               },
               itemBuilder: (context) => [
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'open',
                   child: Row(
                     children: [
-                      Icon(Icons.open_in_new, size: 16),
-                      SizedBox(width: 8),
-                      Text('Open'),
+                      Icon(Icons.open_in_new, size: 16, color: AppColors.getTextPrimary(context)),
+                      const SizedBox(width: 8),
+                      Text('Open', style: TextStyle(color: AppColors.getTextPrimary(context))),
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'edit',
                   child: Row(
                     children: [
-                      Icon(Icons.edit, size: 16),
-                      SizedBox(width: 8),
-                      Text('Edit'),
+                      Icon(Icons.edit, size: 16, color: AppColors.getTextPrimary(context)),
+                      const SizedBox(width: 8),
+                      Text('Edit', style: TextStyle(color: AppColors.getTextPrimary(context))),
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'delete',
                   child: Row(
                     children: [
-                      Icon(Icons.delete, size: 16),
-                      Text('Delete'),
+                      Icon(Icons.delete, size: 16, color: AppColors.errorRed),
+                      const SizedBox(width: 8),
+                      Text('Delete', style: TextStyle(color: AppColors.errorRed)),
                     ],
                   ),
                 ),
@@ -696,14 +758,14 @@ class _LinksScreenState extends State<LinksScreen> {
           Icon(
             Icons.link,
             size: 80,
-            color: AppColors.textSecondary,
+            color: AppColors.getTextSecondary(context),
           ),
           const SizedBox(height: 24),
           Text(
             'No Links Yet',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: AppColors.getTextPrimary(context),
             ),
           ),
           const SizedBox(height: 12),
@@ -711,7 +773,7 @@ class _LinksScreenState extends State<LinksScreen> {
             'Save important study resources and links here',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: AppColors.textSecondary,
+              color: AppColors.getTextSecondary(context),
             ),
           ),
         ],

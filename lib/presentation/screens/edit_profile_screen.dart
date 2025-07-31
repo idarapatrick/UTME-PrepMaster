@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:math';
 import '../../data/services/firestore_service.dart';
 import '../theme/app_colors.dart';
 import '../../data/nigerian_universities.dart';
@@ -17,6 +16,10 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   String? _firstName;
   String? _lastName;
   String? _email;
@@ -59,11 +62,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             _university2 = userData['university2'] ?? '';
             _university3 = userData['university3'] ?? '';
             _avatarAsset = userData['avatarUrl'] ?? 'assets/avatars/avatar1.png';
+            
+            // Update controllers with loaded data
+            _firstNameController.text = _firstName ?? '';
+            _lastNameController.text = _lastName ?? '';
+            _emailController.text = _email ?? '';
+            _phoneController.text = _phone ?? '';
           });
         }
-      } catch (e) {
-        print('Error loading user data: $e');
-      }
+          } catch (e) {
+      // Error loading user data
+    }
     }
   }
 
@@ -140,217 +149,32 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (user != null) {
       try {
         await FirestoreService.updateUserProfile(user.uid, {'avatarUrl': avatarPath});
-      } catch (e) {
-        print('Error saving avatar: $e');
-      }
+          } catch (e) {
+      // Error saving avatar
+    }
     }
   }
 
-  bool _isValidEmail(String email) {
-    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    super.dispose();
   }
 
-  Future<void> _checkEmailForAnonymousUser(String email) async {
-    if (!_isValidEmail(email)) {
-      return; // Don't check invalid emails
-    }
 
-    try {
-      // Try to create a user with the email to check if it exists
-      final tempPassword = _generateRandomPassword();
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: email.trim(),
-        password: tempPassword,
-      );
-      
-      // If successful, the email doesn't exist, so delete the temporary user
-      final tempUser = FirebaseAuth.instance.currentUser;
-      if (tempUser != null && tempUser.email == email.trim()) {
-        await tempUser.delete();
-      }
-      
-      // Show dialog to create account
-      if (mounted) {
-        _showAccountCreationDialog(email.trim());
-      }
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'email-already-in-use') {
-        // Email exists, show error
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Email already in use. Please choose a different email.',
-                style: TextStyle(
-                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
-                ),
-              ),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      print('Error checking email: $e');
-    }
-  }
 
-  void _showAccountCreationDialog(String email) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            'Create Account',
-            style: TextStyle(
-              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 18),
-            ),
-          ),
-          content: Text(
-            'This email is not registered. Would you like to create an account with this email?',
-            style: TextStyle(
-              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _showCannotContinueDialog();
-              },
-              child: Text(
-                'No',
-                style: TextStyle(
-                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _createAccountForAnonymousUser();
-              },
-              child: Text(
-                'Yes',
-                style: TextStyle(
-                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
 
-  void _showCannotContinueDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            'Cannot Continue',
-            style: TextStyle(
-              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 18),
-            ),
-          ),
-          content: Text(
-            'You cannot continue editing your profile without creating an account.',
-            style: TextStyle(
-              fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                Navigator.pop(context);
-              },
-              child: Text(
-                'OK',
-                style: TextStyle(
-                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  String _generateRandomPassword() {
-    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    return String.fromCharCodes(
-      Iterable.generate(12, (_) => chars.codeUnitAt(Random().nextInt(chars.length))),
-    );
-  }
-
-  Future<void> _createAccountForAnonymousUser() async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null && user.isAnonymous && _email != null && _email!.isNotEmpty) {
-        final password = _generateRandomPassword();
-        
-        // Create new user with email/password
-        final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: _email!.trim(),
-          password: password,
-        );
-        
-        // Update display name
-        await credential.user?.updateDisplayName('${_firstName ?? ''} ${_lastName ?? ''}'.trim());
-        
-        // Save all profile data to Firestore for the new UID
-        final profileData = {
-          'firstName': _firstName,
-          'lastName': _lastName,
-          'email': _email,
-          'phone': _phone,
-          'university1': _university1,
-          'university2': _university2,
-          'university3': _university3,
-          'avatarUrl': _avatarAsset,
-          'lastUpdated': FieldValue.serverTimestamp(),
-          'isAnonymous': false,
-        };
-        
-        await FirestoreService.saveFullUserProfile(credential.user!.uid, profileData);
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Account created successfully!',
-                style: TextStyle(
-                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
-                ),
-              ),
-              backgroundColor: Colors.green,
-            ),
-          );
-          Navigator.pop(context);
-        }
-      }
-    } catch (e) {
-      print('Error creating account: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Error creating account. Please try again.',
-              style: TextStyle(
-                fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
-              ),
-            ),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
 
   Future<void> _saveProfile() async {
+    // Get values from controllers
+    _firstName = _firstNameController.text.trim();
+    _lastName = _lastNameController.text.trim();
+    _email = _emailController.text.trim();
+    _phone = _phoneController.text.trim();
+    
     if (!_formKey.currentState!.validate()) {
       if (_university1 == null || _university1!.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -367,8 +191,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
       return;
     }
-
-    _formKey.currentState!.save();
     
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -404,7 +226,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           'isAnonymous': user.isAnonymous,
         };
         
-        await FirestoreService.updateUserProfileFromModel(user.uid, userProfile);
+        await FirestoreService.updateUserProfile(user.uid, userProfile);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -421,8 +243,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           Navigator.pop(context);
         }
       } catch (e) {
-        print('Error saving profile: $e');
-        print('University values: $_university1, $_university2, $_university3');
+        // Error saving profile
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -559,14 +380,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ResponsiveHelper.responsiveTextField(
             context: context,
             label: 'First Name',
-            controller: TextEditingController(text: _firstName),
+            controller: _firstNameController,
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter your first name';
               }
               return null;
             },
-            onChanged: (value) => _firstName = value,
           ),
           
           SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
@@ -575,14 +395,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ResponsiveHelper.responsiveTextField(
             context: context,
             label: 'Last Name',
-            controller: TextEditingController(text: _lastName),
+            controller: _lastNameController,
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter your last name';
               }
               return null;
             },
-            onChanged: (value) => _lastName = value,
           ),
           
           SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
@@ -591,7 +410,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ResponsiveHelper.responsiveTextField(
             context: context,
             label: 'Email',
-            controller: TextEditingController(text: _email),
+            controller: _emailController,
             keyboardType: TextInputType.emailAddress,
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -602,13 +421,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               }
               return null;
             },
-            onChanged: (value) => _email = value,
-            onEditingComplete: () {
-              final user = FirebaseAuth.instance.currentUser;
-              if (user != null && user.isAnonymous && _email != null && _email!.isNotEmpty) {
-                _checkEmailForAnonymousUser(_email!);
-              }
-            },
           ),
           
           SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
@@ -617,9 +429,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ResponsiveHelper.responsiveTextField(
             context: context,
             label: 'Phone Number',
-            controller: TextEditingController(text: _phone),
+            controller: _phoneController,
             keyboardType: TextInputType.phone,
-            onChanged: (value) => _phone = value,
           ),
         ],
       ),

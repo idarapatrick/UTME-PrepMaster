@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UTME PrepMaster - Email Verification</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #7C3AED, #8B5CF6);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 40px;
+        }
+        h1 {
+            color: #1F2937;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        p {
+            color: #6B7280;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .success {
+            background: #D1FAE5;
+            border: 1px solid #10B981;
+            color: #065F46;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .button {
+            background: linear-gradient(135deg, #7C3AED, #8B5CF6);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .secondary {
+            background: transparent;
+            color: #7C3AED;
+            border: 2px solid #7C3AED;
+        }
+        .loading {
+            display: none;
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #7C3AED;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🎓</div>
+        <h1>UTME PrepMaster</h1>
+        <p>Your smart study companion for UTME success!</p>
+        
+        <div id="verification-content">
+            <div class="success">
+                <strong>✅ Email Verified Successfully!</strong><br>
+                Your email has been verified. You can now access the UTME PrepMaster app.
+            </div>
+            
+            <p>Click the button below to open the app and continue your learning journey.</p>
+            
+            <a href="utme-prep-master://verify-email" class="button" id="open-app-btn">
+                📱 Open UTME PrepMaster App
+            </a>
+            
+            <br>
+            
+            <a href="https://play.google.com/store/apps/details?id=com.example.utme_prep_master" class="button secondary" target="_blank">
+                📥 Download App
+            </a>
+        </div>
+        
+        <div id="loading-content" class="loading">
+            <div class="spinner"></div>
+            <p>Opening UTME PrepMaster app...</p>
+        </div>
+    </div>
+
+    <script>
+        // Handle deep linking to the app
+        document.getElementById('open-app-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Show loading
+            document.getElementById('verification-content').style.display = 'none';
+            document.getElementById('loading-content').style.display = 'block';
+            
+            // Try to open the app
+            const appUrl = 'utme-prep-master://verify-email';
+            window.location.href = appUrl;
+            
+            // Fallback: if app doesn't open, redirect to app store after 3 seconds
+            setTimeout(function() {
+                window.location.href = 'https://play.google.com/store/apps/details?id=com.example.utme_prep_master';
+            }, 3000);
+        });
+        
+        // Auto-detect if we're coming from email verification
+        const urlParams = new URLSearchParams(window.location.search);
+        const mode = urlParams.get('mode');
+        const oobCode = urlParams.get('oobCode');
+        
+        if (mode === 'verifyEmail' && oobCode) {
+            // This is a Firebase email verification link
+            console.log('Email verification detected');
+            // The verification is handled by Firebase automatically
+        }
+    </script>
+</body>
+</html> 

@@ -1,12 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../domain/models/user_stats_model.dart';
 import '../../domain/models/study_session_model.dart';
 import '../../domain/repositories/user_stats_repository.dart';
 
 class UserStatsRepositoryImpl implements UserStatsRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // User Stats
   @override
@@ -22,7 +20,7 @@ class UserStatsRepositoryImpl implements UserStatsRepository {
       }
       return null;
     } catch (e) {
-      print('Error getting user stats: $e');
+      // Error getting user stats
       return null;
     }
   }
@@ -35,7 +33,7 @@ class UserStatsRepositoryImpl implements UserStatsRepository {
           .doc(stats.userId)
           .set(stats.toMap());
     } catch (e) {
-      print('Error creating user stats: $e');
+      // Error creating user stats
       rethrow;
     }
   }
@@ -48,7 +46,7 @@ class UserStatsRepositoryImpl implements UserStatsRepository {
           .doc(stats.userId)
           .update(stats.toMap());
     } catch (e) {
-      print('Error updating user stats: $e');
+      // Error updating user stats
       rethrow;
     }
   }
@@ -75,7 +73,7 @@ class UserStatsRepositoryImpl implements UserStatsRepository {
           .collection('study_sessions')
           .add(session.toMap());
     } catch (e) {
-      print('Error starting study session: $e');
+      // Error starting study session
       rethrow;
     }
   }
@@ -92,7 +90,7 @@ class UserStatsRepositoryImpl implements UserStatsRepository {
         'xpEarned': xpEarned,
       });
     } catch (e) {
-      print('Error ending study session: $e');
+      // Error ending study session
       rethrow;
     }
   }
@@ -114,10 +112,10 @@ class UserStatsRepositoryImpl implements UserStatsRepository {
 
       final snapshot = await query.get();
       return snapshot.docs
-          .map((doc) => StudySession.fromMap(doc.data() as Map<String, dynamic>, doc.id))
+                      .map((doc) => StudySession.fromMap(doc.data() as Map<String, dynamic>, doc.id))
           .toList();
     } catch (e) {
-      print('Error getting user study sessions: $e');
+      // Error getting user study sessions
       return [];
     }
   }
@@ -130,11 +128,52 @@ class UserStatsRepositoryImpl implements UserStatsRepository {
         .orderBy('startTime', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs
-            .map((doc) => StudySession.fromMap(doc.data() as Map<String, dynamic>, doc.id))
+            .map((doc) => StudySession.fromMap(doc.data(), doc.id))
             .toList());
   }
 
   // XP and Streak Management
+  @override
+  Future<void> checkAndUpdateStreak(String userId) async {
+    try {
+      final stats = await getUserStats(userId);
+      if (stats == null) return;
+
+      final now = DateTime.now();
+      final lastStudy = stats.lastStudyDate;
+      
+      // Check if user logged in today
+      final today = DateTime(now.year, now.month, now.day);
+      final lastStudyDay = DateTime(lastStudy.year, lastStudy.month, lastStudy.day);
+      final daysSinceLastStudy = today.difference(lastStudyDay).inDays;
+
+      if (daysSinceLastStudy == 0) {
+        // User already logged in today, no streak update needed
+        return;
+      } else if (daysSinceLastStudy == 1) {
+        // Consecutive day - increment streak
+        await updateStreak(userId, stats.currentStreak + 1);
+      } else if (daysSinceLastStudy > 1) {
+        // Streak broken - reset to 1
+        await updateStreak(userId, 1);
+      } else {
+        // First time login - start streak at 1
+        await updateStreak(userId, 1);
+      }
+      
+      // Update last study date to today
+      final updatedStats = stats.copyWith(
+        lastStudyDate: now,
+        updatedAt: now,
+      );
+      await updateUserStats(updatedStats);
+    } catch (e) {
+      // Error checking and updating streak
+      rethrow;
+    }
+  }
+
+  // Enhanced XP methods for specific activities
   @override
   Future<void> addXp(String userId, int xp, {String? subjectId, String? reason}) async {
     try {
@@ -154,48 +193,73 @@ class UserStatsRepositoryImpl implements UserStatsRepository {
         await updateUserStats(updatedStats);
       }
     } catch (e) {
-      print('Error adding XP: $e');
+      // Error adding XP
       rethrow;
     }
   }
 
-  @override
-  Future<void> updateStreak(String userId, int newStreak) async {
+  // Method for CBT test completion (20 XP for starting CBT)
+  Future<void> startCbtTest(String userId, String subjectId) async {
     try {
+      await addXp(userId, 20, subjectId: subjectId, reason: 'cbt_start');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Method for quiz completion (10 XP for completing quiz)
+  Future<void> completeQuiz(String userId, String subjectId, {
+    int correctAnswers = 0,
+    int totalQuestions = 0,
+    int timeSpentMinutes = 0,
+  }) async {
+    try {
+      // Base XP for completing quiz
+      int baseXp = 10;
+      
+      // Bonus XP for accuracy
+      int accuracyBonus = 0;
+      if (totalQuestions > 0) {
+        double accuracy = correctAnswers / totalQuestions;
+        if (accuracy >= 0.9) accuracyBonus = 15; // 90%+ = 15 bonus XP
+        else if (accuracy >= 0.8) accuracyBonus = 10; // 80%+ = 10 bonus XP
+        else if (accuracy >= 0.7) accuracyBonus = 5; // 70%+ = 5 bonus XP
+      }
+      
+      // Bonus XP for speed (if completed quickly)
+      int speedBonus = 0;
+      if (timeSpentMinutes > 0 && totalQuestions > 0) {
+        double minutesPerQuestion = timeSpentMinutes / totalQuestions;
+        if (minutesPerQuestion < 0.5) speedBonus = 10; // Very fast
+        else if (minutesPerQuestion < 1.0) speedBonus = 5; // Fast
+      }
+      
+      int totalXp = baseXp + accuracyBonus + speedBonus;
+      
+      await addXp(userId, totalXp, subjectId: subjectId, reason: 'quiz_completion');
+      
+      // Update quiz completion stats
       final stats = await getUserStats(userId);
       if (stats != null) {
         final updatedStats = stats.copyWith(
-          currentStreak: newStreak,
-          longestStreak: newStreak > stats.longestStreak ? newStreak : stats.longestStreak,
+          quizzesCompleted: stats.quizzesCompleted + 1,
+          questionsAnswered: stats.questionsAnswered + totalQuestions,
+          correctAnswers: stats.correctAnswers + correctAnswers,
           updatedAt: DateTime.now(),
         );
         await updateUserStats(updatedStats);
       }
     } catch (e) {
-      print('Error updating streak: $e');
       rethrow;
     }
   }
 
-  @override
-  Future<void> checkAndUpdateStreak(String userId) async {
+  // Method for daily login streak check
+  Future<void> checkDailyLogin(String userId) async {
     try {
-      final stats = await getUserStats(userId);
-      if (stats == null) return;
-
-      final now = DateTime.now();
-      final lastStudy = stats.lastStudyDate;
-      final daysSinceLastStudy = now.difference(lastStudy).inDays;
-
-      if (daysSinceLastStudy == 1) {
-        // Consecutive day
-        await updateStreak(userId, stats.currentStreak + 1);
-      } else if (daysSinceLastStudy > 1) {
-        // Streak broken
-        await updateStreak(userId, 1);
-      }
+      await checkAndUpdateStreak(userId);
     } catch (e) {
-      print('Error checking and updating streak: $e');
+      rethrow;
     }
   }
 
@@ -213,7 +277,7 @@ class UserStatsRepositoryImpl implements UserStatsRepository {
         await updateUserStats(updatedStats);
       }
     } catch (e) {
-      print('Error awarding badge: $e');
+      // Error awarding badge
       rethrow;
     }
   }
@@ -231,7 +295,7 @@ class UserStatsRepositoryImpl implements UserStatsRepository {
       // Return badges that user hasn't earned yet
       return allBadges.where((badgeId) => !stats.earnedBadges.contains(badgeId)).toList();
     } catch (e) {
-      print('Error getting available badges: $e');
+      // Error getting available badges
       return [];
     }
   }
@@ -257,7 +321,7 @@ class UserStatsRepositoryImpl implements UserStatsRepository {
         }
       }
     } catch (e) {
-      print('Error checking and awarding badges: $e');
+      // Error checking and awarding badges
     }
   }
 
@@ -301,7 +365,7 @@ class UserStatsRepositoryImpl implements UserStatsRepository {
           .map((doc) => UserStats.fromMap(doc.data(), doc.id))
           .toList();
     } catch (e) {
-      print('Error getting leaderboard: $e');
+      // Error getting leaderboard
       return [];
     }
   }
@@ -320,7 +384,7 @@ class UserStatsRepositoryImpl implements UserStatsRepository {
 
       return (snapshot.count ?? 0) + 1;
     } catch (e) {
-      print('Error getting user rank: $e');
+      // Error getting user rank
       return -1;
     }
   }
@@ -336,17 +400,17 @@ class UserStatsRepositoryImpl implements UserStatsRepository {
 
       return {
         'totalSessions': sessions.length,
-        'totalStudyTime': sessions.fold(0, (sum, session) => sum + session.durationMinutes),
-        'totalXp': sessions.fold(0, (sum, session) => sum + session.xpEarned),
+        'totalStudyTime': sessions.fold(0, (total, session) => total + session.durationMinutes),
+        'totalXp': sessions.fold(0, (total, session) => total + session.xpEarned),
         'averageSessionLength': sessions.isNotEmpty 
-            ? sessions.fold(0, (sum, session) => sum + session.durationMinutes) / sessions.length 
+            ? sessions.fold(0, (total, session) => total + session.durationMinutes) / sessions.length 
             : 0,
         'mostStudiedSubject': _getMostStudiedSubject(sessions),
         'streak': stats.currentStreak,
         'accuracy': stats.accuracyRate,
       };
     } catch (e) {
-      print('Error getting user analytics: $e');
+      // Error getting user analytics
       return {};
     }
   }
@@ -359,7 +423,7 @@ class UserStatsRepositoryImpl implements UserStatsRepository {
 
       return stats.subjectXp;
     } catch (e) {
-      print('Error getting subject progress: $e');
+      // Error getting subject progress
       return {};
     }
   }
@@ -382,5 +446,23 @@ class UserStatsRepositoryImpl implements UserStatsRepository {
     }
 
     return mostStudied;
+  }
+
+  @override
+  Future<void> updateStreak(String userId, int newStreak) async {
+    try {
+      final stats = await getUserStats(userId);
+      if (stats != null) {
+        final updatedStats = stats.copyWith(
+          currentStreak: newStreak,
+          longestStreak: newStreak > stats.longestStreak ? newStreak : stats.longestStreak,
+          updatedAt: DateTime.now(),
+        );
+        await updateUserStats(updatedStats);
+      }
+    } catch (e) {
+      // Error updating streak
+      rethrow;
+    }
   }
 } 

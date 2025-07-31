@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_colors.dart';
 import 'quiz_screen.dart';
+import '../../data/course_content_data.dart';
 
 class CourseContentScreen extends StatefulWidget {
   final String subject;
@@ -17,26 +19,26 @@ class _CourseContentScreenState extends State<CourseContentScreen>
   Map<String, bool> _completed = {};
   bool _loading = true;
   late TabController _tabController;
+  int _selectedIndex = 0;
 
   static const List<String> _tabs = [
-    'syllabus',
-    'videos',
-    'articles',
+    'syllabi',
     'quizzes',
   ];
 
   @override
   void initState() {
     super.initState();
-    int initialIndex = 0;
     if (widget.initialTab != null) {
       final idx = _tabs.indexOf(widget.initialTab!.toLowerCase());
-      if (idx != -1) initialIndex = idx;
+      if (idx != -1) {
+        _selectedIndex = idx;
+      }
     }
     _tabController = TabController(
-      length: 4,
+      length: 2,
       vsync: this,
-      initialIndex: initialIndex,
+      initialIndex: _selectedIndex,
     );
     _loadTopics();
   }
@@ -48,28 +50,42 @@ class _CourseContentScreenState extends State<CourseContentScreen>
   }
 
   Future<void> _loadTopics() async {
-    // For demo, generate 10 topics per subject
-    _topics = List.generate(
-      10,
-      (i) => {
-        'id': '${widget.subject}_topic_$i',
-        'title': '${widget.subject} Topic ${i + 1}',
-      },
-    );
-    // Simulate loading progress from Firestore (not implemented in detail)
-    // final user = FirebaseAuth.instance.currentUser;
-    // if (user != null) {
-    //   // You can extend this to load per-topic progress from Firestore
-    //   // For now, mark all as not completed
-    //   _completed = {for (var t in _topics) t['id']: false};
-    // }
+    // Load syllabi from course content data
+    final subjectData = courseContentData[widget.subject];
+    if (subjectData != null && subjectData['syllabi'] != null) {
+      _topics = List<Map<String, dynamic>>.from(subjectData['syllabi']);
+    } else {
+      _topics = [];
+    }
+    
     setState(() => _loading = false);
   }
 
-  void _toggleTopic(String topicId) {
-    setState(() {
-      _completed[topicId] = !(_completed[topicId] ?? false);
-    });
+  Future<void> _openWebLink(String url) async {
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Could not open link: $url'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error opening link: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _resetProgress() {
@@ -90,7 +106,7 @@ class _CourseContentScreenState extends State<CourseContentScreen>
           margin: const EdgeInsets.only(bottom: 12),
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: AppColors.dominantPurple.withValues(alpha: 0.1),
+              backgroundColor: AppColors.dominantPurple.withOpacity(0.1),
               child: Icon(
                 Icons.quiz,
                 color: AppColors.dominantPurple,
@@ -202,9 +218,7 @@ class _CourseContentScreenState extends State<CourseContentScreen>
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(text: 'Syllabus'),
-            Tab(text: 'Videos'),
-            Tab(text: 'Articles'),
+            Tab(text: 'Syllabi'),
             Tab(text: 'Quizzes'),
           ],
           indicatorColor: AppColors.accentAmber,
@@ -215,35 +229,53 @@ class _CourseContentScreenState extends State<CourseContentScreen>
           : TabBarView(
               controller: _tabController,
               children: [
-                // Syllabus Tab
+                // Syllabi Tab
                 _topics.isEmpty
-                    ? const Center(child: Text('Not started yet.'))
+                    ? const Center(child: Text('No syllabi available for this subject.'))
                     : ListView.builder(
+                        padding: const EdgeInsets.all(16),
                         itemCount: _topics.length,
                         itemBuilder: (context, i) {
-                          final t = _topics[i];
-                          final done = _completed[t['id']] ?? false;
-                          return ListTile(
-                            leading: Icon(
-                              done
-                                  ? Icons.check_circle
-                                  : Icons.radio_button_unchecked,
-                              color: done
-                                  ? AppColors.accentAmber
-                                  : AppColors.borderLight,
-                            ),
-                            title: Text(t['title']),
-                            trailing: IconButton(
-                              icon: Icon(done ? Icons.undo : Icons.check),
-                              onPressed: () => _toggleTopic(t['id']),
+                          final topic = _topics[i];
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: AppColors.dominantPurple.withOpacity(0.1),
+                                child: Icon(
+                                  Icons.link,
+                                  color: AppColors.dominantPurple,
+                                ),
+                              ),
+                              title: Text(
+                                topic['title'],
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Text(
+                                topic['description'] ?? 'Click to access content',
+                                style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.open_in_new,
+                                    size: 16,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ],
+                              ),
+                              onTap: () {
+                                print('Opening URL: ${topic['url']}');
+                                _openWebLink(topic['url']);
+                              },
                             ),
                           );
                         },
                       ),
-                // Videos Tab
-                const Center(child: Text('Videos coming soon!')),
-                // Articles Tab
-                const Center(child: Text('Articles coming soon!')),
                 // Quizzes Tab
                 _buildQuizzesTab(),
               ],

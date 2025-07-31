@@ -23,8 +23,7 @@ final List<TestQuestion> chemistryQuestions = [
     options: ['5', '6', '7', '8'],
     correctAnswer: 2,
     subject: 'Chemistry',
-    explanation:
-        'Chlorine has 7 electrons in its outermost shell (valence electrons).',
+    explanation: 'Chlorine has 7 electrons in its outermost shell (valence electrons).',
   ),
   TestQuestion(
     id: 'chem_4',
@@ -40,8 +39,7 @@ final List<TestQuestion> chemistryQuestions = [
     options: ['Melting', 'Evaporation', 'Sublimation', 'Condensation'],
     correctAnswer: 2,
     subject: 'Chemistry',
-    explanation:
-        'Sublimation is the direct change from solid to gas without passing through liquid state.',
+    explanation: 'Sublimation is the direct change from solid to gas without passing through liquid state.',
   ),
   TestQuestion(
     id: 'chem_6',
@@ -65,8 +63,7 @@ final List<TestQuestion> chemistryQuestions = [
     options: ['Oxidizing agent', 'Reducing agent', 'Catalyst', 'Product'],
     correctAnswer: 1,
     subject: 'Chemistry',
-    explanation:
-        'Hydrogen is oxidized (loses electrons) and acts as a reducing agent.',
+    explanation: 'Hydrogen is oxidized (loses electrons) and acts as a reducing agent.',
   ),
   TestQuestion(
     id: 'chem_9',
@@ -146,8 +143,7 @@ final List<TestQuestion> chemistryQuestions = [
     options: ['Platinum', 'Iron', 'Nickel', 'Vanadium'],
     correctAnswer: 1,
     subject: 'Chemistry',
-    explanation:
-        'Iron catalyst is used in the Haber process for ammonia synthesis.',
+    explanation: 'Iron catalyst is used in the Haber process for ammonia synthesis.',
   ),
   TestQuestion(
     id: 'chem_19',
@@ -168,12 +164,7 @@ final List<TestQuestion> chemistryQuestions = [
   TestQuestion(
     id: 'chem_21',
     question: 'The electron configuration of sodium (Na) is:',
-    options: [
-      '1s² 2s² 2p⁶ 3s¹',
-      '1s² 2s² 2p⁶ 3s²',
-      '1s² 2s² 2p⁵ 3s²',
-      '1s² 2s² 2p⁶ 3p¹',
-    ],
+    options: ['1s² 2s² 2p⁶ 3s¹', '1s² 2s² 2p⁶ 3s²', '1s² 2s² 2p⁵ 3s²', '1s² 2s² 2p⁶ 3p¹'],
     correctAnswer: 0,
     subject: 'Chemistry',
     explanation: 'Sodium has 11 electrons with configuration 1s² 2s² 2p⁶ 3s¹.',
@@ -181,12 +172,7 @@ final List<TestQuestion> chemistryQuestions = [
   TestQuestion(
     id: 'chem_22',
     question: 'Which indicator turns red in acidic solution?',
-    options: [
-      'Litmus',
-      'Phenolphthalein',
-      'Methyl orange',
-      'Universal indicator',
-    ],
+    options: ['Litmus', 'Phenolphthalein', 'Methyl orange', 'Universal indicator'],
     correctAnswer: 2,
     subject: 'Chemistry',
     explanation: 'Methyl orange turns red in acidic solutions.',
@@ -197,8 +183,7 @@ final List<TestQuestion> chemistryQuestions = [
     options: ['sp', 'sp²', 'sp³', 'sp³d'],
     correctAnswer: 2,
     subject: 'Chemistry',
-    explanation:
-        'Carbon in methane has sp³ hybridization with tetrahedral geometry.',
+    explanation: 'Carbon in methane has sp³ hybridization with tetrahedral geometry.',
   ),
   TestQuestion(
     id: 'chem_24',
@@ -218,18 +203,11 @@ final List<TestQuestion> chemistryQuestions = [
   ),
   TestQuestion(
     id: 'chem_26',
-    question:
-        'Which law states that equal volumes of gases at same temperature and pressure contain equal numbers of molecules?',
-    options: [
-      'Boyle\'s Law',
-      'Charles\' Law',
-      'Avogadro\'s Law',
-      'Gay-Lussac\'s Law',
-    ],
+    question: 'Which law states that equal volumes of gases at same temperature and pressure contain equal numbers of molecules?',
+    options: ['Boyle\'s Law', 'Charles\' Law', 'Avogadro\'s Law', 'Gay-Lussac\'s Law'],
     correctAnswer: 2,
     subject: 'Chemistry',
-    explanation:
-        'Avogadro\'s Law relates volume to number of molecules at constant T and P.',
+    explanation: 'Avogadro\'s Law relates volume to number of molecules at constant T and P.',
   ),
   TestQuestion(
     id: 'chem_27',
@@ -237,13 +215,11 @@ final List<TestQuestion> chemistryQuestions = [
     options: ['Cracking', 'Reforming', 'Polymerization', 'Hydrogenation'],
     correctAnswer: 0,
     subject: 'Chemistry',
-    explanation:
-        'Cracking breaks larger alkanes into smaller alkenes and alkanes.',
+    explanation: 'Cracking breaks larger alkanes into smaller alkenes and alkanes.',
   ),
   TestQuestion(
     id: 'chem_28',
-    question:
-        'Which salt is formed when sodium hydroxide reacts with sulfuric acid?',
+    question: 'Which salt is formed when sodium hydroxide reacts with sulfuric acid?',
     options: ['NaCl', 'Na2SO4', 'NaNO3', 'Na2CO3'],
     correctAnswer: 1,
     subject: 'Chemistry',
@@ -252,21 +228,14 @@ final List<TestQuestion> chemistryQuestions = [
   TestQuestion(
     id: 'chem_29',
     question: 'The electronegativity of elements generally increases:',
-    options: [
-      'Down a group',
-      'Up a group',
-      'From left to right',
-      'Both B and C',
-    ],
+    options: ['Down a group', 'Up a group', 'From left to right', 'Both B and C'],
     correctAnswer: 3,
     subject: 'Chemistry',
-    explanation:
-        'Electronegativity increases up a group and from left to right across a period.',
+    explanation: 'Electronegativity increases up a group and from left to right across a period.',
   ),
   TestQuestion(
     id: 'chem_30',
-    question:
-        'Which compound is formed when ethene undergoes addition reaction with hydrogen?',
+    question: 'Which compound is formed when ethene undergoes addition reaction with hydrogen?',
     options: ['Ethanol', 'Ethane', 'Ethanoic acid', 'Ethanal'],
     correctAnswer: 1,
     subject: 'Chemistry',
@@ -278,22 +247,15 @@ final List<TestQuestion> chemistryQuestions = [
     options: ['Linear', 'Trigonal planar', 'Trigonal pyramidal', 'Tetrahedral'],
     correctAnswer: 2,
     subject: 'Chemistry',
-    explanation:
-        'NH3 has trigonal pyramidal shape due to lone pair on nitrogen.',
+    explanation: 'NH3 has trigonal pyramidal shape due to lone pair on nitrogen.',
   ),
   TestQuestion(
     id: 'chem_32',
     question: 'Which process is used to separate crude oil into fractions?',
-    options: [
-      'Filtration',
-      'Distillation',
-      'Chromatography',
-      'Crystallization',
-    ],
+    options: ['Filtration', 'Distillation', 'Chromatography', 'Crystallization'],
     correctAnswer: 1,
     subject: 'Chemistry',
-    explanation:
-        'Fractional distillation separates crude oil based on boiling points.',
+    explanation: 'Fractional distillation separates crude oil based on boiling points.',
   ),
   TestQuestion(
     id: 'chem_33',
@@ -309,8 +271,7 @@ final List<TestQuestion> chemistryQuestions = [
     options: ['CH3CH2OH', '(CH3)2CHOH', '(CH3)3COH', 'C6H5OH'],
     correctAnswer: 0,
     subject: 'Chemistry',
-    explanation:
-        'CH3CH2OH (ethanol) is a primary alcohol with -OH attached to primary carbon.',
+    explanation: 'CH3CH2OH (ethanol) is a primary alcohol with -OH attached to primary carbon.',
   ),
   TestQuestion(
     id: 'chem_35',
@@ -318,8 +279,7 @@ final List<TestQuestion> chemistryQuestions = [
     options: ['+1.0 V', '0.0 V', '-1.0 V', '+0.5 V'],
     correctAnswer: 1,
     subject: 'Chemistry',
-    explanation:
-        'By convention, the standard electrode potential of hydrogen is 0.0 V.',
+    explanation: 'By convention, the standard electrode potential of hydrogen is 0.0 V.',
   ),
   TestQuestion(
     id: 'chem_36',
@@ -327,8 +287,7 @@ final List<TestQuestion> chemistryQuestions = [
     options: ['Temperature', 'Concentration', 'Catalyst', 'Amount of product'],
     correctAnswer: 3,
     subject: 'Chemistry',
-    explanation:
-        'Amount of product formed does not affect the rate of reaction.',
+    explanation: 'Amount of product formed does not affect the rate of reaction.',
   ),
   TestQuestion(
     id: 'chem_37',
@@ -344,13 +303,11 @@ final List<TestQuestion> chemistryQuestions = [
     options: ['Hydrogen', 'Copper', 'Oxygen', 'None'],
     correctAnswer: 1,
     subject: 'Chemistry',
-    explanation:
-        'Copper is reduced as its oxidation state changes from +2 to 0.',
+    explanation: 'Copper is reduced as its oxidation state changes from +2 to 0.',
   ),
   TestQuestion(
     id: 'chem_39',
-    question:
-        'The molarity of a solution containing 4g of NaOH in 250 mL solution is:',
+    question: 'The molarity of a solution containing 4g of NaOH in 250 mL solution is:',
     options: ['0.2 M', '0.4 M', '0.8 M', '1.0 M'],
     correctAnswer: 1,
     subject: 'Chemistry',
@@ -364,4 +321,4 @@ final List<TestQuestion> chemistryQuestions = [
     subject: 'Chemistry',
     explanation: 'Ethene (CH2=CH2) polymerizes to form polyethylene.',
   ),
-];
+]; 

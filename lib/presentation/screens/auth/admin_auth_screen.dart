@@ -27,7 +27,8 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
   }
 
   Future<void> _signInAsAdmin() async {
-    if (!_formKey.currentState!.validate()) return;
+    final formState = _formKey.currentState;
+    if (formState == null || !formState.validate()) return;
 
     setState(() {
       _isLoading = true;

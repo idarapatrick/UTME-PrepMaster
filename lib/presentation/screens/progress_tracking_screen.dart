@@ -14,7 +14,7 @@ class ProgressTrackingScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: ListView.separated(
           itemCount: subjects.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          separatorBuilder: (context, index) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
             final subject = subjects[index];
             final progress =

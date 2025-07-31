@@ -78,9 +78,9 @@ class CbtQuestionService {
       batch.set(subjectRef, subjectData, SetOptions(merge: true));
 
       await batch.commit();
-      print('Successfully uploaded ${questions.length} questions for $subject');
+      // Successfully uploaded questions for subject
     } catch (e) {
-      print('Error uploading questions: $e');
+      // Error uploading questions
       rethrow;
     }
   }
@@ -96,7 +96,7 @@ class CbtQuestionService {
           .get();
       return snapshot.docs.map((doc) => doc.data()['subject'] as String).toList();
     } catch (e) {
-      print('Error getting available subjects: $e');
+      // Error getting available subjects
       return [];
     }
   }
@@ -114,20 +114,21 @@ class CbtQuestionService {
           .get();
 
       return snapshot.docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>?;
+        final data = doc.data();
+        final dataMap = data as Map<String, dynamic>?;
         return TestQuestion(
-          id: data?['id'] ?? doc.id,
-          question: data?['question'] ?? '',
-          options: List<String>.from(data?['options'] ?? []),
-          correctAnswer: data?['correctAnswer'] ?? 0,
-          explanation: data?['explanation'] ?? '',
-          subject: data?['subject'] ?? subject,
-          difficulty: data?['difficulty'] as String?,
-          topic: data?['topic'] as String?,
+          id: dataMap?['id'] ?? doc.id,
+          question: dataMap?['question'] ?? '',
+          options: List<String>.from(dataMap?['options'] ?? []),
+          correctAnswer: dataMap?['correctAnswer'] ?? 0,
+          explanation: dataMap?['explanation'] ?? '',
+          subject: dataMap?['subject'] ?? subject,
+          difficulty: dataMap?['difficulty'] as String?,
+          topic: dataMap?['topic'] as String?,
         );
       }).toList();
     } catch (e) {
-      print('Error getting questions for $subject: $e');
+      // Error getting questions for subject
       return [];
     }
   }
@@ -149,20 +150,21 @@ class CbtQuestionService {
           .get();
 
       return snapshot.docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>?;
+        final data = doc.data();
+        final dataMap = data as Map<String, dynamic>?;
         return TestQuestion(
-          id: data?['id'] ?? doc.id,
-          question: data?['question'] ?? '',
-          options: List<String>.from(data?['options'] ?? []),
-          correctAnswer: data?['correctAnswer'] ?? 0,
-          explanation: data?['explanation'] ?? '',
-          subject: data?['subject'] ?? subject,
-          difficulty: data?['difficulty'],
-          topic: data?['topic'],
+          id: dataMap?['id'] ?? doc.id,
+          question: dataMap?['question'] ?? '',
+          options: List<String>.from(dataMap?['options'] ?? []),
+          correctAnswer: dataMap?['correctAnswer'] ?? 0,
+          explanation: dataMap?['explanation'] ?? '',
+          subject: dataMap?['subject'] ?? subject,
+          difficulty: dataMap?['difficulty'],
+          topic: dataMap?['topic'],
         );
       }).toList();
     } catch (e) {
-      print('Error getting questions by difficulty: $e');
+      // Error getting questions by difficulty
       return [];
     }
   }
@@ -187,16 +189,17 @@ class CbtQuestionService {
 
       final snapshot = await query.get();
       final allQuestions = snapshot.docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>?;
+        final data = doc.data();
+        final dataMap = data as Map<String, dynamic>?;
         return TestQuestion(
-          id: data?['id'] ?? doc.id,
-          question: data?['question'] ?? '',
-          options: List<String>.from(data?['options'] ?? []),
-          correctAnswer: data?['correctAnswer'] ?? 0,
-          explanation: data?['explanation'] ?? '',
-          subject: data?['subject'] ?? subject,
-          difficulty: data?['difficulty'],
-          topic: data?['topic'],
+          id: dataMap?['id'] ?? doc.id,
+          question: dataMap?['question'] ?? '',
+          options: List<String>.from(dataMap?['options'] ?? []),
+          correctAnswer: dataMap?['correctAnswer'] ?? 0,
+          explanation: dataMap?['explanation'] ?? '',
+          subject: dataMap?['subject'] ?? subject,
+          difficulty: dataMap?['difficulty'],
+          topic: dataMap?['topic'],
         );
       }).toList();
 
@@ -204,7 +207,7 @@ class CbtQuestionService {
       allQuestions.shuffle();
       return allQuestions.take(count).toList();
     } catch (e) {
-      print('Error getting random questions: $e');
+      // Error getting random questions
       return [];
     }
   }
@@ -259,7 +262,7 @@ class CbtQuestionService {
 
       return Map<String, dynamic>.from(defaultConfigs[testType] ?? defaultConfigs['full_cbt']!);
     } catch (e) {
-      print('Error getting CBT test config: $e');
+      // Error getting CBT test config
       return {};
     }
   }
@@ -292,9 +295,9 @@ class CbtQuestionService {
       }
 
       await batch.commit();
-      print('Successfully verified ${questionIds.length} questions for $subject');
+      // Successfully verified questions for subject
     } catch (e) {
-      print('Error verifying questions: $e');
+      // Error verifying questions
       rethrow;
     }
   }
@@ -325,9 +328,9 @@ class CbtQuestionService {
       }
 
       await batch.commit();
-      print('Successfully deleted ${questionIds.length} questions for $subject');
+      // Successfully deleted questions for subject
     } catch (e) {
-      print('Error deleting questions: $e');
+      // Error deleting questions
       rethrow;
     }
   }
@@ -363,7 +366,7 @@ class CbtQuestionService {
 
       return stats;
     } catch (e) {
-      print('Error getting question stats: $e');
+      // Error getting question stats
       return {};
     }
   }

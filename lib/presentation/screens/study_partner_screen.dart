@@ -13,6 +13,16 @@ class StudyPartnerScreen extends StatelessWidget {
         title: const Text('Study Partner'),
         backgroundColor: AppColors.dominantPurple,
         foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/home',
+              (route) => false,
+            );
+          },
+        ),
       ),
       backgroundColor: isDark
           ? const Color(0xFF181A20)

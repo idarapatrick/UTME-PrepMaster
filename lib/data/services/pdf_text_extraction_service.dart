@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:convert';
 import '../../domain/models/test_question.dart';
 
 class PdfTextExtractionService {
@@ -10,7 +9,7 @@ class PdfTextExtractionService {
       // In a real implementation, you would use a proper PDF parsing library
       return 'PDF text extraction not implemented yet. Please use sample questions for testing.';
     } catch (e) {
-      print('Error extracting text from PDF: $e');
+      // Error extracting text from PDF
       rethrow;
     }
   }
@@ -74,7 +73,7 @@ class PdfTextExtractionService {
       }
       // If line doesn't match any pattern, it might be part of the question
       else if (currentQuestion.isNotEmpty && currentOptions.isEmpty) {
-        currentQuestion += ' ' + line;
+        currentQuestion = '$currentQuestion $line';
       }
     }
     
@@ -133,7 +132,7 @@ class PdfTextExtractionService {
         }
         // If it's not an option or explanation, it might be part of the question
         else if (question.isNotEmpty && options.isEmpty) {
-          question += ' ' + line;
+          question = '$question $line';
         }
       }
       

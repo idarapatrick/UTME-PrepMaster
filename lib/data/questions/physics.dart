@@ -31,8 +31,7 @@ final List<TestQuestion> physicsQuestions = [
     options: ['Velocity', 'Acceleration', 'Force', 'Speed'],
     correctAnswer: 3,
     subject: 'Physics',
-    explanation:
-        'Speed is a scalar quantity as it has only magnitude, no direction.',
+    explanation: 'Speed is a scalar quantity as it has only magnitude, no direction.',
   ),
   TestQuestion(
     id: 'phy_5',
@@ -52,18 +51,11 @@ final List<TestQuestion> physicsQuestions = [
   ),
   TestQuestion(
     id: 'phy_7',
-    question:
-        'Which law states that "for every action, there is an equal and opposite reaction"?',
-    options: [
-      'Newton\'s 1st Law',
-      'Newton\'s 2nd Law',
-      'Newton\'s 3rd Law',
-      'Law of Conservation',
-    ],
+    question: 'Which law states that "for every action, there is an equal and opposite reaction"?',
+    options: ['Newton\'s 1st Law', 'Newton\'s 2nd Law', 'Newton\'s 3rd Law', 'Law of Conservation'],
     correctAnswer: 2,
     subject: 'Physics',
-    explanation:
-        'Newton\'s third law states that for every action, there is an equal and opposite reaction.',
+    explanation: 'Newton\'s third law states that for every action, there is an equal and opposite reaction.',
   ),
   TestQuestion(
     id: 'phy_8',
@@ -84,16 +76,10 @@ final List<TestQuestion> physicsQuestions = [
   TestQuestion(
     id: 'phy_10',
     question: 'What is the principle behind the operation of a transformer?',
-    options: [
-      'Electromagnetic induction',
-      'Photoelectric effect',
-      'Thermionic emission',
-      'Magnetic field',
-    ],
+    options: ['Electromagnetic induction', 'Photoelectric effect', 'Thermionic emission', 'Magnetic field'],
     correctAnswer: 0,
     subject: 'Physics',
-    explanation:
-        'Transformers work on the principle of electromagnetic induction.',
+    explanation: 'Transformers work on the principle of electromagnetic induction.',
   ),
   TestQuestion(
     id: 'phy_11',
@@ -109,8 +95,7 @@ final List<TestQuestion> physicsQuestions = [
     options: ['Proton', 'Neutron', 'Electron', 'Alpha particle'],
     correctAnswer: 3,
     subject: 'Physics',
-    explanation:
-        'Alpha particle is made up of 2 protons and 2 neutrons, so it\'s not fundamental.',
+    explanation: 'Alpha particle is made up of 2 protons and 2 neutrons, so it\'s not fundamental.',
   ),
   TestQuestion(
     id: 'phy_13',
@@ -138,28 +123,23 @@ final List<TestQuestion> physicsQuestions = [
   ),
   TestQuestion(
     id: 'phy_16',
-    question:
-        'What is the half-life of a radioactive element with initial activity 800 Bq that becomes 200 Bq after 10 years?',
+    question: 'What is the half-life of a radioactive element with initial activity 800 Bq that becomes 200 Bq after 10 years?',
     options: ['5 years', '10 years', '20 years', '15 years'],
     correctAnswer: 0,
     subject: 'Physics',
-    explanation:
-        'Half-life is the time for activity to reduce to half. 800 → 400 → 200 takes 2 half-lives = 10 years, so 1 half-life = 5 years.',
+    explanation: 'Half-life is the time for activity to reduce to half. 800 → 400 → 200 takes 2 half-lives = 10 years, so 1 half-life = 5 years.',
   ),
   TestQuestion(
     id: 'phy_17',
-    question:
-        'What is the critical angle for total internal reflection when light travels from glass (n=1.5) to air (n=1.0)?',
+    question: 'What is the critical angle for total internal reflection when light travels from glass (n=1.5) to air (n=1.0)?',
     options: ['30°', '42°', '45°', '60°'],
     correctAnswer: 1,
     subject: 'Physics',
-    explanation:
-        'Critical angle θc = sin⁻¹(n₂/n₁) = sin⁻¹(1.0/1.5) = sin⁻¹(2/3) ≈ 42°.',
+    explanation: 'Critical angle θc = sin⁻¹(n₂/n₁) = sin⁻¹(1.0/1.5) = sin⁻¹(2/3) ≈ 42°.',
   ),
   TestQuestion(
     id: 'phy_18',
-    question:
-        'What is the power dissipated in a 10Ω resistor when 2A current flows through it?',
+    question: 'What is the power dissipated in a 10Ω resistor when 2A current flows through it?',
     options: ['20 W', '40 W', '5 W', '10 W'],
     correctAnswer: 1,
     subject: 'Physics',
@@ -175,8 +155,7 @@ final List<TestQuestion> physicsQuestions = [
   ),
   TestQuestion(
     id: 'phy_20',
-    question:
-        'What is the period of a simple pendulum with length 1m on Earth?',
+    question: 'What is the period of a simple pendulum with length 1m on Earth?',
     options: ['2π s', '2 s', '1 s', 'π s'],
     correctAnswer: 1,
     subject: 'Physics',
@@ -184,18 +163,15 @@ final List<TestQuestion> physicsQuestions = [
   ),
   TestQuestion(
     id: 'phy_21',
-    question:
-        'What is the efficiency of a machine that does 80J of useful work from 100J of input energy?',
+    question: 'What is the efficiency of a machine that does 80J of useful work from 100J of input energy?',
     options: ['80%', '20%', '120%', '8%'],
     correctAnswer: 0,
     subject: 'Physics',
-    explanation:
-        'Efficiency = (Useful work/Input energy) × 100% = (80/100) × 100% = 80%.',
+    explanation: 'Efficiency = (Useful work/Input energy) × 100% = (80/100) × 100% = 80%.',
   ),
   TestQuestion(
     id: 'phy_22',
-    question:
-        'What is the refractive index of a material if light travels at 2 × 10⁸ m/s in it?',
+    question: 'What is the refractive index of a material if light travels at 2 × 10⁸ m/s in it?',
     options: ['1.5', '2.0', '0.67', '1.0'],
     correctAnswer: 0,
     subject: 'Physics',
@@ -203,13 +179,11 @@ final List<TestQuestion> physicsQuestions = [
   ),
   TestQuestion(
     id: 'phy_23',
-    question:
-        'What is the equivalent resistance of two 6Ω resistors connected in parallel?',
+    question: 'What is the equivalent resistance of two 6Ω resistors connected in parallel?',
     options: ['12Ω', '3Ω', '6Ω', '36Ω'],
     correctAnswer: 1,
     subject: 'Physics',
-    explanation:
-        'For parallel resistors: 1/R = 1/R₁ + 1/R₂ = 1/6 + 1/6 = 2/6, so R = 3Ω.',
+    explanation: 'For parallel resistors: 1/R = 1/R₁ + 1/R₂ = 1/6 + 1/6 = 2/6, so R = 3Ω.',
   ),
   TestQuestion(
     id: 'phy_24',
@@ -221,18 +195,15 @@ final List<TestQuestion> physicsQuestions = [
   ),
   TestQuestion(
     id: 'phy_25',
-    question:
-        'What is the heat capacity of 2kg of water? (Specific heat capacity of water = 4200 J/kg⋅K)',
+    question: 'What is the heat capacity of 2kg of water? (Specific heat capacity of water = 4200 J/kg⋅K)',
     options: ['2100 J/K', '4200 J/K', '8400 J/K', '21000 J/K'],
     correctAnswer: 2,
     subject: 'Physics',
-    explanation:
-        'Heat capacity = mass × specific heat capacity = 2 × 4200 = 8400 J/K.',
+    explanation: 'Heat capacity = mass × specific heat capacity = 2 × 4200 = 8400 J/K.',
   ),
   TestQuestion(
     id: 'phy_26',
-    question:
-        'What is the frequency of electromagnetic radiation with wavelength 600 nm?',
+    question: 'What is the frequency of electromagnetic radiation with wavelength 600 nm?',
     options: ['5 × 10¹⁴ Hz', '5 × 10¹² Hz', '5 × 10¹⁶ Hz', '5 × 10¹⁰ Hz'],
     correctAnswer: 0,
     subject: 'Physics',
@@ -240,8 +211,7 @@ final List<TestQuestion> physicsQuestions = [
   ),
   TestQuestion(
     id: 'phy_27',
-    question:
-        'What is the potential difference across a 20Ω resistor carrying 3A current?',
+    question: 'What is the potential difference across a 20Ω resistor carrying 3A current?',
     options: ['60 V', '23 V', '17 V', '6.7 V'],
     correctAnswer: 0,
     subject: 'Physics',
@@ -249,8 +219,7 @@ final List<TestQuestion> physicsQuestions = [
   ),
   TestQuestion(
     id: 'phy_28',
-    question:
-        'What is the displacement of an object that moves 10m east, then 6m west?',
+    question: 'What is the displacement of an object that moves 10m east, then 6m west?',
     options: ['16 m east', '4 m east', '16 m west', '4 m west'],
     correctAnswer: 1,
     subject: 'Physics',
@@ -266,13 +235,11 @@ final List<TestQuestion> physicsQuestions = [
   ),
   TestQuestion(
     id: 'phy_30',
-    question:
-        'What is the magnification of a lens with focal length 10cm when object is placed 15cm from it?',
+    question: 'What is the magnification of a lens with focal length 10cm when object is placed 15cm from it?',
     options: ['3', '1.5', '0.67', '2'],
     correctAnswer: 0,
     subject: 'Physics',
-    explanation:
-        'Using 1/f = 1/u + 1/v: 1/10 = 1/15 + 1/v, so v = 30cm. Magnification = v/u = 30/15 = 2. Wait, let me recalculate: 1/v = 1/10 - 1/15 = 3/30 - 2/30 = 1/30, so v = 30cm. M = v/u = 30/15 = 2. Actually, M = 3 is correct for this setup.',
+    explanation: 'Using 1/f = 1/u + 1/v: 1/10 = 1/15 + 1/v, so v = 30cm. Magnification = v/u = 30/15 = 2. Wait, let me recalculate: 1/v = 1/10 - 1/15 = 3/30 - 2/30 = 1/30, so v = 30cm. M = v/u = 30/15 = 2. Actually, M = 3 is correct for this setup.',
   ),
   TestQuestion(
     id: 'phy_31',
@@ -284,8 +251,7 @@ final List<TestQuestion> physicsQuestions = [
   ),
   TestQuestion(
     id: 'phy_32',
-    question:
-        'What is the work done in lifting a 10kg object to a height of 5m?',
+    question: 'What is the work done in lifting a 10kg object to a height of 5m?',
     options: ['50 J', '490 J', '500 J', '98 J'],
     correctAnswer: 1,
     subject: 'Physics',
@@ -301,28 +267,23 @@ final List<TestQuestion> physicsQuestions = [
   ),
   TestQuestion(
     id: 'phy_34',
-    question:
-        'What is the force between two charges of 2μC and 3μC separated by 1m in air?',
+    question: 'What is the force between two charges of 2μC and 3μC separated by 1m in air?',
     options: ['54 × 10⁻³ N', '54 × 10⁻⁶ N', '6 × 10⁻⁶ N', '54 N'],
     correctAnswer: 0,
     subject: 'Physics',
-    explanation:
-        'F = kq₁q₂/r² = (9 × 10⁹ × 2 × 10⁻⁶ × 3 × 10⁻⁶)/1² = 54 × 10⁻³ N.',
+    explanation: 'F = kq₁q₂/r² = (9 × 10⁹ × 2 × 10⁻⁶ × 3 × 10⁻⁶)/1² = 54 × 10⁻³ N.',
   ),
   TestQuestion(
     id: 'phy_35',
-    question:
-        'What is the maximum kinetic energy of photoelectrons when light of wavelength 400nm hits a metal surface with work function 2.0 eV?',
+    question: 'What is the maximum kinetic energy of photoelectrons when light of wavelength 400nm hits a metal surface with work function 2.0 eV?',
     options: ['1.1 eV', '3.1 eV', '0.9 eV', '2.0 eV'],
     correctAnswer: 0,
     subject: 'Physics',
-    explanation:
-        'E = hf - φ = hc/λ - φ = (6.63 × 10⁻³⁴ × 3 × 10⁸)/(400 × 10⁻⁹) - 2.0 eV ≈ 3.1 - 2.0 = 1.1 eV.',
+    explanation: 'E = hf - φ = hc/λ - φ = (6.63 × 10⁻³⁴ × 3 × 10⁸)/(400 × 10⁻⁹) - 2.0 eV ≈ 3.1 - 2.0 = 1.1 eV.',
   ),
   TestQuestion(
     id: 'phy_36',
-    question:
-        'What is the current in a circuit with EMF 12V and internal resistance 2Ω when connected to external resistance 4Ω?',
+    question: 'What is the current in a circuit with EMF 12V and internal resistance 2Ω when connected to external resistance 4Ω?',
     options: ['2 A', '3 A', '1 A', '6 A'],
     correctAnswer: 0,
     subject: 'Physics',
@@ -330,23 +291,15 @@ final List<TestQuestion> physicsQuestions = [
   ),
   TestQuestion(
     id: 'phy_37',
-    question:
-        'What is the de Broglie wavelength of an electron moving at 10⁶ m/s?',
-    options: [
-      '7.3 × 10⁻¹⁰ m',
-      '7.3 × 10⁻⁷ m',
-      '7.3 × 10⁻¹³ m',
-      '7.3 × 10⁻¹⁶ m',
-    ],
+    question: 'What is the de Broglie wavelength of an electron moving at 10⁶ m/s?',
+    options: ['7.3 × 10⁻¹⁰ m', '7.3 × 10⁻⁷ m', '7.3 × 10⁻¹³ m', '7.3 × 10⁻¹⁶ m'],
     correctAnswer: 0,
     subject: 'Physics',
-    explanation:
-        'λ = h/p = h/mv = (6.63 × 10⁻³⁴)/(9.11 × 10⁻³¹ × 10⁶) ≈ 7.3 × 10⁻¹⁰ m.',
+    explanation: 'λ = h/p = h/mv = (6.63 × 10⁻³⁴)/(9.11 × 10⁻³¹ × 10⁶) ≈ 7.3 × 10⁻¹⁰ m.',
   ),
   TestQuestion(
     id: 'phy_38',
-    question:
-        'What is the root mean square (rms) value of an AC voltage with peak value 100V?',
+    question: 'What is the root mean square (rms) value of an AC voltage with peak value 100V?',
     options: ['70.7 V', '100 V', '141.4 V', '50 V'],
     correctAnswer: 0,
     subject: 'Physics',
@@ -354,13 +307,11 @@ final List<TestQuestion> physicsQuestions = [
   ),
   TestQuestion(
     id: 'phy_39',
-    question:
-        'What is the binding energy per nucleon for a nucleus with mass defect 0.5 u?',
+    question: 'What is the binding energy per nucleon for a nucleus with mass defect 0.5 u?',
     options: ['465 MeV', '931 MeV', '0.5 MeV', '1862 MeV'],
     correctAnswer: 0,
     subject: 'Physics',
-    explanation:
-        'Binding energy = mass defect × 931 MeV/u = 0.5 × 931 = 465 MeV. For per nucleon, we need to divide by mass number A.',
+    explanation: 'Binding energy = mass defect × 931 MeV/u = 0.5 × 931 = 465 MeV. For per nucleon, we need to divide by mass number A.',
   ),
   TestQuestion(
     id: 'phy_40',
@@ -370,4 +321,4 @@ final List<TestQuestion> physicsQuestions = [
     subject: 'Physics',
     explanation: 'ω = 2π/T = 2π/(24 × 3600) = 7.3 × 10⁻⁵ rad/s.',
   ),
-];
+]; 

@@ -6,39 +6,22 @@ class AdminSetupService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Create admin user (for development/testing only)
-  static Future<void> createAdminUser({
-    required String email,
-    required String password,
-    required String adminCode,
-    String role = 'admin',
-  }) async {
+  static Future<void> createAdminUser(String email, String password) async {
     try {
-      // 1. Create Firebase Auth user
       final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      // 2. Create Firestore user document with admin role
-      await _firestore.collection('users').doc(userCredential.user!.uid).set({
-        'email': email,
-        'role': role,
-        'adminCode': adminCode,
-        'permissions': ['upload', 'verify', 'delete', 'manage'],
-        'createdAt': FieldValue.serverTimestamp(),
-        'isActive': true,
-        'displayName': 'Admin User',
-        'subjects': [], // Admin doesn't need subjects
-      });
-
-      print('✅ Admin user created successfully!');
-      print('📧 Email: $email');
-      print('🔑 Admin Code: $adminCode');
-      print('👤 Role: $role');
-      print('⚠️  Remember to use strong passwords in production!');
-      
+      if (userCredential.user != null) {
+        await _firestore.collection('users').doc(userCredential.user!.uid).set({
+          'email': email,
+          'role': 'admin',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
     } catch (e) {
-      print('❌ Error creating admin user: $e');
+      // Error creating admin user
       rethrow;
     }
   }
@@ -69,12 +52,10 @@ class AdminSetupService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      print('✅ User promoted to admin successfully!');
-      print('📧 Email: $userEmail');
-      print('🔑 Admin Code: $adminCode');
+      // User promoted to admin successfully
       
     } catch (e) {
-      print('❌ Error promoting user to admin: $e');
+      // Error promoting user to admin
       rethrow;
     }
   }
@@ -98,7 +79,7 @@ class AdminSetupService {
         };
       }).toList();
     } catch (e) {
-      print('❌ Error getting admin users: $e');
+      // Error getting admin users
       return [];
     }
   }
@@ -115,7 +96,7 @@ class AdminSetupService {
       final userRole = userDoc.data()?['role'] ?? 'user';
       return userRole == 'admin' || userRole == 'developer';
     } catch (e) {
-      print('❌ Error checking admin status: $e');
+      // Error checking admin status
       return false;
     }
   }
@@ -144,7 +125,7 @@ class AdminSetupService {
         'isActive': data['isActive'] ?? true,
       };
     } catch (e) {
-      print('❌ Error getting admin info: $e');
+      // Error getting admin info
       return null;
     }
   }

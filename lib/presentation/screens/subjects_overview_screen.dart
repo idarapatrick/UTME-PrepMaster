@@ -33,7 +33,7 @@ class SubjectsOverviewScreen extends StatelessWidget {
             Expanded(
               child: ListView.separated(
                 itemCount: utmeSubjects.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                separatorBuilder: (context, index) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {
                   final subject = utmeSubjects[index];
                   return Material(

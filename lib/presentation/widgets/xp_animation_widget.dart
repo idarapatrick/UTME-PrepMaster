@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import '../theme/app_colors.dart';
 
 class XpAnimationWidget extends StatefulWidget {
   final int xpEarned;
   final VoidCallback? onAnimationComplete;
+  final Duration duration;
 
   const XpAnimationWidget({
     super.key,
     required this.xpEarned,
     this.onAnimationComplete,
+    this.duration = const Duration(seconds: 2),
   });
 
   @override
@@ -18,206 +21,153 @@ class XpAnimationWidget extends StatefulWidget {
 class _XpAnimationWidgetState extends State<XpAnimationWidget>
     with TickerProviderStateMixin {
   late AnimationController _controller;
-  late AnimationController _particleController;
+  late AnimationController _scaleController;
+  late AnimationController _fadeController;
+  
+  late Animation<double> _slideAnimation;
   late Animation<double> _scaleAnimation;
-  late Animation<double> _opacityAnimation;
-  late Animation<Offset> _slideAnimation;
-  late Animation<double> _particleAnimation;
-
-  final List<Particle> _particles = [];
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _rotationAnimation;
 
   @override
   void initState() {
     super.initState();
     
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 2000),
+      duration: widget.duration,
       vsync: this,
     );
     
-    _particleController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+    _scaleController = AnimationController(
+      duration: const Duration(milliseconds: 300),
       vsync: this,
     );
+    
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    _slideAnimation = Tween<double>(
+      begin: 0.0,
+      end: -100.0,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCubic,
+    ));
 
     _scaleAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.0, 0.3, curve: Curves.elasticOut),
+      parent: _scaleController,
+      curve: Curves.elasticOut,
     ));
 
-    _opacityAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
+    _fadeAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.0,
     ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
-    ));
-
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0),
-      end: const Offset(0, -2),
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.3, 1.0, curve: Curves.easeOut),
-    ));
-
-    _particleAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _particleController,
+      parent: _fadeController,
       curve: Curves.easeOut,
     ));
 
-    _controller.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        widget.onAnimationComplete?.call();
-      }
-    });
+    _rotationAnimation = Tween<double>(
+      begin: 0.0,
+      end: 2 * math.pi,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    ));
 
-    _createParticles();
     _startAnimation();
   }
 
-  void _createParticles() {
-    final random = math.Random();
-    for (int i = 0; i < 8; i++) {
-      _particles.add(Particle(
-        position: Offset(
-          (random.nextDouble() - 0.5) * 100,
-          (random.nextDouble() - 0.5) * 100,
-        ),
-        velocity: Offset(
-          (random.nextDouble() - 0.5) * 200,
-          (random.nextDouble() - 0.5) * 200,
-        ),
-        color: _getRandomColor(),
-      ));
-    }
-  }
-
-  Color _getRandomColor() {
-    final colors = [
-      Colors.amber,
-      Colors.orange,
-      Colors.yellow,
-      Colors.amber,
-    ];
-    return colors[math.Random().nextInt(colors.length)];
-  }
-
-  void _startAnimation() {
+  void _startAnimation() async {
+    // Start with scale animation
+    await _scaleController.forward();
+    
+    // Wait a bit, then start slide and fade
+    await Future.delayed(const Duration(milliseconds: 500));
+    
+    // Start slide and fade animations
     _controller.forward();
-    _particleController.forward();
+    _fadeController.forward();
+    
+    // Wait for animation to complete
+    await Future.delayed(widget.duration);
+    
+    if (mounted) {
+      widget.onAnimationComplete?.call();
+    }
   }
 
   @override
   void dispose() {
     _controller.dispose();
-    _particleController.dispose();
+    _scaleController.dispose();
+    _fadeController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: Listenable.merge([_controller, _particleController]),
+      animation: Listenable.merge([_controller, _scaleController, _fadeController]),
       builder: (context, child) {
-        return Stack(
-          children: [
-            // Particles
-            ..._particles.map((particle) {
-              final progress = _particleAnimation.value;
-              final position = particle.position + particle.velocity * progress;
-              
-              return Positioned(
-                left: position.dx + MediaQuery.of(context).size.width / 2,
-                top: position.dy + MediaQuery.of(context).size.height / 2,
-                child: Transform.scale(
-                  scale: 1 - progress,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: particle.color,
-                      shape: BoxShape.circle,
-                    ),
+        return Transform.translate(
+          offset: Offset(0, _slideAnimation.value),
+          child: Transform.scale(
+            scale: _scaleAnimation.value,
+            child: Opacity(
+              opacity: _fadeAnimation.value,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.dominantPurple,
+                      AppColors.dominantPurple.withValues(alpha: 0.8),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
+                  borderRadius: BorderRadius.circular(25),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.dominantPurple.withValues(alpha: 0.3),
+                      blurRadius: 10,
+                      spreadRadius: 2,
+                    ),
+                  ],
                 ),
-              );
-            }),
-            
-            // Main XP text
-            Center(
-              child: SlideTransition(
-                position: _slideAnimation,
-                child: ScaleTransition(
-                  scale: _scaleAnimation,
-                  child: FadeTransition(
-                    opacity: _opacityAnimation,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.amber.shade400,
-                            Colors.orange.shade400,
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(25),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.amber.withValues(alpha: 0.3),
-                            blurRadius: 20,
-                            spreadRadius: 5,
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.star,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '+${widget.xpEarned} XP',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Transform.rotate(
+                      angle: _rotationAnimation.value,
+                      child: Icon(
+                        Icons.star,
+                        color: Colors.amber,
+                        size: 20,
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '+${widget.xpEarned} XP',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ],
+          ),
         );
       },
     );
   }
-}
-
-class Particle {
-  final Offset position;
-  final Offset velocity;
-  final Color color;
-
-  Particle({
-    required this.position,
-    required this.velocity,
-    required this.color,
-  });
 } 

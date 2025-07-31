@@ -91,8 +91,7 @@ final List<TestQuestion> mathematicsQuestions = [
   ),
   TestQuestion(
     id: 'math_12',
-    question:
-        'Find the circumference of a circle with radius 7 cm (use π = 22/7):',
+    question: 'Find the circumference of a circle with radius 7 cm (use π = 22/7):',
     options: ['22 cm', '44 cm', '49 cm', '154 cm'],
     correctAnswer: 1,
     subject: 'Mathematics',
@@ -109,12 +108,7 @@ final List<TestQuestion> mathematicsQuestions = [
   TestQuestion(
     id: 'math_14',
     question: 'The quadratic formula for ax² + bx + c = 0 is:',
-    options: [
-      'x = (-b ± √(b² - 4ac))/2a',
-      'x = (-b ± √(b² + 4ac))/2a',
-      'x = (b ± √(b² - 4ac))/2a',
-      'x = (-b ± √(b² - 4ac))/a',
-    ],
+    options: ['x = (-b ± √(b² - 4ac))/2a', 'x = (-b ± √(b² + 4ac))/2a', 'x = (b ± √(b² - 4ac))/2a', 'x = (-b ± √(b² - 4ac))/a'],
     correctAnswer: 0,
     subject: 'Mathematics',
     explanation: 'The quadratic formula is x = (-b ± √(b² - 4ac))/2a.',
@@ -186,12 +180,7 @@ final List<TestQuestion> mathematicsQuestions = [
   TestQuestion(
     id: 'math_23',
     question: 'The inverse of the function f(x) = 2x + 1 is:',
-    options: [
-      'f⁻¹(x) = (x - 1)/2',
-      'f⁻¹(x) = (x + 1)/2',
-      'f⁻¹(x) = 2x - 1',
-      'f⁻¹(x) = x/2 - 1',
-    ],
+    options: ['f⁻¹(x) = (x - 1)/2', 'f⁻¹(x) = (x + 1)/2', 'f⁻¹(x) = 2x - 1', 'f⁻¹(x) = x/2 - 1'],
     correctAnswer: 0,
     subject: 'Mathematics',
     explanation: 'If y = 2x + 1, then x = (y - 1)/2, so f⁻¹(x) = (x - 1)/2.',
@@ -210,8 +199,7 @@ final List<TestQuestion> mathematicsQuestions = [
     options: ['3/5', '4/5', '5/3', '5/4'],
     correctAnswer: 1,
     subject: 'Mathematics',
-    explanation:
-        'Using sin²θ + cos²θ = 1: sin²θ = 1 - (3/5)² = 16/25, so sin θ = 4/5.',
+    explanation: 'Using sin²θ + cos²θ = 1: sin²θ = 1 - (3/5)² = 16/25, so sin θ = 4/5.',
   ),
   TestQuestion(
     id: 'math_26',
@@ -219,8 +207,7 @@ final List<TestQuestion> mathematicsQuestions = [
     options: ['2n + 1', '3n - 1', '3n + 2', '2n + 3'],
     correctAnswer: 1,
     subject: 'Mathematics',
-    explanation:
-        'This is an arithmetic sequence with first term 2 and common difference 3, so aₙ = 2 + (n-1)3 = 3n - 1.',
+    explanation: 'This is an arithmetic sequence with first term 2 and common difference 3, so aₙ = 2 + (n-1)3 = 3n - 1.',
   ),
   TestQuestion(
     id: 'math_27',
@@ -228,13 +215,11 @@ final List<TestQuestion> mathematicsQuestions = [
     options: ['3', '6', '12', '8'],
     correctAnswer: 2,
     subject: 'Mathematics',
-    explanation:
-        'Using binomial theorem: (x + 2)³ = x³ + 3x²(2) + 3x(4) + 8. Coefficient of x² is 12.',
+    explanation: 'Using binomial theorem: (x + 2)³ = x³ + 3x²(2) + 3x(4) + 8. Coefficient of x² is 12.',
   ),
   TestQuestion(
     id: 'math_28',
-    question:
-        'The equation of a line passing through (0, 2) with gradient 3 is:',
+    question: 'The equation of a line passing through (0, 2) with gradient 3 is:',
     options: ['y = 3x + 2', 'y = 2x + 3', 'y = 3x - 2', 'y = 2x - 3'],
     correctAnswer: 0,
     subject: 'Mathematics',
@@ -246,27 +231,19 @@ final List<TestQuestion> mathematicsQuestions = [
     options: ['0', '1/4', '1/2', '1'],
     correctAnswer: 2,
     subject: 'Mathematics',
-    explanation:
-        'There are 2 equally likely outcomes (head or tail), so P(head) = 1/2.',
+    explanation: 'There are 2 equally likely outcomes (head or tail), so P(head) = 1/2.',
   ),
   TestQuestion(
     id: 'math_30',
     question: 'Factorize: x² - 9',
-    options: [
-      '(x - 3)(x - 3)',
-      '(x + 3)(x + 3)',
-      '(x - 3)(x + 3)',
-      '(x - 9)(x + 1)',
-    ],
+    options: ['(x - 3)(x - 3)', '(x + 3)(x + 3)', '(x - 3)(x + 3)', '(x - 9)(x + 1)'],
     correctAnswer: 2,
     subject: 'Mathematics',
-    explanation:
-        'x² - 9 = x² - 3² = (x - 3)(x + 3) using difference of squares.',
+    explanation: 'x² - 9 = x² - 3² = (x - 3)(x + 3) using difference of squares.',
   ),
   TestQuestion(
     id: 'math_31',
-    question:
-        'The sum to infinity of the geometric series 1 + 1/2 + 1/4 + 1/8 + ... is:',
+    question: 'The sum to infinity of the geometric series 1 + 1/2 + 1/4 + 1/8 + ... is:',
     options: ['1', '1.5', '2', '∞'],
     correctAnswer: 2,
     subject: 'Mathematics',
@@ -294,8 +271,7 @@ final List<TestQuestion> mathematicsQuestions = [
     options: ['(2, -1)', '(2, 1)', '(-2, -1)', '(-2, 1)'],
     correctAnswer: 0,
     subject: 'Mathematics',
-    explanation:
-        'Using x = -b/2a = 4/2 = 2, and y = 4 - 8 + 3 = -1. Turning point is (2, -1).',
+    explanation: 'Using x = -b/2a = 4/2 = 2, and y = 4 - 8 + 3 = -1. Turning point is (2, -1).',
   ),
   TestQuestion(
     id: 'math_35',
@@ -319,8 +295,7 @@ final List<TestQuestion> mathematicsQuestions = [
     options: ['0°', '30°', '45°', '90°'],
     correctAnswer: 0,
     subject: 'Mathematics',
-    explanation:
-        'cos θ = (a·b)/(|a||b|) = 24/(5×5) = 24/25. Since both vectors have same magnitude and large dot product, θ ≈ 0°.',
+    explanation: 'cos θ = (a·b)/(|a||b|) = 24/(5×5) = 24/25. Since both vectors have same magnitude and large dot product, θ ≈ 0°.',
   ),
   TestQuestion(
     id: 'math_38',
@@ -336,8 +311,7 @@ final List<TestQuestion> mathematicsQuestions = [
     options: ['0', '2', '4', 'undefined'],
     correctAnswer: 2,
     subject: 'Mathematics',
-    explanation:
-        '(x² - 4)/(x - 2) = (x - 2)(x + 2)/(x - 2) = x + 2. As x → 2, limit = 4.',
+    explanation: '(x² - 4)/(x - 2) = (x - 2)(x + 2)/(x - 2) = x + 2. As x → 2, limit = 4.',
   ),
   TestQuestion(
     id: 'math_40',
