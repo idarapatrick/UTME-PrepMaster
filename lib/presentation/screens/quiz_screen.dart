@@ -308,6 +308,20 @@ class _QuizScreenState extends State<QuizScreen> {
     }
   }
 
+  int _calculateCorrectAnswers() {
+    int correctCount = 0;
+    for (int i = 0; i < _questions.length; i++) {
+      final selectedAnswer = _selectedAnswers[i];
+      if (selectedAnswer.isNotEmpty) {
+        final selectedIndex = _questions[i].options.indexOf(selectedAnswer);
+        if (selectedIndex == _questions[i].correctAnswer) {
+          correctCount++;
+        }
+      }
+    }
+    return correctCount;
+  }
+
   // Save quiz progress to local storage
   Future<void> _saveQuizProgress(String subject, int correct, int total) async {
     try {

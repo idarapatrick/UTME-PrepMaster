@@ -194,6 +194,8 @@ class ResponsiveHelper {
     double? childAspectRatio,
   }) {
     return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       padding: padding ?? getResponsiveEdgeInsets(context),
       crossAxisCount: getResponsiveGridCrossAxisCount(context),
       crossAxisSpacing: crossAxisSpacing ?? getResponsiveSpacing(context),
@@ -281,7 +283,7 @@ class ResponsiveHelper {
   static Widget responsiveButton({
     required BuildContext context,
     required String text,
-    required VoidCallback onPressed,
+    required VoidCallback? onPressed,
     Color? backgroundColor,
     Color? foregroundColor,
     EdgeInsets? padding,
@@ -324,12 +326,16 @@ class ResponsiveHelper {
     TextInputType? keyboardType,
     Widget? prefixIcon,
     Widget? suffixIcon,
+    void Function(String)? onChanged,
+    void Function()? onEditingComplete,
   }) {
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
       validator: validator,
+      onChanged: onChanged,
+      onEditingComplete: onEditingComplete,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: prefixIcon,

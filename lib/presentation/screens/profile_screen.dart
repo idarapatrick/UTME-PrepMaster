@@ -343,7 +343,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: _buildQuickStat(
                   context,
                   'Questions',
-                  '${userStats?.totalQuestionsAnswered ?? 0}',
+                  '${userStats?.questionsAnswered ?? 0}',
                   Icons.quiz,
                   AppColors.subjectBlue,
                 ),
@@ -353,7 +353,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: _buildQuickStat(
                   context,
                   'Accuracy',
-                  '${userStats?.accuracyPercentage?.toStringAsFixed(1) ?? '0.0'}%',
+                  '${((userStats?.accuracyRate ?? 0.0) * 100).toStringAsFixed(1)}%',
                   Icons.trending_up,
                   AppColors.subjectGreen,
                 ),
@@ -424,7 +424,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _buildStatCard(
                 context,
                 'Total Study Time',
-                '${userStats?.totalStudyTime?.inHours ?? 0}h',
+                userStats?.formattedStudyTime ?? '0m',
                 Icons.timer,
                 AppColors.dominantPurple,
                 isDark,
@@ -432,7 +432,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _buildStatCard(
                 context,
                 'Questions Answered',
-                '${userStats?.totalQuestionsAnswered ?? 0}',
+                '${userStats?.questionsAnswered ?? 0}',
                 Icons.quiz,
                 AppColors.subjectBlue,
                 isDark,
@@ -440,7 +440,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _buildStatCard(
                 context,
                 'Correct Answers',
-                '${userStats?.totalCorrectAnswers ?? 0}',
+                '${userStats?.correctAnswers ?? 0}',
                 Icons.check_circle,
                 AppColors.accentAmber,
                 isDark,
@@ -448,7 +448,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               _buildStatCard(
                 context,
                 'Accuracy',
-                '${userStats?.accuracyPercentage?.toStringAsFixed(1) ?? '0.0'}%',
+                '${((userStats?.accuracyRate ?? 0.0) * 100).toStringAsFixed(1)}%',
                 Icons.trending_up,
                 AppColors.subjectGreen,
                 isDark,
@@ -513,8 +513,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
           
           // Menu items
-          ResponsiveHelper.responsiveListView(
-            context: context,
+          Column(
             children: [
               _buildMenuItem(
                 context,

@@ -45,7 +45,18 @@ class UserStatsProvider extends ChangeNotifier {
   // Initialize user stats
   Future<void> initializeUserStats() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      print('DEBUG: No authenticated user for stats initialization');
+      return;
+    }
+
+    print('DEBUG: Initializing user stats for user: ${user.uid}');
+    
+    // Use a flag to prevent multiple initializations
+    if (_isLoading) {
+      print('DEBUG: Already initializing user stats, skipping');
+      return;
+    }
 
     _setLoading(true);
     try {
@@ -53,6 +64,7 @@ class UserStatsProvider extends ChangeNotifier {
       _userStats = await _repository.getUserStats(user.uid);
       
       if (_userStats == null) {
+        print('DEBUG: Creating new user stats for user: ${user.uid}');
         // Create default stats for new user
         _userStats = UserStats(
           userId: user.uid,
@@ -72,22 +84,51 @@ class UserStatsProvider extends ChangeNotifier {
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );
-        await _repository.createUserStats(_userStats!);
+        try {
+          await _repository.createUserStats(_userStats!);
+          print('DEBUG: User stats created successfully');
+        } catch (e) {
+          print('DEBUG: Error creating user stats: $e');
+          // Continue without throwing error - we have default stats
+        }
+      } else {
+        print('DEBUG: Loaded existing user stats');
       }
       
-      // Load recent sessions
-      await _loadRecentSessions();
+      // Load recent sessions (but don't fail if this errors)
+      try {
+        await _loadRecentSessions();
+      } catch (e) {
+        print('DEBUG: Error loading recent sessions: $e');
+        // Continue without recent sessions
+      }
       
-      // Listen to real-time updates
-      _listenToUserStats(user.uid);
-      
-      // Save state to local storage as backup
-      await _saveStateToLocal();
-      
+      _setError(null);
     } catch (e) {
+      print('DEBUG: Error initializing user stats: $e');
       _setError('Failed to load user stats: $e');
-      // Try to load from local backup
-      await _loadStateFromLocal();
+      
+      // Create minimal fallback stats
+      if (_userStats == null) {
+        _userStats = UserStats(
+          userId: user.uid,
+          totalXp: 0,
+          currentStreak: 0,
+          longestStreak: 0,
+          lastStudyDate: DateTime.now(),
+          totalStudyTimeMinutes: 0,
+          totalSessions: 0,
+          quizzesCompleted: 0,
+          questionsAnswered: 0,
+          correctAnswers: 0,
+          subjectXp: {},
+          subjectStudyTime: {},
+          earnedBadges: [],
+          availableBadges: [],
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+      }
     } finally {
       _setLoading(false);
     }

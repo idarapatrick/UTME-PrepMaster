@@ -949,8 +949,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
         if (_showHistory) ...[
           SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
           
-          ResponsiveHelper.responsiveListView(
-            context: context,
+          Column(
             children: _cbtHistory.map((test) => _buildHistoryCard(context, test, isDark)).toList(),
           ),
         ],
