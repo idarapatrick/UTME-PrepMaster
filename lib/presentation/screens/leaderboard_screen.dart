@@ -313,8 +313,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
         
         SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
         
-        ResponsiveHelper.responsiveListView(
-          context: context,
+        Column(
           children: _xpLeaderboard.asMap().entries.map((entry) {
             final index = entry.key;
             final user = entry.value;

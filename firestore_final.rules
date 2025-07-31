@@ -1,0 +1,480 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Check if user owns the resource
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Check if user is admin
+    function isAdmin() {
+      return isAuthenticated() && 
+        request.auth.token.email in [
+          'admin@utmeprepmaster.com', 
+          'michael@utmeprepmaster.com',
+          'idarapatrick@gmail.com',
+          'm.musembi@alustudent.com'
+        ];
+    }
+    
+    // Check if user can modify user data
+    function canModifyUserData(data) {
+      return isAuthenticated() && (
+        // New users can create their profile
+        !resource.exists() ||
+        // Existing users can update their own data
+        isOwner(resource.id)
+      );
+    }
+    
+    // Validate user profile data structure
+    function isValidUserProfile(data) {
+      let requiredFields = ['email', 'createdAt'];
+      let optionalFields = ['displayName', 'firstName', 'lastName', 'phone', 
+                           'university1', 'university2', 'university3', 'avatarUrl',
+                           'xp', 'studyStreak', 'totalStudyTime', 'badgesCount', 
+                           'isAnonymous', 'lastUpdated', 'preferences'];
+      
+      return data.keys().hasAll(requiredFields) &&
+             data.email is string &&
+             data.email.size() > 0 &&
+             (data.xp is number && data.xp >= 0) &&
+             (data.studyStreak is number && data.studyStreak >= 0) &&
+             (data.totalStudyTime is number && data.totalStudyTime >= 0);
+    }
+    
+    // Validate test result data
+    function isValidTestResult(data) {
+      return data.keys().hasAll(['subject', 'score', 'totalQuestions', 'timestamp', 'type']) &&
+             data.subject is string &&
+             data.subject.size() > 0 &&
+             data.score is number &&
+             data.totalQuestions is number &&
+             data.type is string &&
+             data.score >= 0 &&
+             data.score <= data.totalQuestions &&
+             data.timestamp is timestamp;
+    }
+    
+    // Validate progress data
+    function isValidProgress(data) {
+      return data.keys().hasAny(['subjectProgress', 'topicProgress', 'lastActivity']) &&
+             ('subjectProgress' in data ? data.subjectProgress is map : true) &&
+             ('lastActivity' in data ? data.lastActivity is timestamp : true);
+    }
+    
+    // Validate note data
+    function isValidNote(data) {
+      return data.keys().hasAll(['title', 'content', 'createdAt']) &&
+             data.title is string &&
+             data.title.size() > 0 &&
+             data.content is string &&
+             data.createdAt is timestamp;
+    }
+    
+    // Validate link data
+    function isValidLink(data) {
+      return data.keys().hasAll(['title', 'url', 'createdAt']) &&
+             data.title is string &&
+             data.title.size() > 0 &&
+             data.url is string &&
+             data.url.size() > 0 &&
+             data.createdAt is timestamp;
+    }
+    
+    // ========================================
+    // USER DATA & PROFILES
+    // ========================================
+    
+    match /users/{userId} {
+      // Users can read and write their own profile
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && isValidUserProfile(request.resource.data);
+      allow update: if isOwner(userId) && isValidUserProfile(request.resource.data);
+      allow delete: if isOwner(userId) || isAdmin();
+      
+      // User's test results
+      match /tests/{testId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && isValidTestResult(request.resource.data);
+        allow update: if isOwner(userId) && isValidTestResult(request.resource.data);
+      }
+      
+      // User's mock test results  
+      match /mockTests/{testId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && isValidTestResult(request.resource.data);
+        allow update: if isOwner(userId) && isValidTestResult(request.resource.data);
+      }
+      
+      // User's quiz results
+      match /quizzes/{quizId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && isValidTestResult(request.resource.data);
+        allow update: if isOwner(userId) && isValidTestResult(request.resource.data);
+      }
+      
+      // User's personal notes
+      match /notes/{noteId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && isValidNote(request.resource.data);
+        allow update: if isOwner(userId) && isValidNote(request.resource.data);
+      }
+      
+      // User's saved links
+      match /links/{linkId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && isValidLink(request.resource.data);
+        allow update: if isOwner(userId) && isValidLink(request.resource.data);
+      }
+      
+      // User's overall progress
+      match /progress/{progressId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && isValidProgress(request.resource.data);
+        allow update: if isOwner(userId) && isValidProgress(request.resource.data);
+      }
+      
+      // User's subject-specific progress
+      match /subject_progress/{subjectId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && isValidProgress(request.resource.data);
+        allow update: if isOwner(userId) && isValidProgress(request.resource.data);
+      }
+      
+      // User's offline cache data
+      match /offline_cache/{cacheId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+      
+      // User's verification status
+      match /verification/{verificationId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+      
+      // User's statistics and performance data
+      match /user_stats/{statsId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+    }
+    
+    // ========================================
+    // PUBLIC READ-ONLY DATA
+    // ========================================
+    
+    // Global leaderboards (read-only for users, write for admins)
+    match /leaderboard/{leaderboardId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Alternative leaderboard path
+    match /leaderboards/{leaderboardId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Global achievements and badges (read-only for users)
+    match /achievements/{achievementId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    match /badges/{badgeId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // ========================================
+    // EDUCATIONAL CONTENT
+    // ========================================
+    
+    // Subjects and their content (read-only for users)
+    match /subjects/{subjectId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+      
+      // Topics within subjects
+      match /topics/{topicId} {
+        allow read: if isAuthenticated();
+        allow write: if isAdmin();
+        
+        // Content within topics
+        match /content/{contentId} {
+          allow read: if isAuthenticated();
+          allow write: if isAdmin();
+        }
+      }
+      
+      // Questions within subjects
+      match /questions/{questionId} {
+        allow read: if isAuthenticated();
+        allow write: if isAdmin();
+      }
+      
+      // Past questions for subjects
+      match /past_questions/{questionId} {
+        allow read: if isAuthenticated();
+        allow write: if isAdmin();
+      }
+    }
+    
+    // CBT Questions collection
+    match /cbt_questions/{questionId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Practice questions
+    match /practice_questions/{questionId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Universities data (read-only for users)
+    match /universities/{universityId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Study materials and resources
+    match /study_materials/{materialId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // CBT Configuration and test settings
+    match /cbt_configs/{configId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Study sessions tracking
+    match /study_sessions/{sessionId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && 
+        (isAdmin() || request.auth.uid == resource.data.userId);
+      allow delete: if isAdmin() || request.auth.uid == resource.data.userId;
+    }
+    
+    // User statistics (top-level collection)
+    match /user_stats/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+    
+    // ========================================
+    // EMAIL VERIFICATION SYSTEM
+    // ========================================
+    
+    // Email verification tokens and status
+    match /email_verification/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+    
+    // Verification status tracking
+    match /verification_status/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+    
+    // Email verification logs
+    match /verification_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // ========================================
+    // ADMIN-ONLY COLLECTIONS
+    // ========================================
+    
+    // Admin dashboard and management
+    match /admin/{document=**} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Admin user management
+    match /admin_users/{adminId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // System configuration
+    match /config/{configId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // App settings
+    match /app_settings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Analytics data (admin only)
+    match /analytics/{analyticsId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // ========================================
+    // COMMUNITY FEATURES
+    // ========================================
+    
+    // Public study groups (read for all, write for members)
+    match /study_groups/{groupId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && 
+        (isAdmin() || request.auth.uid in resource.data.members);
+      allow delete: if isAdmin();
+      
+      // Messages within study groups
+      match /messages/{messageId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() && 
+          request.auth.uid in get(/databases/$(database)/documents/study_groups/$(groupId)).data.members;
+        allow update: if isAuthenticated() && 
+          (isAdmin() || request.auth.uid == resource.data.authorId);
+        allow delete: if isAdmin() || request.auth.uid == resource.data.authorId;
+      }
+    }
+    
+    // Public discussions and forums
+    match /discussions/{discussionId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && 
+        (isAdmin() || request.auth.uid == resource.data.authorId);
+      allow delete: if isAdmin() || request.auth.uid == resource.data.authorId;
+      
+      // Comments on discussions
+      match /comments/{commentId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated();
+        allow update: if isAuthenticated() && 
+          (isAdmin() || request.auth.uid == resource.data.authorId);
+        allow delete: if isAdmin() || request.auth.uid == resource.data.authorId;
+      }
+    }
+    
+    // ========================================
+    // SYSTEM DATA
+    // ========================================
+    
+    // App version and update info
+    match /app_info/{infoId} {
+      allow read: if true; // Public read for app updates
+      allow write: if isAdmin();
+    }
+    
+    // Terms of service and privacy policy
+    match /legal/{legalId} {
+      allow read: if true; // Public read
+      allow write: if isAdmin();
+    }
+    
+    // Help and FAQ content
+    match /help/{helpId} {
+      allow read: if true; // Public read
+      allow write: if isAdmin();
+    }
+    
+    // Feature flags and A/B testing
+    match /feature_flags/{flagId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Error logging and crash reports (user can write their own)
+    match /error_logs/{errorId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // User feedback and suggestions
+    match /feedback/{feedbackId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && 
+        (isAdmin() || request.auth.uid == resource.data.userId);
+      allow delete: if isAdmin();
+    }
+    
+    // Notification templates and settings
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // ========================================
+    // FIRESTORE INTEGRATION COLLECTIONS
+    // ========================================
+    
+    // Real-time data synchronization
+    match /sync_status/{syncId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Offline data persistence
+    match /offline_data/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+      
+      match /cached_content/{contentId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+      
+      match /pending_uploads/{uploadId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+    }
+    
+    // User progress tracking with real-time updates
+    match /progress_tracking/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+      
+      match /daily_progress/{date} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+      
+      match /weekly_summary/{week} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+      
+      match /monthly_stats/{month} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+    }
+    
+    // Leaderboard data storage with validation
+    match /leaderboard_data/{period} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+      
+      match /rankings/{userId} {
+        allow read: if isAuthenticated();
+        allow write: if isAdmin() || isOwner(userId);
+      }
+    }
+    
+    // ========================================
+    // CATCH-ALL RULES
+    // ========================================
+    
+    // Deny access to any other collections not explicitly defined
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

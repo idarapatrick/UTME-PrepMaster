@@ -1,0 +1,32 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow authenticated users to upload/download their own files
+    match /users/{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow admins full access
+    match /{allPaths=**} {
+      allow read, write: if request.auth != null && 
+        request.auth.token.email in [
+          'admin@utmeprepmaster.com',
+          'm.musembi@alustudent.com',
+          'michael@utmeprepmaster.com',
+          'idarapatrick@gmail.com'
+        ];
+    }
+    
+    // Public read access for app assets
+    match /public/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && 
+        request.auth.token.email in [
+          'admin@utmeprepmaster.com',
+          'm.musembi@alustudent.com',
+          'michael@utmeprepmaster.com',
+          'idarapatrick@gmail.com'
+        ];
+    }
+  }
+}

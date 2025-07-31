@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
 import 'presentation/theme/app_theme.dart';
 import 'presentation/screens/auth/auth_screen.dart';
@@ -29,17 +28,25 @@ import 'presentation/screens/admin/developer_panel_screen.dart';
 import 'presentation/screens/admin/admin_dashboard_screen.dart';
 import 'presentation/screens/auth/admin_auth_screen.dart';
 import 'presentation/screens/course_content_screen.dart';
+// Import the new services
+import 'data/services/firestore_service.dart';
+import 'data/services/offline_cache_service.dart';
+import 'data/services/email_verification_service.dart';
 
 void main() async {
-  
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Firebase
   await Firebase.initializeApp();
 
-  // Enable Firestore offline caching
-  FirebaseFirestore.instance.settings = const Settings(
-    persistenceEnabled: true,
-    cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
-  );
+  // Initialize Firestore with offline persistence
+  await FirestoreService.initializeFirestore();
+  
+  // Initialize offline cache service
+  await OfflineCacheService.initialize();
+  
+  // Initialize email verification service
+  EmailVerificationService.initialize();
 
   runApp(
     MultiProvider(
@@ -106,14 +113,16 @@ class _AuthGateState extends State<AuthGate> {
   @override
   void initState() {
     super.initState();
-    _initializeApp();
+    // Initialize after the first frame is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeApp();
+    });
   }
 
   Future<void> _initializeApp() async {
     try {
-      // Initialize user stats provider
-      final userStatsProvider = Provider.of<UserStatsProvider>(context, listen: false);
-      await userStatsProvider.initializeUserStats();
+      // Just wait a moment for Firebase to initialize
+      await Future.delayed(const Duration(milliseconds: 500));
     } catch (e) {
       print('Error initializing app: $e');
     } finally {
@@ -134,12 +143,18 @@ class _AuthGateState extends State<AuthGate> {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
+        print('DEBUG: AuthGate - ConnectionState: ${snapshot.connectionState}');
+        print('DEBUG: AuthGate - Has data: ${snapshot.hasData}');
+        print('DEBUG: AuthGate - User: ${snapshot.data?.email}');
+        
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const SplashScreen();
         }
         if (snapshot.hasData) {
+          print('DEBUG: AuthGate - Navigating to HomeScreen');
           return const HomeScreen();
         }
+        print('DEBUG: AuthGate - Showing AuthScreen');
         return const AuthScreen();
       },
     );

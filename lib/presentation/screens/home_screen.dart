@@ -702,7 +702,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         return SubjectCard(
                           name: subject['name'] as String,
                           icon: subject['icon'] as IconData,
-                          imageUrl: subject['imageUrl'] as String,
+                          imageUrl: subject['imageUrl'] as String? ?? '', // Provide empty string as fallback
                           accentColor: subject['color'] as Color,
                           progressText: _getSubjectProgressText(subject['name'] as String),
                           onTap: () {

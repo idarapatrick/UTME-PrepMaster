@@ -389,22 +389,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
         // Save to Firestore
         await FirestoreService.saveFullUserProfile(user.uid, profileData);
-        
-        // Also update using the model method for consistency
-        final userProfile = {
-          'firstName': _firstName,
-          'lastName': _lastName,
-          'email': _email,
-          'phone': _phone,
-          'university1': _university1,
-          'university2': _university2,
-          'university3': _university3,
-          'avatarUrl': _avatarAsset,
-          'lastUpdated': FieldValue.serverTimestamp(),
-          'isAnonymous': user.isAnonymous,
-        };
-        
-        await FirestoreService.updateUserProfileFromModel(user.uid, userProfile);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
