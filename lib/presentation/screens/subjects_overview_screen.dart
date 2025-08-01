@@ -33,7 +33,8 @@ class SubjectsOverviewScreen extends StatelessWidget {
             Expanded(
               child: ListView.separated(
                 itemCount: utmeSubjects.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 10),
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 10),
                 itemBuilder: (context, index) {
                   final subject = utmeSubjects[index];
                   return Material(
@@ -47,7 +48,9 @@ class SubjectsOverviewScreen extends StatelessWidget {
                       ),
                       leading: CircleAvatar(
                         radius: 22,
-                        backgroundColor: Colors.deepPurple.withValues(alpha: 0.1),
+                        backgroundColor: Colors.deepPurple.withValues(
+                          alpha: 0.1,
+                        ),
                         child: const Icon(
                           Icons.menu_book_rounded,
                           color: Colors.deepPurple,

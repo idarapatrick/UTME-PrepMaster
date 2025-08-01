@@ -31,15 +31,14 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
 
   Future<void> _submit() async {
     final formState = _formKey.currentState;
-    if (formState == null || !formState.validate() &&
-        _selectedDate != null) {
+    if (formState == null || !formState.validate() && _selectedDate != null) {
       return;
     }
 
     try {
       // Save personal info logic here
       await Future.delayed(const Duration(seconds: 1)); // Simulate save
-      
+
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/subject-selection');
       }

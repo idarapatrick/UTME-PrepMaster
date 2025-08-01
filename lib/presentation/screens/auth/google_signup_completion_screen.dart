@@ -1,30 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../../data/services/auth_service.dart';
+
 import '../../../data/services/firestore_service.dart';
 import '../../theme/app_colors.dart';
 import '../../utils/responsive_helper.dart';
 
 class GoogleSignupCompletionScreen extends StatefulWidget {
   final User googleUser;
-  
-  const GoogleSignupCompletionScreen({
-    super.key,
-    required this.googleUser,
-  });
+
+  const GoogleSignupCompletionScreen({super.key, required this.googleUser});
 
   @override
-  State<GoogleSignupCompletionScreen> createState() => _GoogleSignupCompletionScreenState();
+  State<GoogleSignupCompletionScreen> createState() =>
+      _GoogleSignupCompletionScreenState();
 }
 
-class _GoogleSignupCompletionScreenState extends State<GoogleSignupCompletionScreen> {
+class _GoogleSignupCompletionScreenState
+    extends State<GoogleSignupCompletionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
-  
+
   bool _isLoading = false;
-  final AuthService _authService = AuthService();
 
   @override
   void initState() {
@@ -50,7 +48,9 @@ class _GoogleSignupCompletionScreenState extends State<GoogleSignupCompletionScr
 
     try {
       // Update user display name
-      await widget.googleUser.updateDisplayName('${_firstNameController.text.trim()} ${_lastNameController.text.trim()}');
+      await widget.googleUser.updateDisplayName(
+        '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}',
+      );
 
       // Create user profile in Firestore
       final userData = {
@@ -58,7 +58,8 @@ class _GoogleSignupCompletionScreenState extends State<GoogleSignupCompletionScr
         'email': widget.googleUser.email,
         'firstName': _firstNameController.text.trim(),
         'lastName': _lastNameController.text.trim(),
-        'displayName': '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}',
+        'displayName':
+            '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}',
         'photoURL': widget.googleUser.photoURL,
         'createdAt': DateTime.now(),
         'lastSignIn': DateTime.now(),
@@ -67,7 +68,10 @@ class _GoogleSignupCompletionScreenState extends State<GoogleSignupCompletionScr
         'isAnonymous': false,
       };
 
-      await FirestoreService.saveFullUserProfile(widget.googleUser.uid, userData);
+      await FirestoreService.saveFullUserProfile(
+        widget.googleUser.uid,
+        userData,
+      );
 
       // Send email verification with custom action code settings
       await widget.googleUser.sendEmailVerification(
@@ -84,13 +88,10 @@ class _GoogleSignupCompletionScreenState extends State<GoogleSignupCompletionScr
       if (mounted) {
         // Navigate to email verification screen immediately
         Navigator.pushNamedAndRemoveUntil(
-          context, 
-          '/email-verification', 
+          context,
+          '/email-verification',
           (route) => false,
-          arguments: {
-            'email': widget.googleUser.email,
-            'isNewUser': true,
-          },
+          arguments: {'email': widget.googleUser.email, 'isNewUser': true},
         );
       }
     } catch (e) {
@@ -114,9 +115,11 @@ class _GoogleSignupCompletionScreenState extends State<GoogleSignupCompletionScr
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF181A20) : AppColors.backgroundPrimary,
+      backgroundColor: isDark
+          ? const Color(0xFF181A20)
+          : AppColors.backgroundPrimary,
       appBar: AppBar(
         title: const Text('Complete Your Profile'),
         backgroundColor: AppColors.dominantPurple,
@@ -132,31 +135,37 @@ class _GoogleSignupCompletionScreenState extends State<GoogleSignupCompletionScr
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 40),
-                
+
                 // Welcome message
                 Text(
                   'Welcome to UTME PrepMaster!',
                   style: TextStyle(
-                    fontSize: ResponsiveHelper.getResponsiveFontSize(context, 24),
+                    fontSize: ResponsiveHelper.getResponsiveFontSize(
+                      context,
+                      24,
+                    ),
                     fontWeight: FontWeight.bold,
                     color: isDark ? Colors.white : AppColors.textPrimary,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                
+
                 const SizedBox(height: 8),
-                
+
                 Text(
                   'Please complete your profile to continue',
                   style: TextStyle(
-                    fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+                    fontSize: ResponsiveHelper.getResponsiveFontSize(
+                      context,
+                      16,
+                    ),
                     color: AppColors.textSecondary,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                
+
                 const SizedBox(height: 40),
-                
+
                 // First Name field
                 TextFormField(
                   controller: _firstNameController,
@@ -176,9 +185,9 @@ class _GoogleSignupCompletionScreenState extends State<GoogleSignupCompletionScr
                     return null;
                   },
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Last Name field
                 TextFormField(
                   controller: _lastNameController,
@@ -198,9 +207,9 @@ class _GoogleSignupCompletionScreenState extends State<GoogleSignupCompletionScr
                     return null;
                   },
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Email field (read-only)
                 TextFormField(
                   controller: _emailController,
@@ -212,12 +221,14 @@ class _GoogleSignupCompletionScreenState extends State<GoogleSignupCompletionScr
                       borderRadius: BorderRadius.circular(12),
                     ),
                     filled: true,
-                    fillColor: isDark ? const Color(0xFF2A2D3E) : Colors.grey[100],
+                    fillColor: isDark
+                        ? const Color(0xFF2A2D3E)
+                        : Colors.grey[100],
                   ),
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Info card
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -241,16 +252,19 @@ class _GoogleSignupCompletionScreenState extends State<GoogleSignupCompletionScr
                           'Your email will be verified automatically. You\'ll receive a verification link shortly.',
                           style: TextStyle(
                             color: AppColors.dominantPurple,
-                            fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
+                            fontSize: ResponsiveHelper.getResponsiveFontSize(
+                              context,
+                              14,
+                            ),
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 32),
-                
+
                 // Complete signup button
                 ElevatedButton(
                   onPressed: _isLoading ? null : _completeSignup,
@@ -267,13 +281,18 @@ class _GoogleSignupCompletionScreenState extends State<GoogleSignupCompletionScr
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           ),
                         )
                       : Text(
                           'Complete Signup',
                           style: TextStyle(
-                            fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+                            fontSize: ResponsiveHelper.getResponsiveFontSize(
+                              context,
+                              16,
+                            ),
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -286,4 +305,4 @@ class _GoogleSignupCompletionScreenState extends State<GoogleSignupCompletionScr
       ),
     );
   }
-} 
+}

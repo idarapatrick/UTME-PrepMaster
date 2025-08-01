@@ -22,11 +22,11 @@ class _DeveloperPanelScreenState extends State<DeveloperPanelScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final stats = await CbtQuestionService.getQuestionStats();
       final subjects = await CbtQuestionService.getAvailableSubjects();
-      
+
       setState(() {
         _questionStats = stats;
         _availableSubjects = subjects;
@@ -46,10 +46,7 @@ class _DeveloperPanelScreenState extends State<DeveloperPanelScreen> {
         backgroundColor: AppColors.dominantPurple,
         foregroundColor: Colors.white,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadData,
-          ),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData),
         ],
       ),
       body: _isLoading
@@ -68,9 +65,8 @@ class _DeveloperPanelScreenState extends State<DeveloperPanelScreen> {
                         children: [
                           Text(
                             'Question Statistics',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 16),
                           _buildStatsGrid(),
@@ -90,9 +86,8 @@ class _DeveloperPanelScreenState extends State<DeveloperPanelScreen> {
                         children: [
                           Text(
                             'Quick Actions',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 16),
                           _buildQuickActions(),
@@ -112,9 +107,8 @@ class _DeveloperPanelScreenState extends State<DeveloperPanelScreen> {
                         children: [
                           Text(
                             'Subject Management',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 16),
                           _buildSubjectList(),
@@ -146,7 +140,7 @@ class _DeveloperPanelScreenState extends State<DeveloperPanelScreen> {
       itemBuilder: (context, index) {
         final subject = _questionStats.keys.elementAt(index);
         final stats = _questionStats[subject];
-        
+
         return Card(
           color: AppColors.dominantPurple.withValues(alpha: 0.1),
           child: Padding(
@@ -177,7 +171,10 @@ class _DeveloperPanelScreenState extends State<DeveloperPanelScreen> {
     return Column(
       children: [
         ListTile(
-          leading: const Icon(Icons.upload_file, color: AppColors.dominantPurple),
+          leading: const Icon(
+            Icons.upload_file,
+            color: AppColors.dominantPurple,
+          ),
           title: const Text('Upload Questions'),
           subtitle: const Text('Upload new CBT questions from PDF'),
           onTap: () {
@@ -251,7 +248,9 @@ class _DeveloperPanelScreenState extends State<DeveloperPanelScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Verify Questions'),
-        content: const Text('This feature will be implemented to review and verify pending questions.'),
+        content: const Text(
+          'This feature will be implemented to review and verify pending questions.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -283,7 +282,9 @@ class _DeveloperPanelScreenState extends State<DeveloperPanelScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Question Analytics'),
-        content: const Text('View detailed analytics about question usage and performance.'),
+        content: const Text(
+          'View detailed analytics about question usage and performance.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -304,7 +305,9 @@ class _DeveloperPanelScreenState extends State<DeveloperPanelScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Delete $subject'),
-        content: Text('Are you sure you want to delete all questions for $subject? This action cannot be undone.'),
+        content: Text(
+          'Are you sure you want to delete all questions for $subject? This action cannot be undone.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -325,4 +328,4 @@ class _DeveloperPanelScreenState extends State<DeveloperPanelScreen> {
       ),
     );
   }
-} 
+}

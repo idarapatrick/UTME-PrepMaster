@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 
 class SearchableDropdown extends StatefulWidget {
   final List<String> options;
@@ -41,14 +42,16 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
   void _filterOptions(String query) {
     setState(() {
       filtered = widget.options
-          .where((option) =>
-              option.toLowerCase().contains(query.toLowerCase()))
+          .where((option) => option.toLowerCase().contains(query.toLowerCase()))
           .toList();
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+
     return FormField<String>(
       initialValue: widget.value,
       validator: widget.validator,
@@ -66,12 +69,20 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
                 });
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 16,
+                ),
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: state.hasError ? Colors.red : Colors.grey.shade300,
+                    color: state.hasError
+                        ? Colors.red
+                        : (isDark
+                              ? AppColors.darkBorderMedium
+                              : AppColors.borderMedium),
                   ),
                   borderRadius: BorderRadius.circular(8),
+                  color: isDark ? const Color(0xFF2A2D3E) : Colors.white,
                 ),
                 child: Row(
                   children: [
@@ -79,12 +90,19 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
                       child: Text(
                         widget.value ?? widget.label,
                         style: TextStyle(
-                          color: widget.value == null ? Colors.grey : Colors.black,
+                          color: widget.value == null
+                              ? (isDark
+                                    ? AppColors.darkTextLight
+                                    : AppColors.textLight)
+                              : (isDark ? Colors.white : Colors.black),
                         ),
                       ),
                     ),
                     Icon(
-                      isOpen ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                      isOpen
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
+                      color: isDark ? Colors.white : Colors.black,
                     ),
                   ],
                 ),
@@ -94,9 +112,13 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
               Container(
                 margin: const EdgeInsets.only(top: 4),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
+                  border: Border.all(
+                    color: isDark
+                        ? AppColors.darkBorderMedium
+                        : AppColors.borderMedium,
+                  ),
                   borderRadius: BorderRadius.circular(8),
-                  color: Colors.white,
+                  color: isDark ? const Color(0xFF2A2D3E) : Colors.white,
                 ),
                 child: Column(
                   children: [
@@ -104,9 +126,22 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
                       padding: const EdgeInsets.all(8.0),
                       child: TextField(
                         onChanged: _filterOptions,
-                        decoration: const InputDecoration(
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black,
+                        ),
+                        decoration: InputDecoration(
                           hintText: 'Search...',
-                          prefixIcon: Icon(Icons.search),
+                          hintStyle: TextStyle(
+                            color: isDark
+                                ? AppColors.darkTextLight
+                                : AppColors.textLight,
+                          ),
+                          prefixIcon: Icon(
+                            Icons.search,
+                            color: isDark
+                                ? AppColors.darkTextLight
+                                : AppColors.textLight,
+                          ),
                           border: InputBorder.none,
                         ),
                       ),
@@ -119,7 +154,12 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
                         itemBuilder: (context, index) {
                           final option = filtered[index];
                           return ListTile(
-                            title: Text(option),
+                            title: Text(
+                              option,
+                              style: TextStyle(
+                                color: isDark ? Colors.white : Colors.black,
+                              ),
+                            ),
                             onTap: () {
                               widget.onChanged(option);
                               state.didChange(option);
@@ -147,4 +187,4 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
       },
     );
   }
-} 
+}

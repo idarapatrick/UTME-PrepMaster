@@ -184,15 +184,11 @@ class AppTheme {
       cardColor: AppColors.darkCardPrimary,
       dialogTheme: DialogThemeData(
         backgroundColor: AppColors.darkCardPrimary,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       popupMenuTheme: PopupMenuThemeData(
         color: AppColors.darkCardPrimary,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.darkCardSecondary,

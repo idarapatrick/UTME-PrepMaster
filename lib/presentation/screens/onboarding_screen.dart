@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_colors.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -10,6 +11,15 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
+  Future<void> _markOnboardingComplete() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('hasSeenOnboarding', true);
+    } catch (e) {
+      // Ignore errors, continue with navigation
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,9 +44,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   color: AppColors.dominantPurple,
                 ),
               ),
-              
+
               const SizedBox(height: 20),
-              
+
               // App Title
               Text(
                 'UTME PrepMaster',
@@ -46,28 +56,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   color: AppColors.dominantPurple,
                 ),
               ),
-              
+
               const SizedBox(height: 8),
-              
+
               Text(
                 'Your smart study companion for UTME success!',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: AppColors.textSecondary,
-                ),
+                style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
               ),
-              
+
               const SizedBox(height: 40),
-              
+
               // Simple CTA Button
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     HapticFeedback.lightImpact();
-                    Navigator.pushReplacementNamed(context, '/auth');
+                    await _markOnboardingComplete();
+                    if (mounted) {
+                      Navigator.pushReplacementNamed(context, '/auth');
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.dominantPurple,

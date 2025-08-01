@@ -33,7 +33,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             .collection('users')
             .doc(user.uid)
             .get();
-        
+
         if (userDoc.exists) {
           setState(() {
             _userRole = userDoc.data()?['role'] ?? 'user';
@@ -47,11 +47,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final stats = await CbtQuestionService.getQuestionStats();
       final subjects = await CbtQuestionService.getAvailableSubjects();
-      
+
       setState(() {
         _questionStats = stats;
         _availableSubjects = subjects;
@@ -71,14 +71,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         backgroundColor: AppColors.dominantPurple,
         foregroundColor: Colors.white,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadData,
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _signOut,
-          ),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData),
+          IconButton(icon: const Icon(Icons.logout), onPressed: _signOut),
         ],
       ),
       body: _isLoading
@@ -111,9 +105,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                                   children: [
                                     Text(
                                       'Welcome, Admin!',
-                                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleLarge
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                     ),
                                     Text(
                                       'Role: ${_userRole ?? 'Unknown'}',
@@ -142,9 +139,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         children: [
                           Text(
                             'System Overview',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 16),
                           _buildQuickStats(),
@@ -164,9 +160,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         children: [
                           Text(
                             'Quick Actions',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 16),
                           _buildQuickActions(),
@@ -186,9 +181,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         children: [
                           Text(
                             'Question Management',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 16),
                           _buildSubjectManagement(),
@@ -245,7 +239,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -267,10 +266,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ),
           Text(
             title,
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 12,
-            ),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
             textAlign: TextAlign.center,
           ),
         ],
@@ -282,7 +278,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return Column(
       children: [
         ListTile(
-          leading: const Icon(Icons.upload_file, color: AppColors.dominantPurple),
+          leading: const Icon(
+            Icons.upload_file,
+            color: AppColors.dominantPurple,
+          ),
           title: const Text('Upload Questions'),
           subtitle: const Text('Upload new CBT questions from PDF'),
           trailing: const Icon(Icons.arrow_forward_ios),
@@ -323,9 +322,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Widget _buildSubjectManagement() {
     if (_availableSubjects.isEmpty) {
-      return const Center(
-        child: Text('No subjects available'),
-      );
+      return const Center(child: Text('No subjects available'));
     }
 
     return Column(
@@ -369,7 +366,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Verify Questions'),
-        content: const Text('This feature will be implemented to review and verify pending questions.'),
+        content: const Text(
+          'This feature will be implemented to review and verify pending questions.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -385,7 +384,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Analytics'),
-        content: const Text('View detailed analytics about question usage and performance.'),
+        content: const Text(
+          'View detailed analytics about question usage and performance.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -401,7 +402,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('System Settings'),
-        content: const Text('Configure CBT test settings and system parameters.'),
+        content: const Text(
+          'Configure CBT test settings and system parameters.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -421,7 +424,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Delete $subject'),
-        content: Text('Are you sure you want to delete all questions for $subject? This action cannot be undone.'),
+        content: Text(
+          'Are you sure you want to delete all questions for $subject? This action cannot be undone.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -446,11 +451,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     try {
       // Sign out from Firebase Auth
       await FirebaseAuth.instance.signOut();
-      
+
       // Clear all session data from SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
-      
+
       // Navigate to admin auth screen
       if (mounted) {
         Navigator.of(context).pushNamedAndRemoveUntil(
@@ -462,11 +467,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       // Error signing out
       // Even if there's an error, try to navigate to admin auth
       if (mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          '/admin/auth',
-          (route) => false,
-        );
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil('/admin/auth', (route) => false);
       }
     }
   }
-} 
+}

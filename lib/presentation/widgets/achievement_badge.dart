@@ -4,7 +4,7 @@ import '../theme/app_colors.dart';
 class AchievementBadge extends StatelessWidget {
   final String achievement;
   final double size;
-  
+
   const AchievementBadge({
     super.key,
     required this.achievement,
@@ -14,7 +14,7 @@ class AchievementBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final achievementData = _getAchievementData(achievement);
-    
+
     return Tooltip(
       message: achievement.replaceAll('-', ' ').toTitleCase(),
       child: Container(
@@ -56,9 +56,11 @@ class AchievementBadge extends StatelessWidget {
 
 extension StringExtension on String {
   String toTitleCase() {
-    return split(' ').map((word) {
-      if (word.isEmpty) return word;
-      return word[0].toUpperCase() + word.substring(1).toLowerCase();
-    }).join(' ');
+    return split(' ')
+        .map((word) {
+          if (word.isEmpty) return word;
+          return word[0].toUpperCase() + word.substring(1).toLowerCase();
+        })
+        .join(' ');
   }
 }

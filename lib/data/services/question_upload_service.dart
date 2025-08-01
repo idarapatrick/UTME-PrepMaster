@@ -18,7 +18,7 @@ class QuestionUploadService {
       if (user == null) throw Exception('User not authenticated');
 
       final batch = _firestore.batch();
-      
+
       for (int i = 0; i < questions.length; i++) {
         final question = questions[i];
         final questionRef = _firestore
@@ -82,7 +82,7 @@ class QuestionUploadService {
     try {
       // Parse the PDF text into questions
       final questions = _parseQuestionsFromText(pdfText, subject);
-      
+
       // Upload the parsed questions
       await uploadSubjectQuestions(
         subject: subject,
@@ -97,34 +97,39 @@ class QuestionUploadService {
   }
 
   // Parse questions from PDF text (basic implementation)
-  static List<TestQuestion> _parseQuestionsFromText(String text, String subject) {
+  static List<TestQuestion> _parseQuestionsFromText(
+    String text,
+    String subject,
+  ) {
     final questions = <TestQuestion>[];
     final lines = text.split('\n');
-    
+
     String currentQuestion = '';
     List<String> currentOptions = [];
     int correctAnswer = 0;
     String explanation = '';
-    
+
     for (int i = 0; i < lines.length; i++) {
       final line = lines[i].trim();
-      
+
       if (line.isEmpty) continue;
-      
+
       // Detect question pattern (starts with number)
       if (RegExp(r'^\d+\.').hasMatch(line)) {
         // Save previous question if exists
         if (currentQuestion.isNotEmpty) {
-          questions.add(TestQuestion(
-            id: 'q${questions.length + 1}',
-            question: currentQuestion,
-            options: currentOptions,
-            correctAnswer: correctAnswer,
-            explanation: explanation,
-            subject: subject,
-          ));
+          questions.add(
+            TestQuestion(
+              id: 'q${questions.length + 1}',
+              question: currentQuestion,
+              options: currentOptions,
+              correctAnswer: correctAnswer,
+              explanation: explanation,
+              subject: subject,
+            ),
+          );
         }
-        
+
         // Start new question
         currentQuestion = line.replaceFirst(RegExp(r'^\d+\.\s*'), '');
         currentOptions = [];
@@ -135,31 +140,33 @@ class QuestionUploadService {
       else if (RegExp(r'^[A-D]\)').hasMatch(line)) {
         final option = line.replaceFirst(RegExp(r'^[A-D]\)\s*'), '');
         currentOptions.add(option);
-        
+
         // Assume the correct answer is marked somehow (you'll need to adjust this)
         if (line.contains('*') || line.contains('✓')) {
           correctAnswer = currentOptions.length - 1;
         }
       }
       // Detect explanation
-      else if (line.toLowerCase().contains('explanation') || 
-               line.toLowerCase().contains('answer')) {
+      else if (line.toLowerCase().contains('explanation') ||
+          line.toLowerCase().contains('answer')) {
         explanation = line;
       }
     }
-    
+
     // Add the last question
     if (currentQuestion.isNotEmpty) {
-      questions.add(TestQuestion(
-        id: 'q${questions.length + 1}',
-        question: currentQuestion,
-        options: currentOptions,
-        correctAnswer: correctAnswer,
-        explanation: explanation,
-        subject: subject,
-      ));
+      questions.add(
+        TestQuestion(
+          id: 'q${questions.length + 1}',
+          question: currentQuestion,
+          options: currentOptions,
+          correctAnswer: correctAnswer,
+          explanation: explanation,
+          subject: subject,
+        ),
+      );
     }
-    
+
     return questions;
   }
 
@@ -175,7 +182,9 @@ class QuestionUploadService {
   }
 
   // Get questions for a specific subject
-  static Future<List<TestQuestion>> getQuestionsForSubject(String subject) async {
+  static Future<List<TestQuestion>> getQuestionsForSubject(
+    String subject,
+  ) async {
     try {
       final snapshot = await _firestore
           .collection('cbt_questions')
@@ -206,8 +215,8 @@ class QuestionUploadService {
 
   // Get questions by difficulty
   static Future<List<TestQuestion>> getQuestionsByDifficulty(
-    String subject, 
-    String difficulty
+    String subject,
+    String difficulty,
   ) async {
     try {
       final snapshot = await _firestore
@@ -259,13 +268,15 @@ class QuestionUploadService {
           .get();
 
       final batch = _firestore.batch();
-      
+
       for (final doc in questionsSnapshot.docs) {
         batch.delete(doc.reference);
       }
 
       // Delete subject document
-      batch.delete(_firestore.collection('cbt_questions').doc(subject.toLowerCase()));
+      batch.delete(
+        _firestore.collection('cbt_questions').doc(subject.toLowerCase()),
+      );
 
       await batch.commit();
       // Successfully deleted all questions for subject
@@ -274,4 +285,4 @@ class QuestionUploadService {
       rethrow;
     }
   }
-} 
+}

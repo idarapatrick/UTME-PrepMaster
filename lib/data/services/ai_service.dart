@@ -8,12 +8,8 @@ class AIService {
     try {
       final response = await http.post(
         Uri.parse(_baseUrl),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'message': message,
-        }),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'message': message}),
       );
 
       if (response.statusCode == 200) {

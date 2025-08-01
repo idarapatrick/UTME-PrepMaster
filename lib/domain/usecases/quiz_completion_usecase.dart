@@ -16,21 +16,25 @@ class QuizCompletionUseCase {
   }) async {
     // Calculate base XP
     int baseXp = 20; // Base XP for completing a quiz
-    
+
     // Add XP for correct answers (5 XP per correct answer)
     int accuracyXp = correctAnswers * 5;
-    
+
     // Add XP for speed (bonus for completing quickly)
     int speedXp = _calculateSpeedBonus(timeSpentMinutes, totalQuestions);
-    
+
     // Add XP for accuracy bonus
-    int accuracyBonusXp = _calculateAccuracyBonus(correctAnswers, totalQuestions);
-    
+    int accuracyBonusXp = _calculateAccuracyBonus(
+      correctAnswers,
+      totalQuestions,
+    );
+
     // Add subject-specific bonus XP
     int subjectBonusXp = bonusXp[subjectId] ?? 0;
-    
-    int totalXp = baseXp + accuracyXp + speedXp + accuracyBonusXp + subjectBonusXp;
-    
+
+    int totalXp =
+        baseXp + accuracyXp + speedXp + accuracyBonusXp + subjectBonusXp;
+
     // Update user stats
     await _updateUserStatsAfterQuiz(
       userId: userId,
@@ -40,10 +44,10 @@ class QuizCompletionUseCase {
       timeSpentMinutes: timeSpentMinutes,
       xpEarned: totalXp,
     );
-    
+
     // Check for streak updates
     await _userStatsRepository.checkAndUpdateStreak(userId);
-    
+
     // Check for new badges
     await _userStatsRepository.checkAndAwardBadges(userId);
   }
@@ -53,7 +57,7 @@ class QuizCompletionUseCase {
     // Less than 1 minute per question = 10 XP bonus
     // Less than 30 seconds per question = 20 XP bonus
     double minutesPerQuestion = timeSpentMinutes / totalQuestions;
-    
+
     if (minutesPerQuestion < 0.5) return 20; // 30 seconds per question
     if (minutesPerQuestion < 1.0) return 10; // 1 minute per question
     return 0;
@@ -61,7 +65,7 @@ class QuizCompletionUseCase {
 
   int _calculateAccuracyBonus(int correctAnswers, int totalQuestions) {
     double accuracy = correctAnswers / totalQuestions;
-    
+
     if (accuracy >= 0.9) return 30; // 90%+ accuracy = 30 XP bonus
     if (accuracy >= 0.8) return 20; // 80%+ accuracy = 20 XP bonus
     if (accuracy >= 0.7) return 10; // 70%+ accuracy = 10 XP bonus
@@ -77,7 +81,7 @@ class QuizCompletionUseCase {
     required int xpEarned,
   }) async {
     final currentStats = await _userStatsRepository.getUserStats(userId);
-    
+
     if (currentStats == null) {
       // Create new user stats
       final newStats = UserStats(
@@ -102,14 +106,19 @@ class QuizCompletionUseCase {
     } else {
       // Update existing stats
       final updatedSubjectXp = Map<String, int>.from(currentStats.subjectXp);
-      final updatedSubjectStudyTime = Map<String, int>.from(currentStats.subjectStudyTime);
-      
-      updatedSubjectXp[subjectId] = (updatedSubjectXp[subjectId] ?? 0) + xpEarned;
-      updatedSubjectStudyTime[subjectId] = (updatedSubjectStudyTime[subjectId] ?? 0) + timeSpentMinutes;
-      
+      final updatedSubjectStudyTime = Map<String, int>.from(
+        currentStats.subjectStudyTime,
+      );
+
+      updatedSubjectXp[subjectId] =
+          (updatedSubjectXp[subjectId] ?? 0) + xpEarned;
+      updatedSubjectStudyTime[subjectId] =
+          (updatedSubjectStudyTime[subjectId] ?? 0) + timeSpentMinutes;
+
       final updatedStats = currentStats.copyWith(
         totalXp: currentStats.totalXp + xpEarned,
-        totalStudyTimeMinutes: currentStats.totalStudyTimeMinutes + timeSpentMinutes,
+        totalStudyTimeMinutes:
+            currentStats.totalStudyTimeMinutes + timeSpentMinutes,
         quizzesCompleted: currentStats.quizzesCompleted + 1,
         questionsAnswered: currentStats.questionsAnswered + totalQuestions,
         correctAnswers: currentStats.correctAnswers + correctAnswers,
@@ -118,8 +127,8 @@ class QuizCompletionUseCase {
         subjectStudyTime: updatedSubjectStudyTime,
         updatedAt: DateTime.now(),
       );
-      
+
       await _userStatsRepository.updateUserStats(updatedStats);
     }
   }
-} 
+}

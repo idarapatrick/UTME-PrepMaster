@@ -19,6 +19,7 @@ import '../../data/questions/commerce.dart';
 import '../../data/questions/christian_studies.dart';
 import '../../data/questions/islamic_studies.dart';
 import '../screens/test_results_screen.dart'; // Added import for TestResultsScreen
+import '../widgets/leaderboard_notification.dart'; // Added import for LeaderboardNotification
 
 class MockTestScreen extends StatefulWidget {
   const MockTestScreen({super.key});
@@ -38,7 +39,9 @@ class _MockTestScreenState extends State<MockTestScreen> {
 
   // CBT Test State
   bool _showSubjectSelection = false;
-  final List<String> _selectedSubjects = ['English']; // English is always selected
+  final List<String> _selectedSubjects = [
+    'English',
+  ]; // English is always selected
   List<String> _availableSubjects = [];
   List<TestQuestion> _questions = [];
   bool _isCbt = false; // Added to track if it's a CBT test
@@ -53,7 +56,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
 
   void _loadAvailableSubjects() {
     final subjects = <String>[];
-    
+
     // Check which subjects have questions
     if (mathematicsQuestions.isNotEmpty) subjects.add('Mathematics');
     if (physicsQuestions.isNotEmpty) subjects.add('Physics');
@@ -66,7 +69,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
     if (commerceQuestions.isNotEmpty) subjects.add('Commerce');
     if (crsQuestions.isNotEmpty) subjects.add('Christian Religious Studies');
     if (islamicStudiesQuestions.isNotEmpty) subjects.add('Islamic Studies');
-    
+
     setState(() {
       _availableSubjects = subjects;
     });
@@ -121,14 +124,16 @@ class _MockTestScreenState extends State<MockTestScreen> {
 
   void _toggleSubject(String subject) {
     if (subject == 'English') return; // English cannot be unselected
-    
+
     setState(() {
       if (_selectedSubjects.contains(subject)) {
-        if (_selectedSubjects.length > 1) { // Keep at least English
+        if (_selectedSubjects.length > 1) {
+          // Keep at least English
           _selectedSubjects.remove(subject);
         }
       } else {
-        if (_selectedSubjects.length < 4) { // Max 4 subjects (English + 3 others)
+        if (_selectedSubjects.length < 4) {
+          // Max 4 subjects (English + 3 others)
           _selectedSubjects.add(subject);
         }
       }
@@ -139,7 +144,9 @@ class _MockTestScreenState extends State<MockTestScreen> {
     if (_selectedSubjects.length != 4) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please select exactly 3 additional subjects (English is already selected)'),
+          content: Text(
+            'Please select exactly 3 additional subjects (English is already selected)',
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -148,7 +155,10 @@ class _MockTestScreenState extends State<MockTestScreen> {
 
     // Award 20 XP for starting CBT test
     try {
-      final userStatsProvider = Provider.of<UserStatsProvider>(context, listen: false);
+      final userStatsProvider = Provider.of<UserStatsProvider>(
+        context,
+        listen: false,
+      );
       for (final subject in _selectedSubjects) {
         await userStatsProvider.startCbtTest(subject);
       }
@@ -174,38 +184,41 @@ class _MockTestScreenState extends State<MockTestScreen> {
     final allQuestions = <TestQuestion>[];
     final subjectQuestionRanges = <String, List<int>>{};
     int currentIndex = 0;
-    
+
     for (final subject in _selectedSubjects) {
       final subjectQuestions = _getLocalQuestionsForSubject(subject);
       if (subjectQuestions.isNotEmpty) {
         // Shuffle questions and take required number
         final shuffled = List<TestQuestion>.from(subjectQuestions);
         shuffled.shuffle();
-        
+
         int questionCount;
         if (subject == 'English') {
           questionCount = 60; // Take 60 questions for English
         } else {
           questionCount = 40; // Take 40 questions for other subjects
         }
-        
+
         final selectedQuestions = shuffled.take(questionCount).toList();
         allQuestions.addAll(selectedQuestions);
-        
+
         // Store the range of indices for this subject
-        final subjectIndices = List<int>.generate(questionCount, (i) => currentIndex + i);
+        final subjectIndices = List<int>.generate(
+          questionCount,
+          (i) => currentIndex + i,
+        );
         subjectQuestionRanges[subject] = subjectIndices;
         currentIndex += questionCount;
       }
     }
-    
+
     setState(() {
       _questions = allQuestions;
       _selectedAnswers = List.filled(allQuestions.length, '');
       _answeredQuestions = List.filled(allQuestions.length, false);
       _subjectQuestionRanges = subjectQuestionRanges;
     });
-    
+
     _startTimer();
   }
 
@@ -255,7 +268,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
 
   void _selectAnswer(String answer) {
     if (!_isTestInProgress) return;
-    
+
     setState(() {
       _selectedAnswers[_currentQuestionIndex] = answer;
       _answeredQuestions[_currentQuestionIndex] = true;
@@ -293,7 +306,9 @@ class _MockTestScreenState extends State<MockTestScreen> {
     final currentSubject = _getCurrentSubject();
     if (currentSubject.isNotEmpty) {
       final subjectQuestions = _subjectQuestionRanges[currentSubject]!;
-      final currentIndexInSubject = subjectQuestions.indexOf(_currentQuestionIndex);
+      final currentIndexInSubject = subjectQuestions.indexOf(
+        _currentQuestionIndex,
+      );
       return currentIndexInSubject + 1;
     }
     return _currentQuestionIndex + 1;
@@ -313,8 +328,10 @@ class _MockTestScreenState extends State<MockTestScreen> {
     final currentSubject = _getCurrentSubject();
     if (currentSubject.isNotEmpty) {
       final subjectQuestions = _subjectQuestionRanges[currentSubject]!;
-      final currentIndexInSubject = subjectQuestions.indexOf(_currentQuestionIndex);
-      
+      final currentIndexInSubject = subjectQuestions.indexOf(
+        _currentQuestionIndex,
+      );
+
       if (currentIndexInSubject < subjectQuestions.length - 1) {
         // Move to next question in same subject
         setState(() {
@@ -340,8 +357,10 @@ class _MockTestScreenState extends State<MockTestScreen> {
     final currentSubject = _getCurrentSubject();
     if (currentSubject.isNotEmpty) {
       final subjectQuestions = _subjectQuestionRanges[currentSubject]!;
-      final currentIndexInSubject = subjectQuestions.indexOf(_currentQuestionIndex);
-      
+      final currentIndexInSubject = subjectQuestions.indexOf(
+        _currentQuestionIndex,
+      );
+
       if (currentIndexInSubject > 0) {
         // Move to previous question in same subject
         setState(() {
@@ -353,7 +372,8 @@ class _MockTestScreenState extends State<MockTestScreen> {
         final currentSubjectIndex = subjects.indexOf(currentSubject);
         if (currentSubjectIndex > 0) {
           final previousSubject = subjects[currentSubjectIndex - 1];
-          final previousSubjectQuestions = _subjectQuestionRanges[previousSubject]!;
+          final previousSubjectQuestions =
+              _subjectQuestionRanges[previousSubject]!;
           setState(() {
             _currentQuestionIndex = previousSubjectQuestions.last;
           });
@@ -369,7 +389,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
 
     final correctAnswers = _calculateCorrectAnswers();
     final isCbt = _currentSubject.isEmpty; // If no specific subject, it's CBT
-    
+
     double score;
     if (isCbt) {
       // CBT: graded over 400
@@ -381,16 +401,37 @@ class _MockTestScreenState extends State<MockTestScreen> {
 
     // Save results
     final user = FirebaseAuth.instance.currentUser;
+    Map<String, dynamic>? leaderboardResult;
     if (user != null) {
       try {
         if (isCbt) {
-          await FirestoreService.saveCbtResult(
+          print('Saving CBT result for user: ${user.uid}'); // Debug print
+
+          // Save to leaderboard
+          leaderboardResult = await FirestoreService.saveCbtResult(
             user.uid,
             'cbt_test',
             score.toInt(),
             correctAnswers,
             _questions.length,
             120 * 60 - _timeRemaining,
+          );
+          print(
+            'Leaderboard result received: $leaderboardResult',
+          ); // Debug print
+
+          // Update user stats with new comprehensive tracking
+          final userStatsProvider = Provider.of<UserStatsProvider>(
+            context,
+            listen: false,
+          );
+          await userStatsProvider.completeCbtTest(
+            subjectId: _currentSubject,
+            totalQuestions: _questions.length,
+            correctAnswers: correctAnswers,
+            timeSpentMinutes:
+                (120 * 60 - _timeRemaining) ~/ 60, // Convert seconds to minutes
+            score: score.toInt(),
           );
         } else {
           await FirestoreService.saveQuizResult(
@@ -400,29 +441,49 @@ class _MockTestScreenState extends State<MockTestScreen> {
             _questions.length,
             Duration(seconds: 20 * 60 - _timeRemaining),
           );
+
+          // Update user stats for quiz completion
+          final userStatsProvider = Provider.of<UserStatsProvider>(
+            context,
+            listen: false,
+          );
+          await userStatsProvider.completeQuizWithNewSystem(
+            subjectId: _currentSubject,
+            totalQuestions: _questions.length,
+            correctAnswers: correctAnswers,
+            timeSpentMinutes:
+                (20 * 60 - _timeRemaining) ~/ 60, // Convert seconds to minutes
+          );
         }
-          } catch (e) {
-      // Error saving results
-    }
+      } catch (e) {
+        print('Error saving results: $e'); // Debug print
+        // Error saving results
+      }
     }
 
     // Show results
     if (mounted) {
-      _showResults(correctAnswers, score, isCbt);
+      _showResults(correctAnswers, score, isCbt, leaderboardResult);
     }
   }
 
   int _calculateCorrectAnswers() {
     int correct = 0;
     for (int i = 0; i < _questions.length; i++) {
-      if (_selectedAnswers[i] == _questions[i].options[_questions[i].correctAnswer]) {
+      if (_selectedAnswers[i] ==
+          _questions[i].options[_questions[i].correctAnswer]) {
         correct++;
       }
     }
     return correct;
   }
 
-  void _showResults(int correctAnswers, double score, bool isCbt) async {
+  void _showResults(
+    int correctAnswers,
+    double score,
+    bool isCbt,
+    Map<String, dynamic>? leaderboardResult,
+  ) async {
     // Show grading screen first
     showDialog(
       context: context,
@@ -450,10 +511,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
               const SizedBox(height: 8),
               const Text(
                 'Please wait while we calculate your results',
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Colors.white70, fontSize: 14),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -463,11 +521,30 @@ class _MockTestScreenState extends State<MockTestScreen> {
     );
 
     // Simulate grading time (2-4 seconds)
-    await Future.delayed(Duration(seconds: 2 + (DateTime.now().millisecond % 3)));
+    await Future.delayed(
+      Duration(seconds: 2 + (DateTime.now().millisecond % 3)),
+    );
 
     // Close grading dialog
     if (mounted) {
       Navigator.of(context).pop();
+    }
+
+    // Show leaderboard notification if user made it to top 20
+    if (mounted &&
+        leaderboardResult != null &&
+        leaderboardResult['inTop20'] == true) {
+      print(
+        'Showing leaderboard notification for rank: ${leaderboardResult['rank']}',
+      ); // Debug print
+      _showLeaderboardNotification(
+        leaderboardResult['rank'] as int,
+        leaderboardResult['score'] as int,
+      );
+    } else {
+      print(
+        'No leaderboard notification - result: $leaderboardResult',
+      ); // Debug print
     }
 
     // Navigate to results screen
@@ -481,7 +558,9 @@ class _MockTestScreenState extends State<MockTestScreen> {
             score: score,
             isCbt: isCbt,
             selectedSubjects: _selectedSubjects,
-            timeElapsed: isCbt ? 120 * 60 - _timeRemaining : 20 * 60 - _timeRemaining,
+            timeElapsed: isCbt
+                ? 120 * 60 - _timeRemaining
+                : 20 * 60 - _timeRemaining,
             subjectScores: _calculateSubjectScores(),
           ),
         ),
@@ -489,17 +568,34 @@ class _MockTestScreenState extends State<MockTestScreen> {
     }
   }
 
+  void _showLeaderboardNotification(int rank, int score) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: LeaderboardNotification(
+          rank: rank,
+          score: score,
+          onDismiss: () {
+            Navigator.of(context).pop();
+          },
+        ),
+      ),
+    );
+  }
+
   Map<String, double> _calculateSubjectScores() {
     if (!_isCbt) return {};
-    
+
     final Map<String, double> subjectScores = {};
     final Map<String, int> subjectCorrect = {};
     final Map<String, int> subjectTotal = {};
-    
+
     for (int i = 0; i < _questions.length; i++) {
       final question = _questions[i];
       final subject = _getQuestionSubject(i);
-      
+
       if (subject != null) {
         subjectTotal[subject] = (subjectTotal[subject] ?? 0) + 1;
         if (_selectedAnswers[i] == question.options[question.correctAnswer]) {
@@ -507,22 +603,25 @@ class _MockTestScreenState extends State<MockTestScreen> {
         }
       }
     }
-    
+
     for (final subject in subjectTotal.keys) {
       final correct = subjectCorrect[subject] ?? 0;
       final total = subjectTotal[subject] ?? 1;
       subjectScores[subject] = (correct / total) * 100;
     }
-    
+
     return subjectScores;
   }
 
   String? _getQuestionSubject(int questionIndex) {
     // This is a simplified mapping - in a real app, questions would have subject tags
     if (questionIndex < 60) return 'English';
-    if (questionIndex < 100) return _selectedSubjects.length > 1 ? _selectedSubjects[1] : null;
-    if (questionIndex < 140) return _selectedSubjects.length > 2 ? _selectedSubjects[2] : null;
-    if (questionIndex < 180) return _selectedSubjects.length > 3 ? _selectedSubjects[3] : null;
+    if (questionIndex < 100)
+      return _selectedSubjects.length > 1 ? _selectedSubjects[1] : null;
+    if (questionIndex < 140)
+      return _selectedSubjects.length > 2 ? _selectedSubjects[2] : null;
+    if (questionIndex < 180)
+      return _selectedSubjects.length > 3 ? _selectedSubjects[3] : null;
     return null;
   }
 
@@ -565,43 +664,36 @@ class _MockTestScreenState extends State<MockTestScreen> {
           children: [
             const Text(
               'Available Tests',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
+
             // CBT Test Option
             Card(
               margin: const EdgeInsets.only(bottom: 16),
               child: ListTile(
                 title: const Text('CBT Test'),
-                subtitle: const Text('180 questions (60 English + 40 each from 3 subjects), 120 minutes, graded over 400'),
+                subtitle: const Text(
+                  '180 questions (60 English + 40 each from 3 subjects), 120 minutes, graded over 400',
+                ),
                 trailing: ElevatedButton(
                   onPressed: _showCbtSubjectSelection,
                   child: const Text('Start CBT'),
                 ),
               ),
             ),
-            
+
             const Text(
               'Subject Quizzes',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             const Text(
               '10 random questions, 20 minutes, graded over 20',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 16),
-            
+
             Expanded(
               child: ListView.builder(
                 itemCount: _availableSubjects.length,
@@ -649,13 +741,10 @@ class _MockTestScreenState extends State<MockTestScreen> {
           children: [
             const Text(
               'Select 3 additional subjects (English is already selected)',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
+
             // Selected subjects
             Wrap(
               spacing: 8,
@@ -663,23 +752,22 @@ class _MockTestScreenState extends State<MockTestScreen> {
                 final isEnglish = subject == 'English';
                 return Chip(
                   label: Text(subject),
-                  backgroundColor: isEnglish ? Colors.grey : AppColors.dominantPurple,
+                  backgroundColor: isEnglish
+                      ? Colors.grey
+                      : AppColors.dominantPurple,
                   deleteIcon: isEnglish ? null : const Icon(Icons.close),
                   onDeleted: isEnglish ? null : () => _toggleSubject(subject),
                 );
               }).toList(),
             ),
-            
+
             const SizedBox(height: 24),
             const Text(
               'Available Subjects',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
+
             Expanded(
               child: ListView.builder(
                 itemCount: _availableSubjects.length,
@@ -687,24 +775,24 @@ class _MockTestScreenState extends State<MockTestScreen> {
                   final subject = _availableSubjects[index];
                   final isSelected = _selectedSubjects.contains(subject);
                   final isEnglish = subject == 'English';
-                  
+
                   return Card(
                     margin: const EdgeInsets.only(bottom: 8),
                     child: ListTile(
                       title: Text(subject),
                       subtitle: Text(isEnglish ? 'Compulsory' : 'Optional'),
-                      trailing: isEnglish 
-                        ? const Icon(Icons.lock, color: Colors.grey)
-                        : Checkbox(
-                            value: isSelected,
-                            onChanged: (value) => _toggleSubject(subject),
-                          ),
+                      trailing: isEnglish
+                          ? const Icon(Icons.lock, color: Colors.grey)
+                          : Checkbox(
+                              value: isSelected,
+                              onChanged: (value) => _toggleSubject(subject),
+                            ),
                     ),
                   );
                 },
               ),
             ),
-            
+
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -725,11 +813,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
 
   Widget _buildTestInterface() {
     if (_questions.isEmpty) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final currentQuestion = _questions[_currentQuestionIndex];
@@ -748,7 +832,9 @@ class _MockTestScreenState extends State<MockTestScreen> {
               context: context,
               builder: (context) => AlertDialog(
                 title: const Text('Exit Test?'),
-                content: const Text('Are you sure you want to exit? Your progress will be lost.'),
+                content: const Text(
+                  'Are you sure you want to exit? Your progress will be lost.',
+                ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
@@ -775,18 +861,14 @@ class _MockTestScreenState extends State<MockTestScreen> {
             margin: const EdgeInsets.only(right: 8),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.timer,
-                  color: Colors.white,
-                  size: 16,
-                ),
+                Icon(Icons.timer, color: Colors.white, size: 16),
                 const SizedBox(width: 4),
                 Text(
                   _formatTime(_timeRemaining),
@@ -828,10 +910,10 @@ class _MockTestScreenState extends State<MockTestScreen> {
             backgroundColor: Colors.grey[300],
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.dominantPurple),
           ),
-          
+
           // Subject Tabs (only for CBT)
           if (isCbt) _buildSubjectTabs(),
-          
+
           // Question counter
           Padding(
             padding: const EdgeInsets.all(16),
@@ -839,9 +921,9 @@ class _MockTestScreenState extends State<MockTestScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  isCbt 
-                    ? '${_getCurrentSubject()} - Question ${_getCurrentQuestionInSubject()} of ${_getTotalQuestionsInSubject()}'
-                    : 'Question ${_currentQuestionIndex + 1} of ${_questions.length}',
+                  isCbt
+                      ? '${_getCurrentSubject()} - Question ${_getCurrentQuestionInSubject()} of ${_getTotalQuestionsInSubject()}'
+                      : 'Question ${_currentQuestionIndex + 1} of ${_questions.length}',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -858,7 +940,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
               ],
             ),
           ),
-          
+
           // Question
           Expanded(
             child: SingleChildScrollView(
@@ -874,10 +956,11 @@ class _MockTestScreenState extends State<MockTestScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Options
                   ...currentQuestion.options.map((option) {
-                    final isSelected = _selectedAnswers[_currentQuestionIndex] == option;
+                    final isSelected =
+                        _selectedAnswers[_currentQuestionIndex] == option;
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: GestureDetector(
@@ -886,10 +969,14 @@ class _MockTestScreenState extends State<MockTestScreen> {
                           width: double.infinity,
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: isSelected ? AppColors.dominantPurple : Colors.grey[100],
+                            color: isSelected
+                                ? AppColors.dominantPurple
+                                : Colors.grey[100],
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                              color: isSelected ? AppColors.dominantPurple : Colors.grey[300]!,
+                              color: isSelected
+                                  ? AppColors.dominantPurple
+                                  : Colors.grey[300]!,
                             ),
                           ),
                           child: Text(
@@ -897,7 +984,9 @@ class _MockTestScreenState extends State<MockTestScreen> {
                             style: TextStyle(
                               fontSize: 16,
                               color: isSelected ? Colors.white : Colors.black,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                             ),
                           ),
                         ),
@@ -908,7 +997,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
               ),
             ),
           ),
-          
+
           // Navigation buttons
           Padding(
             padding: const EdgeInsets.all(16),
@@ -917,14 +1006,16 @@ class _MockTestScreenState extends State<MockTestScreen> {
               children: [
                 // Previous button
                 ElevatedButton(
-                  onPressed: _isCbt ? _previousQuestionInSubject : (_currentQuestionIndex > 0 ? _previousQuestion : null),
+                  onPressed: _isCbt
+                      ? _previousQuestionInSubject
+                      : (_currentQuestionIndex > 0 ? _previousQuestion : null),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.grey[300],
                     foregroundColor: Colors.black,
                   ),
                   child: const Text('Previous'),
                 ),
-                
+
                 // Submit button (always available)
                 ElevatedButton(
                   onPressed: _submitTest,
@@ -934,10 +1025,14 @@ class _MockTestScreenState extends State<MockTestScreen> {
                   ),
                   child: const Text('Submit'),
                 ),
-                
+
                 // Next button
                 ElevatedButton(
-                  onPressed: _isCbt ? _nextQuestionInSubject : (_currentQuestionIndex < _questions.length - 1 ? _nextQuestion : null),
+                  onPressed: _isCbt
+                      ? _nextQuestionInSubject
+                      : (_currentQuestionIndex < _questions.length - 1
+                            ? _nextQuestion
+                            : null),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.dominantPurple,
                     foregroundColor: Colors.white,
@@ -962,12 +1057,16 @@ class _MockTestScreenState extends State<MockTestScreen> {
         itemBuilder: (context, index) {
           final subject = _subjectQuestionRanges.keys.elementAt(index);
           final questionIndices = _subjectQuestionRanges[subject]!;
-          final isCurrentSubject = questionIndices.contains(_currentQuestionIndex);
-          
+          final isCurrentSubject = questionIndices.contains(
+            _currentQuestionIndex,
+          );
+
           // Calculate progress for this subject
-          final answeredInSubject = questionIndices.where((index) => _answeredQuestions[index]).length;
+          final answeredInSubject = questionIndices
+              .where((index) => _answeredQuestions[index])
+              .length;
           final totalInSubject = questionIndices.length;
-          
+
           return Container(
             margin: const EdgeInsets.only(right: 8),
             child: ElevatedButton(
@@ -982,12 +1081,17 @@ class _MockTestScreenState extends State<MockTestScreen> {
                 });
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: isCurrentSubject ? AppColors.dominantPurple : Colors.grey[200],
+                backgroundColor: isCurrentSubject
+                    ? AppColors.dominantPurple
+                    : Colors.grey[200],
                 foregroundColor: isCurrentSubject ? Colors.white : Colors.black,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -996,7 +1100,9 @@ class _MockTestScreenState extends State<MockTestScreen> {
                     subject,
                     style: TextStyle(
                       fontSize: 12,
-                      fontWeight: isCurrentSubject ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: isCurrentSubject
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                     ),
                   ),
                   Text(
@@ -1059,10 +1165,10 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
 
   void _calculate() {
     if (_operation.isEmpty) return;
-    
+
     final secondNumber = double.parse(_display);
     double result = 0;
-    
+
     switch (_operation) {
       case '+':
         result = _firstNumber + secondNumber;
@@ -1092,7 +1198,7 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
         result = tan(secondNumber * pi / 180);
         break;
     }
-    
+
     setState(() {
       _display = result.toString();
       _operation = '';
@@ -1125,7 +1231,9 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.grey[100],
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -1136,12 +1244,15 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
                 ),
                 Text(
                   _display,
-                  style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
           ),
-          
+
           // Calculator buttons
           Expanded(
             child: GridView.count(
@@ -1150,33 +1261,114 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
               children: [
                 // Scientific functions
                 _buildButton('C', Colors.red, _clear),
-                _buildButton('log', Colors.orange, () => _onOperationPressed('log')),
-                _buildButton('ln', Colors.orange, () => _onOperationPressed('ln')),
-                _buildButton('÷', Colors.orange, () => _onOperationPressed('÷')),
-                
-                _buildButton('sin', Colors.orange, () => _onOperationPressed('sin')),
-                _buildButton('cos', Colors.orange, () => _onOperationPressed('cos')),
-                _buildButton('tan', Colors.orange, () => _onOperationPressed('tan')),
-                _buildButton('×', Colors.orange, () => _onOperationPressed('×')),
-                
+                _buildButton(
+                  'log',
+                  Colors.orange,
+                  () => _onOperationPressed('log'),
+                ),
+                _buildButton(
+                  'ln',
+                  Colors.orange,
+                  () => _onOperationPressed('ln'),
+                ),
+                _buildButton(
+                  '÷',
+                  Colors.orange,
+                  () => _onOperationPressed('÷'),
+                ),
+
+                _buildButton(
+                  'sin',
+                  Colors.orange,
+                  () => _onOperationPressed('sin'),
+                ),
+                _buildButton(
+                  'cos',
+                  Colors.orange,
+                  () => _onOperationPressed('cos'),
+                ),
+                _buildButton(
+                  'tan',
+                  Colors.orange,
+                  () => _onOperationPressed('tan'),
+                ),
+                _buildButton(
+                  '×',
+                  Colors.orange,
+                  () => _onOperationPressed('×'),
+                ),
+
                 // Numbers and basic operations
-                _buildButton('7', Colors.grey[300]!, () => _onNumberPressed('7')),
-                _buildButton('8', Colors.grey[300]!, () => _onNumberPressed('8')),
-                _buildButton('9', Colors.grey[300]!, () => _onNumberPressed('9')),
-                _buildButton('-', Colors.orange, () => _onOperationPressed('-')),
-                
-                _buildButton('4', Colors.grey[300]!, () => _onNumberPressed('4')),
-                _buildButton('5', Colors.grey[300]!, () => _onNumberPressed('5')),
-                _buildButton('6', Colors.grey[300]!, () => _onNumberPressed('6')),
-                _buildButton('+', Colors.orange, () => _onOperationPressed('+')),
-                
-                _buildButton('1', Colors.grey[300]!, () => _onNumberPressed('1')),
-                _buildButton('2', Colors.grey[300]!, () => _onNumberPressed('2')),
-                _buildButton('3', Colors.grey[300]!, () => _onNumberPressed('3')),
+                _buildButton(
+                  '7',
+                  Colors.grey[300]!,
+                  () => _onNumberPressed('7'),
+                ),
+                _buildButton(
+                  '8',
+                  Colors.grey[300]!,
+                  () => _onNumberPressed('8'),
+                ),
+                _buildButton(
+                  '9',
+                  Colors.grey[300]!,
+                  () => _onNumberPressed('9'),
+                ),
+                _buildButton(
+                  '-',
+                  Colors.orange,
+                  () => _onOperationPressed('-'),
+                ),
+
+                _buildButton(
+                  '4',
+                  Colors.grey[300]!,
+                  () => _onNumberPressed('4'),
+                ),
+                _buildButton(
+                  '5',
+                  Colors.grey[300]!,
+                  () => _onNumberPressed('5'),
+                ),
+                _buildButton(
+                  '6',
+                  Colors.grey[300]!,
+                  () => _onNumberPressed('6'),
+                ),
+                _buildButton(
+                  '+',
+                  Colors.orange,
+                  () => _onOperationPressed('+'),
+                ),
+
+                _buildButton(
+                  '1',
+                  Colors.grey[300]!,
+                  () => _onNumberPressed('1'),
+                ),
+                _buildButton(
+                  '2',
+                  Colors.grey[300]!,
+                  () => _onNumberPressed('2'),
+                ),
+                _buildButton(
+                  '3',
+                  Colors.grey[300]!,
+                  () => _onNumberPressed('3'),
+                ),
                 _buildButton('=', Colors.green, _calculate, isLarge: true),
-                
-                _buildButton('0', Colors.grey[300]!, () => _onNumberPressed('0'), isLarge: true),
-                _buildButton('.', Colors.grey[300]!, () => _onNumberPressed('.')),
+
+                _buildButton(
+                  '0',
+                  Colors.grey[300]!,
+                  () => _onNumberPressed('0'),
+                  isLarge: true,
+                ),
+                _buildButton(
+                  '.',
+                  Colors.grey[300]!,
+                  () => _onNumberPressed('.'),
+                ),
               ],
             ),
           ),
@@ -1185,7 +1377,12 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
     );
   }
 
-  Widget _buildButton(String text, Color color, VoidCallback onPressed, {bool isLarge = false}) {
+  Widget _buildButton(
+    String text,
+    Color color,
+    VoidCallback onPressed, {
+    bool isLarge = false,
+  }) {
     return Container(
       margin: const EdgeInsets.all(4),
       child: ElevatedButton(
@@ -1193,9 +1390,7 @@ class _CalculatorWidgetState extends State<CalculatorWidget> {
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         child: Text(
           text,

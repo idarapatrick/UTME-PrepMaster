@@ -37,10 +37,11 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
 
     try {
       // Sign in with Firebase Auth
-      final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+      final userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+          );
 
       // Check if user exists and has admin role
       final userDoc = await FirebaseFirestore.instance
@@ -74,7 +75,6 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/admin/dashboard');
       }
-
     } on FirebaseAuthException catch (e) {
       setState(() {
         _errorMessage = e.message ?? 'Authentication failed';
@@ -122,9 +122,9 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
                   color: AppColors.dominantPurple,
                 ),
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               Text(
                 'Admin Access',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -132,16 +132,16 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
                   color: AppColors.dominantPurple,
                 ),
               ),
-              
+
               const SizedBox(height: 8),
-              
+
               Text(
                 'Enter your admin credentials',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
               ),
-              
+
               const SizedBox(height: 32),
 
               // Email Field
@@ -217,7 +217,9 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           ),
                         )
                       : const Text('Sign In as Admin'),
@@ -257,4 +259,4 @@ class _AdminAuthScreenState extends State<AdminAuthScreen> {
       ),
     );
   }
-} 
+}

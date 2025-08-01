@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
-import '../theme/app_colors.dart';
+
 
 class StreakAnimationWidget extends StatefulWidget {
   final int streakCount;
@@ -11,7 +11,7 @@ class StreakAnimationWidget extends StatefulWidget {
     super.key,
     required this.streakCount,
     this.onAnimationComplete,
-    this.duration = const Duration(seconds: 3),
+    this.duration = const Duration(seconds: 2),
   });
 
   @override
@@ -21,159 +21,130 @@ class StreakAnimationWidget extends StatefulWidget {
 class _StreakAnimationWidgetState extends State<StreakAnimationWidget>
     with TickerProviderStateMixin {
   late AnimationController _controller;
-  late AnimationController _fireController;
   late AnimationController _scaleController;
-  
+  late AnimationController _fadeController;
+
   late Animation<double> _slideAnimation;
   late Animation<double> _scaleAnimation;
-  late Animation<double> _fireScaleAnimation;
-  late Animation<double> _rotationAnimation;
   late Animation<double> _fadeAnimation;
+  late Animation<double> _fireAnimation;
 
   @override
   void initState() {
     super.initState();
-    
-    _controller = AnimationController(
-      duration: widget.duration,
-      vsync: this,
-    );
-    
-    _fireController = AnimationController(
-      duration: const Duration(milliseconds: 200),
-      vsync: this,
-    );
-    
+
+    _controller = AnimationController(duration: widget.duration, vsync: this);
+
     _scaleController = AnimationController(
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 500),
       vsync: this,
     );
 
     _slideAnimation = Tween<double>(
       begin: 0.0,
-      end: -120.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutCubic,
-    ));
+      end: -100.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _scaleController,
-      curve: Curves.elasticOut,
-    ));
-
-    _fireScaleAnimation = Tween<double>(
-      begin: 0.5,
-      end: 1.2,
-    ).animate(CurvedAnimation(
-      parent: _fireController,
-      curve: Curves.easeInOut,
-    ));
-
-    _rotationAnimation = Tween<double>(
-      begin: 0.0,
-      end: 2 * math.pi,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut),
+    );
 
     _fadeAnimation = Tween<double>(
       begin: 1.0,
       end: 0.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    ));
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeOut));
+
+    _fireAnimation = Tween<double>(
+      begin: 0.0,
+      end: 2 * math.pi,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.linear));
 
     _startAnimation();
   }
 
   void _startAnimation() async {
-    // Start with scale animation
     await _scaleController.forward();
-    
-    // Start fire animation
-    _fireController.repeat(reverse: true);
-    
-    // Wait a bit, then start slide and fade
-    await Future.delayed(const Duration(milliseconds: 800));
-    
-    // Start slide and fade animations
+    await Future.delayed(const Duration(milliseconds: 500));
     _controller.forward();
-    
-    // Wait for animation to complete
-    await Future.delayed(widget.duration);
-    
-    if (mounted) {
-      widget.onAnimationComplete?.call();
-    }
+    await Future.delayed(const Duration(milliseconds: 1000));
+    _fadeController.forward();
+    await Future.delayed(const Duration(milliseconds: 500));
+    widget.onAnimationComplete?.call();
   }
 
   @override
   void dispose() {
     _controller.dispose();
-    _fireController.dispose();
     _scaleController.dispose();
+    _fadeController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: Listenable.merge([_controller, _fireController, _scaleController]),
+      animation: Listenable.merge([
+        _controller,
+        _scaleController,
+        _fadeController,
+      ]),
       builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(0, _slideAnimation.value),
-          child: Transform.scale(
-            scale: _scaleAnimation.value,
-            child: Opacity(
-              opacity: _fadeAnimation.value,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.orange,
-                      Colors.red,
-                      Colors.orange,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+        return Positioned(
+          bottom: 100 + _slideAnimation.value,
+          left: 0,
+          right: 0,
+          child: Opacity(
+            opacity: _fadeAnimation.value,
+            child: Center(
+              child: Transform.scale(
+                scale: _scaleAnimation.value,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
                   ),
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.orange.withValues(alpha: 0.4),
-                      blurRadius: 15,
-                      spreadRadius: 3,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Colors.orange, Colors.red],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Transform.scale(
-                      scale: _fireScaleAnimation.value,
-                      child: Icon(
-                        Icons.local_fire_department,
-                        color: Colors.white,
-                        size: 24,
+                    borderRadius: BorderRadius.circular(25),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.orange.withOpacity(0.3),
+                        blurRadius: 10,
+                        spreadRadius: 2,
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${widget.streakCount} Day${widget.streakCount == 1 ? '' : 's'} Streak!',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Transform.rotate(
+                        angle: _fireAnimation.value,
+                        child: Icon(
+                          Icons.local_fire_department,
+                          color: Colors.white,
+                          size: 24,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      Text(
+                        '${widget.streakCount} Day Streak!',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -182,4 +153,4 @@ class _StreakAnimationWidgetState extends State<StreakAnimationWidget>
       },
     );
   }
-} 
+}

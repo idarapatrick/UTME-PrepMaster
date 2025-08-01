@@ -15,36 +15,41 @@ class PdfTextExtractionService {
   }
 
   // Parse questions from extracted text
-  static List<TestQuestion> parseQuestionsFromText(String text, String subject) {
+  static List<TestQuestion> parseQuestionsFromText(
+    String text,
+    String subject,
+  ) {
     final questions = <TestQuestion>[];
     final lines = text.split('\n');
-    
+
     String currentQuestion = '';
     List<String> currentOptions = [];
     int correctAnswer = 0;
     String explanation = '';
     String currentTopic = '';
-    
+
     for (int i = 0; i < lines.length; i++) {
       final line = lines[i].trim();
-      
+
       if (line.isEmpty) continue;
-      
+
       // Detect question pattern (starts with number)
       if (RegExp(r'^\d+\.').hasMatch(line)) {
         // Save previous question if exists
         if (currentQuestion.isNotEmpty && currentOptions.isNotEmpty) {
-          questions.add(TestQuestion(
-            id: 'q${questions.length + 1}',
-            question: currentQuestion,
-            options: currentOptions,
-            correctAnswer: correctAnswer,
-            explanation: explanation,
-            subject: subject,
-            topic: currentTopic,
-          ));
+          questions.add(
+            TestQuestion(
+              id: 'q${questions.length + 1}',
+              question: currentQuestion,
+              options: currentOptions,
+              correctAnswer: correctAnswer,
+              explanation: explanation,
+              subject: subject,
+              topic: currentTopic,
+            ),
+          );
         }
-        
+
         // Start new question
         currentQuestion = line.replaceFirst(RegExp(r'^\d+\.\s*'), '');
         currentOptions = [];
@@ -55,20 +60,24 @@ class PdfTextExtractionService {
       else if (RegExp(r'^[A-D]\)').hasMatch(line)) {
         final option = line.replaceFirst(RegExp(r'^[A-D]\)\s*'), '');
         currentOptions.add(option);
-        
+
         // Check for correct answer indicators
-        if (line.contains('*') || line.contains('✓') || line.contains('(correct)')) {
+        if (line.contains('*') ||
+            line.contains('✓') ||
+            line.contains('(correct)')) {
           correctAnswer = currentOptions.length - 1;
         }
       }
       // Detect explanation
-      else if (line.toLowerCase().contains('explanation') || 
-               line.toLowerCase().contains('answer') ||
-               line.toLowerCase().contains('solution')) {
+      else if (line.toLowerCase().contains('explanation') ||
+          line.toLowerCase().contains('answer') ||
+          line.toLowerCase().contains('solution')) {
         explanation = line;
       }
       // Detect topic headers
-      else if (line.toUpperCase() == line && line.length > 3 && line.length < 50) {
+      else if (line.toUpperCase() == line &&
+          line.length > 3 &&
+          line.length < 50) {
         currentTopic = line;
       }
       // If line doesn't match any pattern, it might be part of the question
@@ -76,41 +85,46 @@ class PdfTextExtractionService {
         currentQuestion = '$currentQuestion $line';
       }
     }
-    
+
     // Add the last question
     if (currentQuestion.isNotEmpty && currentOptions.isNotEmpty) {
-      questions.add(TestQuestion(
-        id: 'q${questions.length + 1}',
-        question: currentQuestion,
-        options: currentOptions,
-        correctAnswer: correctAnswer,
-        explanation: explanation,
-        subject: subject,
-        topic: currentTopic,
-      ));
+      questions.add(
+        TestQuestion(
+          id: 'q${questions.length + 1}',
+          question: currentQuestion,
+          options: currentOptions,
+          correctAnswer: correctAnswer,
+          explanation: explanation,
+          subject: subject,
+          topic: currentTopic,
+        ),
+      );
     }
-    
+
     return questions;
   }
 
   // Enhanced parsing for different question formats
-  static List<TestQuestion> parseQuestionsEnhanced(String text, String subject) {
+  static List<TestQuestion> parseQuestionsEnhanced(
+    String text,
+    String subject,
+  ) {
     final questions = <TestQuestion>[];
     final sections = text.split(RegExp(r'\n\s*\n')); // Split by double newlines
-    
+
     for (final section in sections) {
       final lines = section.split('\n');
       if (lines.length < 3) continue; // Skip sections with too few lines
-      
+
       String question = '';
       List<String> options = [];
       int correctAnswer = 0;
       String explanation = '';
-      
+
       for (int i = 0; i < lines.length; i++) {
         final line = lines[i].trim();
         if (line.isEmpty) continue;
-        
+
         // Check if this is a question line
         if (RegExp(r'^\d+\.').hasMatch(line)) {
           question = line.replaceFirst(RegExp(r'^\d+\.\s*'), '');
@@ -119,15 +133,15 @@ class PdfTextExtractionService {
         else if (RegExp(r'^[A-D]\)').hasMatch(line)) {
           final option = line.replaceFirst(RegExp(r'^[A-D]\)\s*'), '');
           options.add(option);
-          
+
           // Check for correct answer
           if (line.contains('*') || line.contains('✓')) {
             correctAnswer = options.length - 1;
           }
         }
         // Check for explanation
-        else if (line.toLowerCase().contains('explanation') || 
-                 line.toLowerCase().contains('answer')) {
+        else if (line.toLowerCase().contains('explanation') ||
+            line.toLowerCase().contains('answer')) {
           explanation = line;
         }
         // If it's not an option or explanation, it might be part of the question
@@ -135,20 +149,22 @@ class PdfTextExtractionService {
           question = '$question $line';
         }
       }
-      
+
       // Only add if we have a valid question with options
       if (question.isNotEmpty && options.length >= 2) {
-        questions.add(TestQuestion(
-          id: 'q${questions.length + 1}',
-          question: question,
-          options: options,
-          correctAnswer: correctAnswer,
-          explanation: explanation,
-          subject: subject,
-        ));
+        questions.add(
+          TestQuestion(
+            id: 'q${questions.length + 1}',
+            question: question,
+            options: options,
+            correctAnswer: correctAnswer,
+            explanation: explanation,
+            subject: subject,
+          ),
+        );
       }
     }
-    
+
     return questions;
   }
 
@@ -157,9 +173,9 @@ class PdfTextExtractionService {
     return questions.where((question) {
       // Check if question has valid structure
       return question.question.isNotEmpty &&
-             question.options.length >= 2 &&
-             question.correctAnswer >= 0 &&
-             question.correctAnswer < question.options.length;
+          question.options.length >= 2 &&
+          question.correctAnswer >= 0 &&
+          question.correctAnswer < question.options.length;
     }).toList();
   }
 
@@ -189,7 +205,7 @@ class PdfTextExtractionService {
             difficulty: 'easy',
           ),
         ];
-      
+
       case 'physics':
         return [
           TestQuestion(
@@ -207,13 +223,14 @@ class PdfTextExtractionService {
             question: 'Which of the following is a vector quantity?',
             options: ['A) Mass', 'B) Time', 'C) Velocity', 'D) Temperature'],
             correctAnswer: 2,
-            explanation: 'Velocity has both magnitude and direction, making it a vector quantity',
+            explanation:
+                'Velocity has both magnitude and direction, making it a vector quantity',
             subject: subject,
             topic: 'Vectors',
             difficulty: 'medium',
           ),
         ];
-      
+
       case 'chemistry':
         return [
           TestQuestion(
@@ -221,7 +238,8 @@ class PdfTextExtractionService {
             question: 'What is the chemical symbol for gold?',
             options: ['A) Ag', 'B) Au', 'C) Fe', 'D) Cu'],
             correctAnswer: 1,
-            explanation: 'Au is the chemical symbol for gold (from Latin "aurum")',
+            explanation:
+                'Au is the chemical symbol for gold (from Latin "aurum")',
             subject: subject,
             topic: 'Elements',
             difficulty: 'easy',
@@ -237,41 +255,50 @@ class PdfTextExtractionService {
             difficulty: 'easy',
           ),
         ];
-      
+
       case 'biology':
         return [
           TestQuestion(
             id: 'biology_1',
             question: 'What is the powerhouse of the cell?',
-            options: ['A) Nucleus', 'B) Mitochondria', 'C) Golgi apparatus', 'D) Endoplasmic reticulum'],
+            options: [
+              'A) Nucleus',
+              'B) Mitochondria',
+              'C) Golgi apparatus',
+              'D) Endoplasmic reticulum',
+            ],
             correctAnswer: 1,
-            explanation: 'Mitochondria is known as the powerhouse of the cell because it produces energy through cellular respiration',
+            explanation:
+                'Mitochondria is known as the powerhouse of the cell because it produces energy through cellular respiration',
             subject: subject,
             topic: 'Cell Biology',
             difficulty: 'easy',
           ),
           TestQuestion(
             id: 'biology_2',
-            question: 'Which of the following is a function of the cell membrane?',
+            question:
+                'Which of the following is a function of the cell membrane?',
             options: [
               'A) Protein synthesis',
               'B) Selective permeability',
               'C) Energy production',
-              'D) DNA replication'
+              'D) DNA replication',
             ],
             correctAnswer: 1,
-            explanation: 'The cell membrane controls what enters and exits the cell, making it selectively permeable',
+            explanation:
+                'The cell membrane controls what enters and exits the cell, making it selectively permeable',
             subject: subject,
             topic: 'Cell Biology',
             difficulty: 'medium',
           ),
         ];
-      
+
       case 'english':
         return [
           TestQuestion(
             id: 'english_1',
-            question: 'Choose the correct form: "She _____ to the store yesterday."',
+            question:
+                'Choose the correct form: "She _____ to the store yesterday."',
             options: ['A) go', 'B) goes', 'C) went', 'D) going'],
             correctAnswer: 2,
             explanation: 'The past tense of "go" is "went"',
@@ -286,22 +313,28 @@ class PdfTextExtractionService {
               'A) Me and him went to the store',
               'B) He and I went to the store',
               'C) Him and I went to the store',
-              'D) Me and he went to the store'
+              'D) Me and he went to the store',
             ],
             correctAnswer: 1,
-            explanation: 'When using multiple subjects, use subject pronouns: "He and I"',
+            explanation:
+                'When using multiple subjects, use subject pronouns: "He and I"',
             subject: subject,
             topic: 'Grammar',
             difficulty: 'medium',
           ),
         ];
-      
+
       default:
         return [
           TestQuestion(
             id: 'generic_1',
             question: 'Sample question for $subject?',
-            options: ['A) Option 1', 'B) Option 2', 'C) Option 3', 'D) Option 4'],
+            options: [
+              'A) Option 1',
+              'B) Option 2',
+              'C) Option 3',
+              'D) Option 4',
+            ],
             correctAnswer: 0,
             explanation: 'This is a sample question',
             subject: subject,
@@ -311,4 +344,4 @@ class PdfTextExtractionService {
         ];
     }
   }
-} 
+}

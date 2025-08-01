@@ -1,20 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum BadgeType {
-  streak,      // Daily streak badges
-  xp,          // XP milestone badges
-  studyTime,   // Study time badges
-  accuracy,    // Quiz accuracy badges
-  subject,     // Subject-specific badges
-  special,     // Special event badges
+  streak, // Daily streak badges
+  xp, // XP milestone badges
+  studyTime, // Study time badges
+  accuracy, // Quiz accuracy badges
+  subject, // Subject-specific badges
+  special, // Special event badges
 }
 
-enum BadgeRarity {
-  common,
-  rare,
-  epic,
-  legendary,
-}
+enum BadgeRarity { common, rare, epic, legendary }
 
 class Badge {
   final String id;
@@ -61,11 +56,11 @@ class Badge {
       imagePath: map['imagePath'],
       requirement: map['requirement'] ?? 0,
       subjectId: map['subjectId'],
-      availableFrom: map['availableFrom'] != null 
-          ? (map['availableFrom'] as Timestamp).toDate() 
+      availableFrom: map['availableFrom'] != null
+          ? (map['availableFrom'] as Timestamp).toDate()
           : null,
-      availableUntil: map['availableUntil'] != null 
-          ? (map['availableUntil'] as Timestamp).toDate() 
+      availableUntil: map['availableUntil'] != null
+          ? (map['availableUntil'] as Timestamp).toDate()
           : null,
       isActive: map['isActive'] ?? true,
       xpReward: map['xpReward'] ?? 0,
@@ -81,8 +76,12 @@ class Badge {
       'imagePath': imagePath,
       'requirement': requirement,
       'subjectId': subjectId,
-      'availableFrom': availableFrom != null ? Timestamp.fromDate(availableFrom!) : null,
-      'availableUntil': availableUntil != null ? Timestamp.fromDate(availableUntil!) : null,
+      'availableFrom': availableFrom != null
+          ? Timestamp.fromDate(availableFrom!)
+          : null,
+      'availableUntil': availableUntil != null
+          ? Timestamp.fromDate(availableUntil!)
+          : null,
       'isActive': isActive,
       'xpReward': xpReward,
     };
@@ -126,4 +125,4 @@ class Badge {
         return description;
     }
   }
-} 
+}

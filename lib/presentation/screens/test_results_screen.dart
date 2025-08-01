@@ -62,7 +62,7 @@ class _TestResultsScreenState extends State<TestResultsScreen> {
     final hours = seconds ~/ 3600;
     final minutes = (seconds % 3600) ~/ 60;
     final secs = seconds % 60;
-    
+
     if (hours > 0) {
       return '${hours}h ${minutes}m ${secs}s';
     } else if (minutes > 0) {
@@ -113,7 +113,9 @@ class _TestResultsScreenState extends State<TestResultsScreen> {
             // Main Score Card
             Card(
               elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Column(
@@ -121,7 +123,10 @@ class _TestResultsScreenState extends State<TestResultsScreen> {
                     Text(
                       testType,
                       style: TextStyle(
-                        fontSize: ResponsiveHelper.getResponsiveFontSize(context, 18),
+                        fontSize: ResponsiveHelper.getResponsiveFontSize(
+                          context,
+                          18,
+                        ),
                         fontWeight: FontWeight.bold,
                         color: AppColors.textSecondary,
                       ),
@@ -142,7 +147,11 @@ class _TestResultsScreenState extends State<TestResultsScreen> {
                             Text(
                               widget.score.toStringAsFixed(1),
                               style: TextStyle(
-                                fontSize: ResponsiveHelper.getResponsiveFontSize(context, 24),
+                                fontSize:
+                                    ResponsiveHelper.getResponsiveFontSize(
+                                      context,
+                                      24,
+                                    ),
                                 fontWeight: FontWeight.bold,
                                 color: scoreColor,
                               ),
@@ -150,7 +159,11 @@ class _TestResultsScreenState extends State<TestResultsScreen> {
                             Text(
                               '/ $maxScore',
                               style: TextStyle(
-                                fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
+                                fontSize:
+                                    ResponsiveHelper.getResponsiveFontSize(
+                                      context,
+                                      14,
+                                    ),
                                 color: AppColors.textSecondary,
                               ),
                             ),
@@ -162,7 +175,10 @@ class _TestResultsScreenState extends State<TestResultsScreen> {
                     Text(
                       'Grade: $grade',
                       style: TextStyle(
-                        fontSize: ResponsiveHelper.getResponsiveFontSize(context, 20),
+                        fontSize: ResponsiveHelper.getResponsiveFontSize(
+                          context,
+                          20,
+                        ),
                         fontWeight: FontWeight.bold,
                         color: scoreColor,
                       ),
@@ -171,7 +187,10 @@ class _TestResultsScreenState extends State<TestResultsScreen> {
                     Text(
                       '${widget.correctAnswers} out of ${widget.totalQuestions} correct',
                       style: TextStyle(
-                        fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+                        fontSize: ResponsiveHelper.getResponsiveFontSize(
+                          context,
+                          16,
+                        ),
                         color: AppColors.textSecondary,
                       ),
                     ),
@@ -179,7 +198,10 @@ class _TestResultsScreenState extends State<TestResultsScreen> {
                     Text(
                       'Time: ${_formatTime(widget.timeElapsed)}',
                       style: TextStyle(
-                        fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
+                        fontSize: ResponsiveHelper.getResponsiveFontSize(
+                          context,
+                          14,
+                        ),
                         color: AppColors.textTertiary,
                       ),
                     ),
@@ -202,7 +224,9 @@ class _TestResultsScreenState extends State<TestResultsScreen> {
               const SizedBox(height: 16),
               Card(
                 elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -218,7 +242,11 @@ class _TestResultsScreenState extends State<TestResultsScreen> {
                               child: Text(
                                 subject,
                                 style: TextStyle(
-                                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+                                  fontSize:
+                                      ResponsiveHelper.getResponsiveFontSize(
+                                        context,
+                                        16,
+                                      ),
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -227,7 +255,8 @@ class _TestResultsScreenState extends State<TestResultsScreen> {
                               flex: 3,
                               child: LinearProgressIndicator(
                                 value: score / 100,
-                                backgroundColor: AppColors.textTertiary.withValues(alpha: 0.2),
+                                backgroundColor: AppColors.textTertiary
+                                    .withValues(alpha: 0.2),
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                   _getScoreColor(score, 100),
                                 ),
@@ -237,7 +266,11 @@ class _TestResultsScreenState extends State<TestResultsScreen> {
                             Text(
                               '${score.toStringAsFixed(1)}%',
                               style: TextStyle(
-                                fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
+                                fontSize:
+                                    ResponsiveHelper.getResponsiveFontSize(
+                                      context,
+                                      14,
+                                    ),
                                 fontWeight: FontWeight.bold,
                                 color: _getScoreColor(score, 100),
                               ),
@@ -268,7 +301,9 @@ class _TestResultsScreenState extends State<TestResultsScreen> {
               else if (_cbtHistory.isEmpty)
                 Card(
                   elevation: 2,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   child: const Padding(
                     padding: EdgeInsets.all(24),
                     child: Text(
@@ -283,18 +318,23 @@ class _TestResultsScreenState extends State<TestResultsScreen> {
               else
                 Card(
                   elevation: 2,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: _cbtHistory.take(5).map((test) {
                         final score = test['score'] ?? 0;
-                        final date = test['date'] != null 
+                        final date = test['date'] != null
                             ? DateTime.parse(test['date'])
                             : DateTime.now();
                         final grade = _getScoreGrade(score.toDouble(), 400);
-                        final scoreColor = _getScoreColor(score.toDouble(), 400);
-                        
+                        final scoreColor = _getScoreColor(
+                          score.toDouble(),
+                          400,
+                        );
+
                         return ListTile(
                           leading: Container(
                             width: 40,
@@ -386,4 +426,4 @@ class _TestResultsScreenState extends State<TestResultsScreen> {
       ),
     );
   }
-} 
+}

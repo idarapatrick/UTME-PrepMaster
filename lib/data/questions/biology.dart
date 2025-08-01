@@ -12,7 +12,12 @@ final List<TestQuestion> biologyQuestions = [
   TestQuestion(
     id: 'bio_2',
     question: 'Which of the following is a function of the cell membrane?',
-    options: ['Energy production', 'Protein synthesis', 'Selective permeability', 'DNA replication'],
+    options: [
+      'Energy production',
+      'Protein synthesis',
+      'Selective permeability',
+      'DNA replication',
+    ],
     correctAnswer: 2,
     subject: 'Biology',
     explanation: 'The cell membrane controls what enters and exits the cell.',
@@ -20,7 +25,12 @@ final List<TestQuestion> biologyQuestions = [
   TestQuestion(
     id: 'bio_3',
     question: 'What is the powerhouse of the cell?',
-    options: ['Nucleus', 'Mitochondria', 'Golgi apparatus', 'Endoplasmic reticulum'],
+    options: [
+      'Nucleus',
+      'Mitochondria',
+      'Golgi apparatus',
+      'Endoplasmic reticulum',
+    ],
     correctAnswer: 1,
     subject: 'Biology',
     explanation: 'Mitochondria is known as the powerhouse of the cell.',
@@ -39,12 +49,18 @@ final List<TestQuestion> biologyQuestions = [
     options: ['Respiration', 'Photosynthesis', 'Digestion', 'Excretion'],
     correctAnswer: 1,
     subject: 'Biology',
-    explanation: 'Photosynthesis is the process by which plants make their own food.',
+    explanation:
+        'Photosynthesis is the process by which plants make their own food.',
   ),
   TestQuestion(
     id: 'bio_6',
     question: 'Which of the following is a function of the circulatory system?',
-    options: ['Transport of nutrients', 'Production of hormones', 'Digestion of food', 'Excretion of waste'],
+    options: [
+      'Transport of nutrients',
+      'Production of hormones',
+      'Digestion of food',
+      'Excretion of waste',
+    ],
     correctAnswer: 0,
     subject: 'Biology',
     explanation: 'The circulatory system transports nutrients and oxygen.',
@@ -52,7 +68,12 @@ final List<TestQuestion> biologyQuestions = [
   TestQuestion(
     id: 'bio_7',
     question: 'What is the main function of the respiratory system?',
-    options: ['Digestion', 'Gas exchange', 'Blood circulation', 'Waste removal'],
+    options: [
+      'Digestion',
+      'Gas exchange',
+      'Blood circulation',
+      'Waste removal',
+    ],
     correctAnswer: 1,
     subject: 'Biology',
     explanation: 'The respiratory system is responsible for gas exchange.',
@@ -60,7 +81,12 @@ final List<TestQuestion> biologyQuestions = [
   TestQuestion(
     id: 'bio_8',
     question: 'Which of the following is a function of the nervous system?',
-    options: ['Transport of nutrients', 'Coordination and control', 'Digestion of food', 'Production of hormones'],
+    options: [
+      'Transport of nutrients',
+      'Coordination and control',
+      'Digestion of food',
+      'Production of hormones',
+    ],
     correctAnswer: 1,
     subject: 'Biology',
     explanation: 'The nervous system coordinates and controls body activities.',
@@ -76,9 +102,14 @@ final List<TestQuestion> biologyQuestions = [
   TestQuestion(
     id: 'bio_10',
     question: 'Which of the following is a function of the digestive system?',
-    options: ['Transport of nutrients', 'Breakdown of food', 'Gas exchange', 'Waste removal'],
+    options: [
+      'Transport of nutrients',
+      'Breakdown of food',
+      'Gas exchange',
+      'Waste removal',
+    ],
     correctAnswer: 1,
     subject: 'Biology',
     explanation: 'The digestive system breaks down food into nutrients.',
   ),
-]; 
+];

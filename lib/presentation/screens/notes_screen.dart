@@ -30,9 +30,11 @@ class _NotesScreenState extends State<NotesScreen> {
             .collection('library_notes')
             .orderBy('timestamp', descending: true)
             .get();
-        
+
         setState(() {
-          _notes = notesSnap.docs.map((d) => {'id': d.id, ...d.data()}).toList();
+          _notes = notesSnap.docs
+              .map((d) => {'id': d.id, ...d.data()})
+              .toList();
           _isLoading = false;
         });
       } else {
@@ -55,13 +57,15 @@ class _NotesScreenState extends State<NotesScreen> {
   Future<void> _addNote() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    
+
     String? note = await showDialog<String>(
       context: context,
       builder: (context) {
         String temp = '';
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           title: Row(
             children: [
               Icon(Icons.note_add, color: AppColors.dominantPurple),
@@ -109,7 +113,7 @@ class _NotesScreenState extends State<NotesScreen> {
         );
       },
     );
-    
+
     if (note != null && note.trim().isNotEmpty) {
       try {
         await FirebaseFirestore.instance
@@ -117,10 +121,10 @@ class _NotesScreenState extends State<NotesScreen> {
             .doc(user.uid)
             .collection('library_notes')
             .add({
-          'note': note.trim(),
-          'timestamp': FieldValue.serverTimestamp(),
-          'createdAt': FieldValue.serverTimestamp(),
-        });
+              'note': note.trim(),
+              'timestamp': FieldValue.serverTimestamp(),
+              'createdAt': FieldValue.serverTimestamp(),
+            });
         await _loadNotes();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -146,13 +150,15 @@ class _NotesScreenState extends State<NotesScreen> {
   Future<void> _editNote(String docId, String currentNote) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    
+
     String? note = await showDialog<String>(
       context: context,
       builder: (context) {
         String temp = currentNote;
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           title: Row(
             children: [
               Icon(Icons.edit, color: AppColors.dominantPurple),
@@ -201,7 +207,7 @@ class _NotesScreenState extends State<NotesScreen> {
         );
       },
     );
-    
+
     if (note != null && note.trim().isNotEmpty) {
       try {
         await FirebaseFirestore.instance
@@ -235,7 +241,7 @@ class _NotesScreenState extends State<NotesScreen> {
   Future<void> _deleteNote(String docId) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -257,7 +263,7 @@ class _NotesScreenState extends State<NotesScreen> {
         ],
       ),
     );
-    
+
     if (confirm == true) {
       try {
         await FirebaseFirestore.instance
@@ -291,7 +297,7 @@ class _NotesScreenState extends State<NotesScreen> {
   String _formatTime(DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
-    
+
     if (difference.inMinutes < 1) {
       return 'Just now';
     } else if (difference.inMinutes < 60) {
@@ -306,7 +312,7 @@ class _NotesScreenState extends State<NotesScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Study Notes'),
@@ -336,11 +342,7 @@ class _NotesScreenState extends State<NotesScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.note,
-                        color: Colors.white,
-                        size: 32,
-                      ),
+                      Icon(Icons.note, color: Colors.white, size: 32),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Column(
@@ -348,16 +350,18 @@ class _NotesScreenState extends State<NotesScreen> {
                           children: [
                             Text(
                               'Study Notes',
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                             ),
                             Text(
                               '${_notes.length} Notes',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Colors.white.withValues(alpha: 0.8),
-                              ),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                  ),
                             ),
                           ],
                         ),
@@ -371,12 +375,13 @@ class _NotesScreenState extends State<NotesScreen> {
                       ? _buildEmptyState(context, isDark)
                       : GridView.builder(
                           padding: const EdgeInsets.all(16),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                            childAspectRatio: 0.85,
-                          ),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 12,
+                                mainAxisSpacing: 12,
+                                childAspectRatio: 0.85,
+                              ),
                           itemCount: _notes.length,
                           itemBuilder: (context, index) {
                             final note = _notes[index];
@@ -395,13 +400,17 @@ class _NotesScreenState extends State<NotesScreen> {
     );
   }
 
-  Widget _buildNoteCard(BuildContext context, bool isDark, Map<String, dynamic> note) {
+  Widget _buildNoteCard(
+    BuildContext context,
+    bool isDark,
+    Map<String, dynamic> note,
+  ) {
     final noteText = note['note'] as String;
     final timestamp = note['timestamp'] as Timestamp?;
-    final timeString = timestamp != null 
+    final timeString = timestamp != null
         ? _formatTime(timestamp.toDate())
         : 'Now';
-    
+
     // Generate a color based on note content with better contrast
     final colors = [
       isDark ? Colors.amber.shade700 : Colors.amber.shade100,
@@ -413,16 +422,18 @@ class _NotesScreenState extends State<NotesScreen> {
     ];
     final colorIndex = noteText.length % colors.length;
     final cardColor = colors[colorIndex];
-    
+
     // Determine text color based on background luminance
-    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.textPrimary;
-    final secondaryTextColor = isDark ? AppColors.darkTextSecondary : AppColors.textSecondary;
-    
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.textPrimary;
+    final secondaryTextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.textSecondary;
+
     return Card(
       color: cardColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () => _editNote(note['id'], note['note']),
         borderRadius: BorderRadius.circular(12),
@@ -433,11 +444,7 @@ class _NotesScreenState extends State<NotesScreen> {
             children: [
               Row(
                 children: [
-                  Icon(
-                    Icons.sticky_note_2,
-                    color: textColor,
-                    size: 18,
-                  ),
+                  Icon(Icons.sticky_note_2, color: textColor, size: 18),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -467,9 +474,18 @@ class _NotesScreenState extends State<NotesScreen> {
                         value: 'edit',
                         child: Row(
                           children: [
-                            Icon(Icons.edit, size: 16, color: AppColors.getTextPrimary(context)),
+                            Icon(
+                              Icons.edit,
+                              size: 16,
+                              color: AppColors.getTextPrimary(context),
+                            ),
                             const SizedBox(width: 8),
-                            Text('Edit', style: TextStyle(color: AppColors.getTextPrimary(context))),
+                            Text(
+                              'Edit',
+                              style: TextStyle(
+                                color: AppColors.getTextPrimary(context),
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -477,9 +493,16 @@ class _NotesScreenState extends State<NotesScreen> {
                         value: 'delete',
                         child: Row(
                           children: [
-                            Icon(Icons.delete, size: 16, color: AppColors.errorRed),
+                            Icon(
+                              Icons.delete,
+                              size: 16,
+                              color: AppColors.errorRed,
+                            ),
                             const SizedBox(width: 8),
-                            Text('Delete', style: TextStyle(color: AppColors.errorRed)),
+                            Text(
+                              'Delete',
+                              style: TextStyle(color: AppColors.errorRed),
+                            ),
                           ],
                         ),
                       ),
@@ -491,11 +514,7 @@ class _NotesScreenState extends State<NotesScreen> {
               Expanded(
                 child: Text(
                   noteText,
-                  style: TextStyle(
-                    color: textColor,
-                    fontSize: 14,
-                    height: 1.4,
-                  ),
+                  style: TextStyle(color: textColor, fontSize: 14, height: 1.4),
                   maxLines: 8,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -537,4 +556,4 @@ class _NotesScreenState extends State<NotesScreen> {
       ),
     );
   }
-} 
+}

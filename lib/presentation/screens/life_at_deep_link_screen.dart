@@ -7,7 +7,7 @@ class LifeAtDeepLinkScreen extends StatelessWidget {
 
   Future<void> _openLifeAt(String feature) async {
     String url;
-    
+
     switch (feature) {
       case 'pomodoro':
         url = 'https://lifeat.io/pomodoro';
@@ -40,10 +40,7 @@ class LifeAtDeepLinkScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text(
           'LifeAt Integration',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
         ),
         backgroundColor: AppColors.dominantPurple,
         foregroundColor: Colors.white,
@@ -80,11 +77,7 @@ class LifeAtDeepLinkScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  Icon(
-                    Icons.open_in_new,
-                    size: 60,
-                    color: Colors.white,
-                  ),
+                  Icon(Icons.open_in_new, size: 60, color: Colors.white),
                   const SizedBox(height: 16),
                   const Text(
                     'Open LifeAt in Browser',
@@ -106,9 +99,9 @@ class LifeAtDeepLinkScreen extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Feature Cards
             _buildFeatureCard(
               context,
@@ -117,9 +110,9 @@ class LifeAtDeepLinkScreen extends StatelessWidget {
               Icons.timer,
               () => _openLifeAt('pomodoro'),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             _buildFeatureCard(
               context,
               'Focus Mode',
@@ -127,9 +120,9 @@ class LifeAtDeepLinkScreen extends StatelessWidget {
               Icons.psychology,
               () => _openLifeAt('focus'),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             _buildFeatureCard(
               context,
               'Study Rooms',
@@ -137,9 +130,9 @@ class LifeAtDeepLinkScreen extends StatelessWidget {
               Icons.people,
               () => _openLifeAt('study'),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             _buildFeatureCard(
               context,
               'Background Music',
@@ -147,9 +140,9 @@ class LifeAtDeepLinkScreen extends StatelessWidget {
               Icons.music_note,
               () => _openLifeAt('music'),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             _buildFeatureCard(
               context,
               'LifeAt Home',
@@ -157,9 +150,9 @@ class LifeAtDeepLinkScreen extends StatelessWidget {
               Icons.home,
               () => _openLifeAt('home'),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Info Section
             Container(
               padding: const EdgeInsets.all(16),
@@ -213,9 +206,7 @@ class LifeAtDeepLinkScreen extends StatelessWidget {
   ) {
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
@@ -229,11 +220,7 @@ class LifeAtDeepLinkScreen extends StatelessWidget {
                   color: AppColors.dominantPurple.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
-                  icon,
-                  color: AppColors.dominantPurple,
-                  size: 24,
-                ),
+                child: Icon(icon, color: AppColors.dominantPurple, size: 24),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -269,4 +256,4 @@ class LifeAtDeepLinkScreen extends StatelessWidget {
       ),
     );
   }
-} 
+}

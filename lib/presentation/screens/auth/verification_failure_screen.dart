@@ -49,7 +49,9 @@ class VerificationFailureScreen extends StatelessWidget {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => EmailVerificationScreen(email: 'user@example.com'),
+                            builder: (_) => EmailVerificationScreen(
+                              email: 'user@example.com',
+                            ),
                           ),
                         );
                       },

@@ -12,12 +12,12 @@ class UserStatsProvider extends ChangeNotifier {
   final UserStatsRepositoryImpl _repository = UserStatsRepositoryImpl();
   final TrackStudySessionUseCase _trackSessionUseCase;
   final QuizCompletionUseCase _quizCompletionUseCase;
-  
+
   UserStats? _userStats;
   List<StudySession> _recentSessions = [];
   bool _isLoading = false;
   String? _error;
-  
+
   // Animation controllers
   bool _showXpAnimation = false;
   int _lastXpEarned = 0;
@@ -27,8 +27,10 @@ class UserStatsProvider extends ChangeNotifier {
   String? _lastBadgeEarned;
 
   UserStatsProvider()
-      : _trackSessionUseCase = TrackStudySessionUseCase(UserStatsRepositoryImpl()),
-        _quizCompletionUseCase = QuizCompletionUseCase(UserStatsRepositoryImpl());
+    : _trackSessionUseCase = TrackStudySessionUseCase(
+        UserStatsRepositoryImpl(),
+      ),
+      _quizCompletionUseCase = QuizCompletionUseCase(UserStatsRepositoryImpl());
 
   // Getters
   UserStats? get userStats => _userStats;
@@ -54,7 +56,7 @@ class UserStatsProvider extends ChangeNotifier {
     try {
       // Load user stats from Firebase
       _userStats = await _repository.getUserStats(user.uid);
-      
+
       if (_userStats == null) {
         // Create default stats for new user
         _userStats = UserStats(
@@ -77,16 +79,15 @@ class UserStatsProvider extends ChangeNotifier {
         );
         await _repository.createUserStats(_userStats!);
       }
-      
+
       // Load recent sessions
       await _loadRecentSessions();
-      
+
       // Listen to real-time updates
       _listenToUserStats(user.uid);
-      
+
       // Save state to local storage as backup
       await _saveStateToLocal();
-      
     } catch (e) {
       _setError('Failed to load user stats: $e');
       // Try to load from local backup
@@ -111,37 +112,37 @@ class UserStatsProvider extends ChangeNotifier {
         _lastXpEarned = newStats.totalXp - _userStats!.totalXp;
         _showXpAnimation = true;
         notifyListeners();
-        
+
         // Hide animation after 3 seconds
         Future.delayed(const Duration(seconds: 3), () {
           _showXpAnimation = false;
           notifyListeners();
         });
       }
-      
+
       // Check for streak increase
       if (newStats.currentStreak > _userStats!.currentStreak) {
         _lastStreakCount = newStats.currentStreak;
         _showStreakAnimation = true;
         notifyListeners();
-        
+
         // Hide animation after 3 seconds
         Future.delayed(const Duration(seconds: 3), () {
           _showStreakAnimation = false;
           notifyListeners();
         });
       }
-      
+
       // Check for new badges
       final newBadges = newStats.earnedBadges
           .where((badge) => !_userStats!.earnedBadges.contains(badge))
           .toList();
-      
+
       if (newBadges.isNotEmpty) {
         _lastBadgeEarned = newBadges.first;
         _showBadgeAnimation = true;
         notifyListeners();
-        
+
         // Hide animation after 3 seconds
         Future.delayed(const Duration(seconds: 3), () {
           _showBadgeAnimation = false;
@@ -149,7 +150,7 @@ class UserStatsProvider extends ChangeNotifier {
         });
       }
     }
-    
+
     _userStats = newStats;
     notifyListeners();
     _autoSaveState(); // Auto-save when stats update
@@ -275,6 +276,31 @@ class UserStatsProvider extends ChangeNotifier {
     }
   }
 
+  // CBT Test Completion with comprehensive stats tracking
+  Future<void> completeCbtTest({
+    required String subjectId,
+    required int totalQuestions,
+    required int correctAnswers,
+    required int timeSpentMinutes,
+    required int score,
+  }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      await _repository.completeCbtTest(
+        user.uid,
+        subjectId,
+        correctAnswers: correctAnswers,
+        totalQuestions: totalQuestions,
+        timeSpentMinutes: timeSpentMinutes,
+        score: score,
+      );
+    } catch (e) {
+      _setError('Failed to complete CBT test: $e');
+    }
+  }
+
   // Daily Login Check
   Future<void> checkDailyLogin() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -293,7 +319,12 @@ class UserStatsProvider extends ChangeNotifier {
     if (user == null) return;
 
     try {
-      await _repository.addXp(user.uid, xp, subjectId: subjectId, reason: reason);
+      await _repository.addXp(
+        user.uid,
+        xp,
+        subjectId: subjectId,
+        reason: reason,
+      );
     } catch (e) {
       _setError('Failed to add XP: $e');
     }
@@ -322,7 +353,10 @@ class UserStatsProvider extends ChangeNotifier {
   }
 
   // Analytics
-  Future<Map<String, dynamic>> getUserAnalytics({DateTime? from, DateTime? to}) async {
+  Future<Map<String, dynamic>> getUserAnalytics({
+    DateTime? from,
+    DateTime? to,
+  }) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return {};
 
@@ -400,7 +434,9 @@ class UserStatsProvider extends ChangeNotifier {
 
       final stateData = {
         'userStats': _userStats?.toMap(),
-        'recentSessions': _recentSessions.map((session) => session.toMap()).toList(),
+        'recentSessions': _recentSessions
+            .map((session) => session.toMap())
+            .toList(),
         'lastSaved': DateTime.now().toIso8601String(),
       };
 
@@ -420,17 +456,17 @@ class UserStatsProvider extends ChangeNotifier {
       final stateJson = prefs.getString('user_stats_${user.uid}');
       if (stateJson != null) {
         final stateData = jsonDecode(stateJson);
-        
+
         if (stateData['userStats'] != null) {
           _userStats = UserStats.fromMap(stateData['userStats'], user.uid);
         }
-        
+
         if (stateData['recentSessions'] != null) {
           _recentSessions = (stateData['recentSessions'] as List)
               .map((sessionData) => StudySession.fromMap(sessionData, ''))
               .toList();
         }
-        
+
         notifyListeners();
         // State loaded from local storage
       }
@@ -443,4 +479,4 @@ class UserStatsProvider extends ChangeNotifier {
   void _autoSaveState() {
     _saveStateToLocal();
   }
-} 
+}

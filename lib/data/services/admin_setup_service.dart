@@ -43,7 +43,7 @@ class AdminSetupService {
       }
 
       final userDoc = userQuery.docs.first;
-      
+
       // Update user role to admin
       await userDoc.reference.update({
         'role': 'admin',
@@ -53,7 +53,6 @@ class AdminSetupService {
       });
 
       // User promoted to admin successfully
-      
     } catch (e) {
       // Error promoting user to admin
       rethrow;
@@ -112,7 +111,7 @@ class AdminSetupService {
 
       final data = userDoc.data()!;
       final userRole = data['role'] ?? 'user';
-      
+
       if (userRole != 'admin' && userRole != 'developer') {
         return null;
       }
@@ -129,4 +128,4 @@ class AdminSetupService {
       return null;
     }
   }
-} 
+}

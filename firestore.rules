@@ -4,6 +4,13 @@ service cloud.firestore {
     // Allow users to read and write their own profile data
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Allow public read access for leaderboard functionality and username validation
+      allow read: if true;
+    }
+    
+    // Allow users to read and write their own notifications
+    match /users/{userId}/notifications/{notificationId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
     // Allow users to read and write their own stats
@@ -18,6 +25,11 @@ service cloud.firestore {
     
     // Allow users to manage their own library links
     match /users/{userId}/library_links/{linkId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow users to manage their own CBT results
+    match /users/{userId}/cbt_results/{resultId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     

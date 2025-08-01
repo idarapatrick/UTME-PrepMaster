@@ -17,17 +17,17 @@ class AppColors {
   static const Color darkBackgroundSecondary = Color(0xFF1E293B);
   static const Color darkBackgroundTertiary = Color(0xFF334155);
 
-  // Light mode text colors
-  static const Color textPrimary = Color(0xFF1F2937);
-  static const Color textSecondary = Color(0xFF64748B);
-  static const Color textTertiary = Color(0xFF94A3B8);
-  static const Color textLight = Color(0xFFCBD5E1);
+  // Light mode text colors - Enhanced for better contrast
+  static const Color textPrimary = Color(0xFF111827);
+  static const Color textSecondary = Color(0xFF374151);
+  static const Color textTertiary = Color(0xFF4B5563);
+  static const Color textLight = Color(0xFF6B7280);
 
-  // Dark mode text colors
-  static const Color darkTextPrimary = Color(0xFFF8FAFC);
-  static const Color darkTextSecondary = Color(0xFFCBD5E1);
-  static const Color darkTextTertiary = Color(0xFF94A3B8);
-  static const Color darkTextLight = Color(0xFF64748B);
+  // Dark mode text colors - Enhanced for better contrast
+  static const Color darkTextPrimary = Color(0xFFFFFFFF);
+  static const Color darkTextSecondary = Color(0xFFF1F5F9);
+  static const Color darkTextTertiary = Color(0xFFE2E8F0);
+  static const Color darkTextLight = Color(0xFFCBD5E1);
 
   // Border colors
   static const Color borderLight = Color(0xFFE2E8F0);
@@ -52,6 +52,7 @@ class AppColors {
   static const Color subjectPurple = Color(0xFF8B5CF6);
   static const Color subjectOrange = Color(0xFFF97316);
   static const Color subjectPink = Color(0xFFEC4899);
+  static const Color accentGreen = Color(0xFF10B981);
 
   // Card colors for dark mode
   static const Color darkCardPrimary = Color(0xFF1E293B);

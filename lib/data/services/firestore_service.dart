@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:developer' as developer;
 import '../../domain/models/user_profile_model.dart';
 import '../nigerian_universities.dart';
+import 'notification_service.dart';
 
 class FirestoreService {
   static final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -20,6 +21,7 @@ class FirestoreService {
         'xp': 0,
         'cbtHighScore': 0,
         'displayName': user.displayName ?? 'User${user.uid.substring(0, 6)}',
+        'username': null, // Will be set during signup
         'subjects': ['English'], // Default subject
       });
     }
@@ -47,7 +49,10 @@ class FirestoreService {
     String userId,
     Map<String, dynamic> data,
   ) async {
-    await _db.collection('users').doc(userId).set(data, SetOptions(merge: true));
+    await _db
+        .collection('users')
+        .doc(userId)
+        .set(data, SetOptions(merge: true));
   }
 
   static Future<void> updateStudyStatistics(
@@ -57,11 +62,11 @@ class FirestoreService {
     int? badgesCount,
   }) async {
     final updates = <String, dynamic>{};
-    
+
     if (studyStreak != null) updates['studyStreak'] = studyStreak;
     if (totalStudyTime != null) updates['totalStudyTime'] = totalStudyTime;
     if (badgesCount != null) updates['badgesCount'] = badgesCount;
-    
+
     if (updates.isNotEmpty) {
       await _db.collection('users').doc(userId).update(updates);
     }
@@ -71,7 +76,10 @@ class FirestoreService {
     String userId,
     Map<String, dynamic> data,
   ) async {
-    await _db.collection('users').doc(userId).set(data, SetOptions(merge: true));
+    await _db
+        .collection('users')
+        .doc(userId)
+        .set(data, SetOptions(merge: true));
   }
 
   // TEST & QUIZ METHODS
@@ -84,9 +92,13 @@ class FirestoreService {
     Duration duration,
   ) async {
     final batch = _db.batch();
-    
+
     // Save test result
-    final testRef = _db.collection('users').doc(userId).collection('tests').doc();
+    final testRef = _db
+        .collection('users')
+        .doc(userId)
+        .collection('tests')
+        .doc();
     batch.set(testRef, {
       'subject': subject,
       'score': score,
@@ -117,9 +129,13 @@ class FirestoreService {
     List<Map<String, dynamic>> answers,
   ) async {
     final batch = _db.batch();
-    
+
     // Save mock test result
-    final testRef = _db.collection('users').doc(userId).collection('mockTests').doc();
+    final testRef = _db
+        .collection('users')
+        .doc(userId)
+        .collection('mockTests')
+        .doc();
     batch.set(testRef, {
       'subject': subject,
       'score': score,
@@ -150,9 +166,13 @@ class FirestoreService {
     Duration duration,
   ) async {
     final batch = _db.batch();
-    
+
     // Save quiz result
-    final quizRef = _db.collection('users').doc(userId).collection('quizzes').doc();
+    final quizRef = _db
+        .collection('users')
+        .doc(userId)
+        .collection('quizzes')
+        .doc();
     batch.set(quizRef, {
       'subject': subject,
       'score': score,
@@ -173,7 +193,7 @@ class FirestoreService {
     _checkAchievements(userId);
   }
 
-  static Future<void> saveCbtResult(
+  static Future<Map<String, dynamic>?> saveCbtResult(
     String userId,
     String testId,
     int score,
@@ -181,10 +201,16 @@ class FirestoreService {
     int totalQuestions,
     int timeSpent,
   ) async {
+
+
     final batch = _db.batch();
-    
+
     // Save CBT result
-    final cbtRef = _db.collection('users').doc(userId).collection('cbt_results').doc();
+    final cbtRef = _db
+        .collection('users')
+        .doc(userId)
+        .collection('cbt_results')
+        .doc();
     batch.set(cbtRef, {
       'testId': testId,
       'score': score,
@@ -197,28 +223,95 @@ class FirestoreService {
 
     // Update user stats
     final userRef = _db.collection('users').doc(userId);
+    final userDoc = await userRef.get();
+
+
+
     final updates = <String, dynamic>{
       'totalCbtTests': FieldValue.increment(1),
       'totalCbtScore': FieldValue.increment(score),
       'lastCbtTest': FieldValue.serverTimestamp(),
     };
-    
+
     // Update high score if this score is higher
-    final userDoc = await userRef.get();
+    bool isNewHighScore = false;
     if (userDoc.exists) {
       final userData = userDoc.data()!;
       final currentHighScore = userData['cbtHighScore'] ?? 0;
       if (score > currentHighScore) {
         updates['cbtHighScore'] = score;
+        isNewHighScore = true;
       }
     } else {
-      updates['cbtHighScore'] = score;
+      // Create user document if it doesn't exist
+
+      batch.set(userRef, {
+        'cbtHighScore': score,
+        'totalCbtTests': 1,
+        'totalCbtScore': score,
+        'lastCbtTest': FieldValue.serverTimestamp(),
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      isNewHighScore = true;
     }
-    
-    batch.update(userRef, updates);
+
+    if (userDoc.exists) {
+      batch.update(userRef, updates);
+    }
 
     await batch.commit();
+
     _checkAchievements(userId);
+
+    // Check if user made it to top 20 (only if it's a new high score)
+    if (isNewHighScore) {
+      final result = await _checkLeaderboardPlacement(userId, score);
+      return result;
+    }
+
+    return null;
+  }
+
+  static Future<Map<String, dynamic>?> _checkLeaderboardPlacement(
+    String userId,
+    int score,
+  ) async {
+    try {
+      // Get current leaderboard
+      final leaderboard = await getCbtLeaderboard('all');
+
+
+      // Find user's position
+      int userRank = -1;
+      for (int i = 0; i < leaderboard.length; i++) {
+        if (leaderboard[i]['userId'] == userId) {
+          userRank = i + 1;
+          break;
+        }
+      }
+
+      
+
+      // If user is in top 20, create notification and return rank info
+      if (userRank > 0 && userRank <= 20) {
+        // Create leaderboard notification
+        await NotificationService.createLeaderboardNotification(
+          userId: userId,
+          oldPosition: 0, // New entry
+          newPosition: userRank,
+          changeType: 'improved',
+        );
+
+        final result = {'rank': userRank, 'score': score, 'inTop20': true};
+
+        return result;
+      }
+
+      return null;
+    } catch (e) {
+
+      return null;
+    }
   }
 
   static Future<List<Map<String, dynamic>>> getCbtHistory(String userId) async {
@@ -239,7 +332,7 @@ class FirestoreService {
           'correctAnswers': data['correctAnswers'] ?? 0,
           'totalQuestions': data['totalQuestions'] ?? 0,
           'timeSpent': data['timeSpent'] ?? 0,
-          'date': data['timestamp'] != null 
+          'date': data['timestamp'] != null
               ? (data['timestamp'] as Timestamp).toDate().toIso8601String()
               : DateTime.now().toIso8601String(),
         };
@@ -250,23 +343,21 @@ class FirestoreService {
     }
   }
 
-  static Future<List<Map<String, dynamic>>> getCbtLeaderboard(String filter) async {
+  static Future<List<Map<String, dynamic>>> getCbtLeaderboard(
+    String filter,
+  ) async {
     try {
-      Query query = _db.collection('users');
-      
-      // Apply time filter if needed
-      if (filter == 'this_week') {
-        final weekAgo = DateTime.now().subtract(const Duration(days: 7));
-        query = query.where('lastCbtTest', isGreaterThanOrEqualTo: weekAgo);
-      } else if (filter == 'this_month') {
-        final monthAgo = DateTime.now().subtract(const Duration(days: 30));
-        query = query.where('lastCbtTest', isGreaterThanOrEqualTo: monthAgo);
-      }
+  
 
-      final querySnapshot = await query
+      // Get all users with cbtHighScore > 0 (simplified query)
+      final querySnapshot = await _db
+          .collection('users')
+          .where('cbtHighScore', isGreaterThan: 0)
           .orderBy('cbtHighScore', descending: true)
           .limit(50)
           .get();
+
+
 
       final List<Map<String, dynamic>> leaderboard = [];
 
@@ -275,28 +366,62 @@ class FirestoreService {
         final userId = doc.id;
         final dataMap = data as Map<String, dynamic>;
         final cbtHighScore = dataMap['cbtHighScore'] ?? 0;
-        
-        if (cbtHighScore > 0) {
+        final lastCbtTest = dataMap['lastCbtTest'];
+
+
+
+        // Apply time filter in memory if needed
+        bool includeUser = true;
+        if (filter == 'this_week') {
+          final weekAgo = DateTime.now().subtract(const Duration(days: 7));
+          if (lastCbtTest != null) {
+            final testDate = (lastCbtTest as Timestamp).toDate();
+            includeUser = testDate.isAfter(weekAgo);
+          } else {
+            includeUser = false;
+          }
+        } else if (filter == 'this_month') {
+          final monthAgo = DateTime.now().subtract(const Duration(days: 30));
+          if (lastCbtTest != null) {
+            final testDate = (lastCbtTest as Timestamp).toDate();
+            includeUser = testDate.isAfter(monthAgo);
+          } else {
+            includeUser = false;
+          }
+        }
+
+        if (cbtHighScore > 0 && includeUser) {
           leaderboard.add({
             'userId': userId,
-            'displayName': dataMap['displayName'] ?? 'Anonymous',
-            'score': cbtHighScore,
-            'date': dataMap['lastCbtTest'] != null 
-                ? (dataMap['lastCbtTest'] as Timestamp).toDate().toIso8601String()
+            'displayName':
+                dataMap['username'] ?? dataMap['displayName'] ?? 'Anonymous',
+            'score': cbtHighScore.toInt(), // Ensure score is always an integer
+            'date': lastCbtTest != null
+                ? (lastCbtTest as Timestamp).toDate().toIso8601String()
                 : DateTime.now().toIso8601String(),
           });
         }
       }
 
+
       return leaderboard;
     } catch (e) {
+
       // Error loading CBT leaderboard
       return [];
     }
   }
 
-  static Future<Map<String, dynamic>?> getSubjectProgress(String userId, String subject) async {
-    final doc = await _db.collection('users').doc(userId).collection('subject_progress').doc(subject).get();
+  static Future<Map<String, dynamic>?> getSubjectProgress(
+    String userId,
+    String subject,
+  ) async {
+    final doc = await _db
+        .collection('users')
+        .doc(userId)
+        .collection('subject_progress')
+        .doc(subject)
+        .get();
     return doc.exists ? doc.data() : null;
   }
 
@@ -305,19 +430,30 @@ class FirestoreService {
   static Future<List<String>> loadUserSubjects(String userId) async {
     final doc = await _db.collection('users').doc(userId).get();
     if (!doc.exists) return [];
-    
+
     final data = doc.data()!;
     return List<String>.from(data['subjects'] ?? []);
   }
 
-  static Future<void> saveUserSubjects(String userId, List<String> subjects) async {
+  static Future<void> saveUserSubjects(
+    String userId,
+    List<String> subjects,
+  ) async {
     await _db.collection('users').doc(userId).set({
       'subjects': subjects,
     }, SetOptions(merge: true));
   }
 
-  static Future<Map<String, dynamic>?> loadSubjectProgress(String userId, String subject) async {
-    final doc = await _db.collection('users').doc(userId).collection('subject_progress').doc(subject).get();
+  static Future<Map<String, dynamic>?> loadSubjectProgress(
+    String userId,
+    String subject,
+  ) async {
+    final doc = await _db
+        .collection('users')
+        .doc(userId)
+        .collection('subject_progress')
+        .doc(subject)
+        .get();
     return doc.exists ? doc.data() : null;
   }
 
@@ -363,10 +499,11 @@ class FirestoreService {
   // LEADERBOARD METHODS
 
   static Future<List<Map<String, dynamic>>> fetchXpLeaderboard() async {
-    final query = _db.collection('users')
+    final query = _db
+        .collection('users')
         .orderBy('xp', descending: true)
         .limit(50);
-    
+
     final snapshot = await query.get();
     return snapshot.docs.map((doc) {
       final data = doc.data();
@@ -380,10 +517,11 @@ class FirestoreService {
   }
 
   static Future<List<Map<String, dynamic>>> fetchCbtLeaderboard() async {
-    final query = _db.collection('users')
+    final query = _db
+        .collection('users')
         .orderBy('cbtHighScore', descending: true)
         .limit(50);
-    
+
     final snapshot = await query.get();
     return snapshot.docs.map((doc) {
       final data = doc.data();
@@ -402,7 +540,7 @@ class FirestoreService {
     try {
       final doc = await _db.collection('users').doc(userId).get();
       if (!doc.exists) return [];
-      
+
       final data = doc.data()!;
       return List<String>.from(data['achievements'] ?? []);
     } catch (e) {
@@ -421,6 +559,8 @@ class FirestoreService {
     // Implementation for file upload
     // This would use Firebase Storage
   }
+
+
 
   // PRIVATE HELPER METHODS
 
@@ -441,10 +581,10 @@ class FirestoreService {
   static void _checkAchievements(String userId) {
     _db.collection('users').doc(userId).get().then((doc) async {
       if (!doc.exists) return;
-      
+
       final data = doc.data()!;
       final achievements = List<String>.from(data['achievements'] ?? []);
-      
+
       // Check for various achievements
       if (_hasAchievement(achievements, 'top-1')) {
         // Check if user is #1 in leaderboard
@@ -453,7 +593,7 @@ class FirestoreService {
           _grantAchievement(userId, 'top-1');
         }
       }
-      
+
       if (_hasAchievement(achievements, 'streak-7')) {
         // Check for 7-day streak
         final streak = data['currentStreak'] ?? 0;
@@ -461,7 +601,7 @@ class FirestoreService {
           _grantAchievement(userId, 'streak-7');
         }
       }
-      
+
       if (_hasAchievement(achievements, 'perfect-score')) {
         // Check for perfect score
         final tests = data['totalTests'] ?? 0;
@@ -470,19 +610,21 @@ class FirestoreService {
           _grantAchievement(userId, 'perfect-score');
         }
       }
-      
+
       if (_hasAchievement(achievements, 'fast-learner')) {
         // Check for quick completion
         final avgTime = data['averageTestTime'] ?? 0;
-        if (avgTime > 0 && avgTime < 300) { // Less than 5 minutes
+        if (avgTime > 0 && avgTime < 300) {
+          // Less than 5 minutes
           _grantAchievement(userId, 'fast-learner');
         }
       }
-      
+
       if (_hasAchievement(achievements, 'bookworm')) {
         // Check for study time
         final studyTime = data['totalStudyTime'] ?? 0;
-        if (studyTime > 3600) { // More than 1 hour
+        if (studyTime > 3600) {
+          // More than 1 hour
           _grantAchievement(userId, 'bookworm');
         }
       }

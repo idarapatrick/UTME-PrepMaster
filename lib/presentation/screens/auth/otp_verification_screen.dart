@@ -44,7 +44,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
     try {
       final isVerified = await _authService.checkEmailVerified();
-      
+
       if (isVerified) {
         _timer?.cancel();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -71,7 +71,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
     try {
       final result = await _authService.resendEmailVerification();
-      
+
       if (result.isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -81,10 +81,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result.message),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(result.message), backgroundColor: Colors.red),
         );
       }
     } catch (e) {
@@ -104,7 +101,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-              backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: AppColors.backgroundPrimary,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -120,7 +117,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: 40),
-              
+
               // Header
               Text(
                 'Verify Your Email',
@@ -133,10 +130,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               SizedBox(height: 12),
               Text(
                 'We\'ve sent a verification link to your email address. Please check your inbox and click the verification link.',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
               ),
               SizedBox(height: 40),
 
@@ -156,16 +150,16 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   ),
                 ),
               ),
-              
+
               SizedBox(height: 40),
 
               // Instructions
               Container(
                 padding: EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                                  color: Colors.blue.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                  color: Colors.blue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,7 +192,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   ],
                 ),
               ),
-              
+
               SizedBox(height: 24),
 
               // Auto-check status
@@ -242,7 +236,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                         ),
                 ),
               ),
-              
+
               SizedBox(height: 24),
 
               // Manual check button
@@ -273,4 +267,4 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       ),
     );
   }
-} 
+}

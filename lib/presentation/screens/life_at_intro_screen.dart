@@ -40,11 +40,7 @@ class LifeAtIntroScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    Icon(
-                      Icons.psychology,
-                      size: 60,
-                      color: Colors.white,
-                    ),
+                    Icon(Icons.psychology, size: 60, color: Colors.white),
                     const SizedBox(height: 16),
                     const Text(
                       'Welcome to LifeAt!',
@@ -65,19 +61,16 @@ class LifeAtIntroScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               // Features Section
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: AppColors.backgroundPrimary,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: AppColors.borderLight,
-                    width: 1,
-                  ),
+                  border: Border.all(color: AppColors.borderLight, width: 1),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,30 +84,54 @@ class LifeAtIntroScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    _buildFeatureItem(Icons.timer, 'Pomodoro Timer', 'Stay focused with 25/5 minute cycles'),
-                    _buildFeatureItem(Icons.music_note, 'Background Music', 'Curated playlists for concentration'),
-                    _buildFeatureItem(Icons.people, 'Virtual Study Rooms', 'Study with others worldwide'),
-                    _buildFeatureItem(Icons.palette, 'Customizable Backgrounds', 'Create your perfect study environment'),
-                    _buildFeatureItem(Icons.analytics, 'Progress Tracking', 'Monitor your study sessions'),
-                    _buildFeatureItem(Icons.notifications, 'Study Reminders', 'Never miss your study time'),
+                    _buildFeatureItem(
+                      Icons.timer,
+                      'Pomodoro Timer',
+                      'Stay focused with 25/5 minute cycles',
+                    ),
+                    _buildFeatureItem(
+                      Icons.music_note,
+                      'Background Music',
+                      'Curated playlists for concentration',
+                    ),
+                    _buildFeatureItem(
+                      Icons.people,
+                      'Virtual Study Rooms',
+                      'Study with others worldwide',
+                    ),
+                    _buildFeatureItem(
+                      Icons.palette,
+                      'Customizable Backgrounds',
+                      'Create your perfect study environment',
+                    ),
+                    _buildFeatureItem(
+                      Icons.analytics,
+                      'Progress Tracking',
+                      'Monitor your study sessions',
+                    ),
+                    _buildFeatureItem(
+                      Icons.notifications,
+                      'Study Reminders',
+                      'Never miss your study time',
+                    ),
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               // Launch Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                                onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const LifeAtStudyScreen(),
-                  ),
-                );
-              },
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LifeAtStudyScreen(),
+                      ),
+                    );
+                  },
                   icon: const Icon(Icons.explore, size: 24),
                   label: const Text(
                     'Launch LifeAt',
@@ -123,7 +140,10 @@ class LifeAtIntroScreen extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.dominantPurple,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 32,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -131,16 +151,13 @@ class LifeAtIntroScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Info Text
               Text(
                 'Tap to open LifeAt in the app browser',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                ),
+                style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -161,11 +178,7 @@ class LifeAtIntroScreen extends StatelessWidget {
               color: AppColors.dominantPurple.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              icon,
-              color: AppColors.dominantPurple,
-              size: 20,
-            ),
+            child: Icon(icon, color: AppColors.dominantPurple, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(

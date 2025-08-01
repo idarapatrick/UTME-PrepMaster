@@ -196,7 +196,7 @@ class BadgeService {
   static Future<void> initializeSampleBadges() async {
     try {
       final batch = _firestore.batch();
-      
+
       for (int i = 0; i < _sampleBadges.length; i++) {
         final badge = _sampleBadges[i];
         final docRef = _firestore.collection('badges').doc('badge_${i + 1}');
@@ -206,7 +206,7 @@ class BadgeService {
           'updatedAt': FieldValue.serverTimestamp(),
         });
       }
-      
+
       await batch.commit();
       // Sample badges initialized successfully
     } catch (e) {
@@ -218,10 +218,7 @@ class BadgeService {
   static Future<List<Map<String, dynamic>>> getAllBadges() async {
     try {
       final snapshot = await _firestore.collection('badges').get();
-      return snapshot.docs.map((doc) => {
-        'id': doc.id,
-        ...doc.data(),
-      }).toList();
+      return snapshot.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
     } catch (e) {
       // Error getting badges
       return [];
@@ -233,10 +230,7 @@ class BadgeService {
     try {
       final doc = await _firestore.collection('badges').doc(badgeId).get();
       if (doc.exists) {
-        return {
-          'id': doc.id,
-          ...doc.data()!,
-        };
+        return {'id': doc.id, ...doc.data()!};
       }
       return null;
     } catch (e) {
@@ -244,4 +238,4 @@ class BadgeService {
       return null;
     }
   }
-} 
+}

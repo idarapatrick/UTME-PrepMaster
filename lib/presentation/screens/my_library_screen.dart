@@ -177,7 +177,9 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
       builder: (context) {
         String temp = currentNote;
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           title: Row(
             children: [
               Icon(Icons.edit, color: AppColors.dominantPurple),
@@ -307,15 +309,15 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
             // Header with stats
             _buildHeader(context),
             const SizedBox(height: 24),
-            
+
             // PDFs Section
             _buildPdfSection(context),
             const SizedBox(height: 24),
-            
+
             // Notes Section
             _buildNotesSection(context),
             const SizedBox(height: 24),
-            
+
             // Links Section
             _buildLinksSection(context),
           ],
@@ -340,11 +342,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.library_books,
-            color: Colors.white,
-            size: 32,
-          ),
+          Icon(Icons.library_books, color: Colors.white, size: 32),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -403,7 +401,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
           ],
         ),
         const SizedBox(height: 16),
-        
+
         // Default UTME Literature PDF
         Card(
           color: AppColors.getCardColor(context),
@@ -438,17 +436,14 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
               ),
             ),
             trailing: IconButton(
-              icon: Icon(
-                Icons.download,
-                color: AppColors.dominantPurple,
-              ),
+              icon: Icon(Icons.download, color: AppColors.dominantPurple),
               onPressed: () {
                 _openPdf('assets/pdfs/last_days_at_forcados_high_school.pdf');
               },
             ),
           ),
         ),
-        
+
         if (_pdfDocs.isNotEmpty) ...[
           const SizedBox(height: 16),
           Text(
@@ -459,40 +454,39 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          ..._pdfDocs.map((pdf) => Card(
-            color: AppColors.getCardColor(context),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+          ..._pdfDocs.map(
+            (pdf) => Card(
+              color: AppColors.getCardColor(context),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentAmber.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.picture_as_pdf,
+                    color: AppColors.accentAmber,
+                    size: 24,
+                  ),
+                ),
+                title: Text(
+                  pdf['fileName'],
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.getTextPrimary(context),
+                  ),
+                ),
+                trailing: IconButton(
+                  icon: Icon(Icons.delete, color: AppColors.errorRed),
+                  onPressed: () => _deletePdf(pdf['id']),
+                ),
+              ),
             ),
-            child: ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.accentAmber.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  Icons.picture_as_pdf,
-                  color: AppColors.accentAmber,
-                  size: 24,
-                ),
-              ),
-              title: Text(
-                pdf['fileName'],
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.getTextPrimary(context),
-                ),
-              ),
-              trailing: IconButton(
-                icon: Icon(
-                  Icons.delete,
-                  color: AppColors.errorRed,
-                ),
-                onPressed: () => _deletePdf(pdf['id']),
-              ),
-            ),
-          )),
+          ),
         ],
       ],
     );
@@ -530,14 +524,9 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
           ],
         ),
         const SizedBox(height: 16),
-        
+
         if (_noteDocs.isEmpty)
-          _buildEmptyState(
-            context,
-            Icons.note_add,
-            'No Notes Yet',
-            'Start taking notes to keep track of important information',
-          )
+          _buildNotesCard(context)
         else
           Column(
             children: [
@@ -551,7 +540,9 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const NotesScreen()),
+                          MaterialPageRoute(
+                            builder: (context) => const NotesScreen(),
+                          ),
                         );
                       },
                       child: Text(
@@ -570,13 +561,58 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
     );
   }
 
+  Widget _buildNotesCard(BuildContext context) {
+    return Card(
+      color: AppColors.getCardColor(context),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const NotesScreen()),
+          );
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.note_add,
+                size: 48,
+                color: AppColors.getTextSecondary(context),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No Notes Yet',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.getTextPrimary(context),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Start taking notes to keep track of important information',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.getTextSecondary(context),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildNoteCard(BuildContext context, Map<String, dynamic> note) {
     final noteText = note['note'] as String;
     final timestamp = note['timestamp'] as Timestamp?;
-    final timeString = timestamp != null 
+    final timeString = timestamp != null
         ? _formatTime(timestamp.toDate())
         : 'Now';
-    
+
     // Generate a color based on note content with better contrast
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final colors = [
@@ -589,16 +625,18 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
     ];
     final colorIndex = noteText.length % colors.length;
     final cardColor = colors[colorIndex];
-    
+
     // Determine text color based on background luminance
-    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.textPrimary;
-    final secondaryTextColor = isDark ? AppColors.darkTextSecondary : AppColors.textSecondary;
-    
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.textPrimary;
+    final secondaryTextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.textSecondary;
+
     return Card(
       color: cardColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () => _editNote(note['id'], note['note']),
         borderRadius: BorderRadius.circular(12),
@@ -609,11 +647,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
             children: [
               Row(
                 children: [
-                  Icon(
-                    Icons.sticky_note_2,
-                    color: textColor,
-                    size: 18,
-                  ),
+                  Icon(Icons.sticky_note_2, color: textColor, size: 18),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -643,9 +677,18 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                         value: 'edit',
                         child: Row(
                           children: [
-                            Icon(Icons.edit, size: 16, color: AppColors.getTextPrimary(context)),
+                            Icon(
+                              Icons.edit,
+                              size: 16,
+                              color: AppColors.getTextPrimary(context),
+                            ),
                             const SizedBox(width: 8),
-                            Text('Edit', style: TextStyle(color: AppColors.getTextPrimary(context))),
+                            Text(
+                              'Edit',
+                              style: TextStyle(
+                                color: AppColors.getTextPrimary(context),
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -653,9 +696,16 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                         value: 'delete',
                         child: Row(
                           children: [
-                            Icon(Icons.delete, size: 16, color: AppColors.errorRed),
+                            Icon(
+                              Icons.delete,
+                              size: 16,
+                              color: AppColors.errorRed,
+                            ),
                             const SizedBox(width: 8),
-                            Text('Delete', style: TextStyle(color: AppColors.errorRed)),
+                            Text(
+                              'Delete',
+                              style: TextStyle(color: AppColors.errorRed),
+                            ),
                           ],
                         ),
                       ),
@@ -667,11 +717,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
               Expanded(
                 child: Text(
                   noteText,
-                  style: TextStyle(
-                    color: textColor,
-                    fontSize: 14,
-                    height: 1.4,
-                  ),
+                  style: TextStyle(color: textColor, fontSize: 14, height: 1.4),
                   maxLines: 8,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -715,14 +761,9 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
           ],
         ),
         const SizedBox(height: 16),
-        
+
         if (_linkDocs.isEmpty)
-          _buildEmptyState(
-            context,
-            Icons.link,
-            'No Links Yet',
-            'Save important study resources and links here',
-          )
+          _buildLinksCard(context)
         else
           Column(
             children: [
@@ -736,7 +777,9 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const LinksScreen()),
+                          MaterialPageRoute(
+                            builder: (context) => const LinksScreen(),
+                          ),
                         );
                       },
                       child: Text(
@@ -755,12 +798,57 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
     );
   }
 
+  Widget _buildLinksCard(BuildContext context) {
+    return Card(
+      color: AppColors.getCardColor(context),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const LinksScreen()),
+          );
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.link,
+                size: 48,
+                color: AppColors.getTextSecondary(context),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No Links Yet',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.getTextPrimary(context),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Save important study resources and links here',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.getTextSecondary(context),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildLinkRow(BuildContext context, Map<String, dynamic> link) {
     final title = link['title'] ?? 'Untitled';
     final url = link['link'] ?? '';
     final description = link['description'] ?? '';
     final domain = _extractDomain(url);
-    
+
     return Container(
       decoration: BoxDecoration(
         border: Border(
@@ -787,11 +875,16 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
               child: InkWell(
                 onTap: () => _openLink(url),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.dominantPurple.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: AppColors.dominantPurple.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: AppColors.dominantPurple.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Text(
                     domain,
@@ -838,9 +931,18 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                   value: 'open',
                   child: Row(
                     children: [
-                      Icon(Icons.open_in_new, size: 16, color: AppColors.getTextPrimary(context)),
+                      Icon(
+                        Icons.open_in_new,
+                        size: 16,
+                        color: AppColors.getTextPrimary(context),
+                      ),
                       const SizedBox(width: 8),
-                      Text('Open', style: TextStyle(color: AppColors.getTextPrimary(context))),
+                      Text(
+                        'Open',
+                        style: TextStyle(
+                          color: AppColors.getTextPrimary(context),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -848,9 +950,18 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                   value: 'edit',
                   child: Row(
                     children: [
-                      Icon(Icons.edit, size: 16, color: AppColors.getTextPrimary(context)),
+                      Icon(
+                        Icons.edit,
+                        size: 16,
+                        color: AppColors.getTextPrimary(context),
+                      ),
                       const SizedBox(width: 8),
-                      Text('Edit', style: TextStyle(color: AppColors.getTextPrimary(context))),
+                      Text(
+                        'Edit',
+                        style: TextStyle(
+                          color: AppColors.getTextPrimary(context),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -860,7 +971,10 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                     children: [
                       Icon(Icons.delete, size: 16, color: AppColors.errorRed),
                       const SizedBox(width: 8),
-                      Text('Delete', style: TextStyle(color: AppColors.errorRed)),
+                      Text(
+                        'Delete',
+                        style: TextStyle(color: AppColors.errorRed),
+                      ),
                     ],
                   ),
                 ),
@@ -872,24 +986,22 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context, IconData icon, String title, String subtitle) {
+  Widget _buildEmptyState(
+    BuildContext context,
+    IconData icon,
+    String title,
+    String subtitle,
+  ) {
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
         color: AppColors.getCardColor(context),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.getBorderLight(context),
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.getBorderLight(context), width: 1),
       ),
       child: Column(
         children: [
-          Icon(
-            icon,
-            size: 48,
-            color: AppColors.getTextSecondary(context),
-          ),
+          Icon(icon, size: 48, color: AppColors.getTextSecondary(context)),
           const SizedBox(height: 16),
           Text(
             title,
@@ -923,7 +1035,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
   String _formatTime(DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
-    
+
     if (difference.inMinutes < 1) {
       return 'Just now';
     } else if (difference.inMinutes < 60) {
@@ -940,27 +1052,27 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Could not open: $url'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not open: $url')));
     }
   }
 
   Future<void> _editLink(String docId, Map<String, dynamic> currentLink) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    
+
     Map<String, String>? result = await showDialog<Map<String, String>>(
       context: context,
       builder: (context) {
         String title = currentLink['title'] ?? '';
         String link = currentLink['link'] ?? '';
         String description = currentLink['description'] ?? '';
-        
+
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           title: Row(
             children: [
               Icon(Icons.edit, color: AppColors.dominantPurple),
@@ -1017,7 +1129,10 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: AppColors.dominantPurple),
                   ),
-                  prefixIcon: Icon(Icons.description, color: AppColors.textSecondary),
+                  prefixIcon: Icon(
+                    Icons.description,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ),
             ],
@@ -1046,7 +1161,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
         );
       },
     );
-    
+
     if (result != null && result['link']?.trim().isNotEmpty == true) {
       await FirebaseFirestore.instance
           .collection('users')
@@ -1054,31 +1169,31 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
           .collection('library_links')
           .doc(docId)
           .update({
-        'title': result['title']?.trim() ?? 'Untitled',
-        'link': result['link']?.trim() ?? '',
-        'description': result['description']?.trim() ?? '',
-      });
+            'title': result['title']?.trim() ?? 'Untitled',
+            'link': result['link']?.trim() ?? '',
+            'description': result['description']?.trim() ?? '',
+          });
       _loadLibrary();
     }
   }
 
   Future<void> _openPdf(String assetPath) async {
     try {
+      print('Opening PDF with path: $assetPath'); // Debug print
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => PdfViewerScreen(
-            pdfPath: 'https://firebasestorage.googleapis.com/v0/b/utme-prepmaster.appspot.com/o/last_days_at_forcados_high_school.pdf?alt=media',
+            pdfPath: assetPath,
             title: 'Last Days at Forcados High School',
           ),
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error opening PDF: $e'),
-        ),
-      );
+      print('Error in _openPdf: $e'); // Debug print
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error opening PDF: $e')));
     }
   }
 }

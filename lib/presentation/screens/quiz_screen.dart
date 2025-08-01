@@ -47,11 +47,13 @@ class _QuizScreenState extends State<QuizScreen> {
 
   void _generateQuestions() async {
     setState(() => _loading = true);
-    
+
     try {
       // Try to get questions from centralized service first
-      final firebaseQuestions = await CbtQuestionService.getQuestionsForSubject(widget.subject);
-      
+      final firebaseQuestions = await CbtQuestionService.getQuestionsForSubject(
+        widget.subject,
+      );
+
       if (firebaseQuestions.isNotEmpty) {
         // Filter by quiz type if needed
         _questions = _filterQuestionsByType(firebaseQuestions, widget.quizType);
@@ -64,25 +66,32 @@ class _QuizScreenState extends State<QuizScreen> {
       // Fallback to local questions
       _questions = _getQuestionsForSubject(widget.subject, widget.quizType);
     }
-    
+
     setState(() => _loading = false);
   }
 
-  List<_QuizQuestion> _filterQuestionsByType(List<TestQuestion> questions, String quizType) {
+  List<_QuizQuestion> _filterQuestionsByType(
+    List<TestQuestion> questions,
+    String quizType,
+  ) {
     // Convert TestQuestion to _QuizQuestion and filter by type
-    return questions.map((q) => _QuizQuestion(
-      id: q.id,
-      question: q.question,
-      options: q.options,
-      correctAnswer: q.options[q.correctAnswer],
-      explanation: q.explanation,
-    )).toList();
+    return questions
+        .map(
+          (q) => _QuizQuestion(
+            id: q.id,
+            question: q.question,
+            options: q.options,
+            correctAnswer: q.options[q.correctAnswer],
+            explanation: q.explanation,
+          ),
+        )
+        .toList();
   }
 
   List<_QuizQuestion> _getQuestionsForSubject(String subject, String quizType) {
     final questions = <_QuizQuestion>[];
     List<TestQuestion> allQuestions = [];
-    
+
     switch (subject) {
       case 'Mathematics':
         allQuestions = mathematicsQuestions;
@@ -120,23 +129,25 @@ class _QuizScreenState extends State<QuizScreen> {
       default:
         // Generic questions for other subjects
         for (int i = 0; i < 40; i++) {
-          allQuestions.add(TestQuestion(
-            id: '${subject}_$i',
-            question: 'Sample question $i for $subject?',
-            options: ['Option A', 'Option B', 'Option C', 'Option D'],
-            correctAnswer: i % 4,
-            subject: subject,
-            explanation: 'This is a sample explanation.',
-          ));
+          allQuestions.add(
+            TestQuestion(
+              id: '${subject}_$i',
+              question: 'Sample question $i for $subject?',
+              options: ['Option A', 'Option B', 'Option C', 'Option D'],
+              correctAnswer: i % 4,
+              subject: subject,
+              explanation: 'This is a sample explanation.',
+            ),
+          );
         }
     }
-    
+
     // For quizzes, randomly select 10 questions
     if (quizType == 'quiz') {
       final random = Random();
       final shuffledQuestions = List<TestQuestion>.from(allQuestions);
       shuffledQuestions.shuffle(random);
-      
+
       // Take first 10 questions (or all if less than 10)
       final selectedQuestions = shuffledQuestions.take(10).toList();
       questions.addAll(_convertTestQuestionsToQuizQuestions(selectedQuestions));
@@ -144,18 +155,24 @@ class _QuizScreenState extends State<QuizScreen> {
       // For CBT tests, use all questions
       questions.addAll(_convertTestQuestionsToQuizQuestions(allQuestions));
     }
-    
+
     return questions;
   }
 
-  List<_QuizQuestion> _convertTestQuestionsToQuizQuestions(List<TestQuestion> testQuestions) {
-    return testQuestions.map((q) => _QuizQuestion(
-      id: q.id,
-      question: q.question,
-      options: q.options,
-      correctAnswer: q.options[q.correctAnswer],
-      explanation: q.explanation,
-    )).toList();
+  List<_QuizQuestion> _convertTestQuestionsToQuizQuestions(
+    List<TestQuestion> testQuestions,
+  ) {
+    return testQuestions
+        .map(
+          (q) => _QuizQuestion(
+            id: q.id,
+            question: q.question,
+            options: q.options,
+            correctAnswer: q.options[q.correctAnswer],
+            explanation: q.explanation,
+          ),
+        )
+        .toList();
   }
 
   void _startTimer() {
@@ -171,7 +188,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
   void _selectAnswer(String answer) {
     if (_finished) return;
-    
+
     setState(() {
       _selectedAnswers[_currentQuestionIndex] = answer;
     });
@@ -207,7 +224,7 @@ class _QuizScreenState extends State<QuizScreen> {
     if (user != null) {
       final correctAnswers = _calculateCorrectAnswers();
       final score = (correctAnswers / _questions.length) * 100;
-      
+
       try {
         await FirestoreService.saveQuizResult(
           user.uid,
@@ -216,16 +233,18 @@ class _QuizScreenState extends State<QuizScreen> {
           _questions.length,
           Duration(seconds: _timeElapsed),
         );
-        
+
         // Update user stats with new XP system
-        final userStatsProvider = Provider.of<UserStatsProvider>(context, listen: false);
+        final userStatsProvider = Provider.of<UserStatsProvider>(
+          context,
+          listen: false,
+        );
         await userStatsProvider.completeQuizWithNewSystem(
           subjectId: widget.subject,
           totalQuestions: _questions.length,
           correctAnswers: correctAnswers,
           timeSpentMinutes: _timeElapsed ~/ 60, // Convert seconds to minutes
         );
-        
       } catch (e) {
         // Error saving quiz results
         ScaffoldMessenger.of(context).showSnackBar(
@@ -273,9 +292,7 @@ class _QuizScreenState extends State<QuizScreen> {
             },
           ),
         ),
-        body: const Center(
-          child: CircularProgressIndicator(),
-        ),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -322,9 +339,11 @@ class _QuizScreenState extends State<QuizScreen> {
           LinearProgressIndicator(
             value: progress,
             backgroundColor: Colors.grey[300],
-            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.dominantPurple),
+            valueColor: const AlwaysStoppedAnimation<Color>(
+              AppColors.dominantPurple,
+            ),
           ),
-          
+
           // Question counter
           Padding(
             padding: const EdgeInsets.all(16),
@@ -349,7 +368,7 @@ class _QuizScreenState extends State<QuizScreen> {
               ],
             ),
           ),
-          
+
           // Question
           Expanded(
             child: SingleChildScrollView(
@@ -365,10 +384,11 @@ class _QuizScreenState extends State<QuizScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Options
                   ...currentQuestion.options.map((option) {
-                    final isSelected = _selectedAnswers[_currentQuestionIndex] == option;
+                    final isSelected =
+                        _selectedAnswers[_currentQuestionIndex] == option;
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: GestureDetector(
@@ -377,10 +397,14 @@ class _QuizScreenState extends State<QuizScreen> {
                           width: double.infinity,
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: isSelected ? AppColors.dominantPurple : Colors.grey[100],
+                            color: isSelected
+                                ? AppColors.dominantPurple
+                                : Colors.grey[100],
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                              color: isSelected ? AppColors.dominantPurple : Colors.grey[300]!,
+                              color: isSelected
+                                  ? AppColors.dominantPurple
+                                  : Colors.grey[300]!,
                             ),
                           ),
                           child: Text(
@@ -388,7 +412,9 @@ class _QuizScreenState extends State<QuizScreen> {
                             style: TextStyle(
                               fontSize: 16,
                               color: isSelected ? Colors.white : Colors.black,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                             ),
                           ),
                         ),
@@ -399,7 +425,7 @@ class _QuizScreenState extends State<QuizScreen> {
               ),
             ),
           ),
-          
+
           // Navigation buttons
           Padding(
             padding: const EdgeInsets.all(16),
@@ -407,7 +433,9 @@ class _QuizScreenState extends State<QuizScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 ElevatedButton(
-                  onPressed: _currentQuestionIndex > 0 ? _previousQuestion : null,
+                  onPressed: _currentQuestionIndex > 0
+                      ? _previousQuestion
+                      : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.grey[300],
                     foregroundColor: Colors.black,
@@ -415,12 +443,18 @@ class _QuizScreenState extends State<QuizScreen> {
                   child: const Text('Previous'),
                 ),
                 ElevatedButton(
-                  onPressed: _currentQuestionIndex < _questions.length - 1 ? _nextQuestion : _finishQuiz,
+                  onPressed: _currentQuestionIndex < _questions.length - 1
+                      ? _nextQuestion
+                      : _finishQuiz,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.dominantPurple,
                     foregroundColor: Colors.white,
                   ),
-                  child: Text(_currentQuestionIndex < _questions.length - 1 ? 'Next' : 'Finish'),
+                  child: Text(
+                    _currentQuestionIndex < _questions.length - 1
+                        ? 'Next'
+                        : 'Finish',
+                  ),
                 ),
               ],
             ),
@@ -433,7 +467,7 @@ class _QuizScreenState extends State<QuizScreen> {
   Widget _buildResultsScreen() {
     final correctAnswers = _calculateCorrectAnswers();
     final score = (correctAnswers / _questions.length) * 100;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Quiz Results'),
@@ -475,26 +509,20 @@ class _QuizScreenState extends State<QuizScreen> {
                   const SizedBox(height: 8),
                   Text(
                     'You got $correctAnswers out of ${_questions.length} questions correct',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                    ),
+                    style: const TextStyle(fontSize: 16, color: Colors.white),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'Time taken: ${_formatTime(_timeElapsed)}',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.white70,
-                    ),
+                    style: const TextStyle(fontSize: 14, color: Colors.white70),
                   ),
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Action buttons
             SizedBox(
               width: double.infinity,
@@ -510,9 +538,9 @@ class _QuizScreenState extends State<QuizScreen> {
                 child: const Text('Back to Home'),
               ),
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(

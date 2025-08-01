@@ -29,48 +29,41 @@ class _BadgeAnimationWidgetState extends State<BadgeAnimationWidget>
   @override
   void initState() {
     super.initState();
-    
+
     _controller = AnimationController(
       duration: const Duration(milliseconds: 3000),
       vsync: this,
     );
-    
+
     _sparkleController = AnimationController(
       duration: const Duration(milliseconds: 2500),
       vsync: this,
     );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.0, 0.5, curve: Curves.elasticOut),
-    ));
+    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.5, curve: Curves.elasticOut),
+      ),
+    );
 
-    _opacityAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.0, 0.7, curve: Curves.easeIn),
-    ));
+    _opacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.7, curve: Curves.easeIn),
+      ),
+    );
 
-    _rotationAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.3, 0.9, curve: Curves.easeInOut),
-    ));
+    _rotationAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.3, 0.9, curve: Curves.easeInOut),
+      ),
+    );
 
-    _sparkleAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _sparkleController,
-      curve: Curves.easeOut,
-    ));
+    _sparkleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _sparkleController, curve: Curves.easeOut),
+    );
 
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
@@ -85,19 +78,21 @@ class _BadgeAnimationWidgetState extends State<BadgeAnimationWidget>
   void _createSparkles() {
     final random = math.Random();
     for (int i = 0; i < 16; i++) {
-      _sparkles.add(Sparkle(
-        position: Offset(
-          (random.nextDouble() - 0.5) * 120,
-          (random.nextDouble() - 0.5) * 120,
+      _sparkles.add(
+        Sparkle(
+          position: Offset(
+            (random.nextDouble() - 0.5) * 120,
+            (random.nextDouble() - 0.5) * 120,
+          ),
+          velocity: Offset(
+            (random.nextDouble() - 0.5) * 150,
+            (random.nextDouble() - 0.5) * 150,
+          ),
+          color: _getRandomSparkleColor(),
+          size: random.nextDouble() * 8 + 4,
+          rotation: random.nextDouble() * 2 * math.pi,
         ),
-        velocity: Offset(
-          (random.nextDouble() - 0.5) * 150,
-          (random.nextDouble() - 0.5) * 150,
-        ),
-        color: _getRandomSparkleColor(),
-        size: random.nextDouble() * 8 + 4,
-        rotation: random.nextDouble() * 2 * math.pi,
-      ));
+      );
     }
   }
 
@@ -135,7 +130,7 @@ class _BadgeAnimationWidgetState extends State<BadgeAnimationWidget>
             ..._sparkles.map((sparkle) {
               final progress = _sparkleAnimation.value;
               final position = sparkle.position + sparkle.velocity * progress;
-              
+
               return Positioned(
                 left: position.dx + MediaQuery.of(context).size.width / 2,
                 top: position.dy + MediaQuery.of(context).size.height / 2,
@@ -162,7 +157,7 @@ class _BadgeAnimationWidgetState extends State<BadgeAnimationWidget>
                 ),
               );
             }),
-            
+
             // Main badge
             Center(
               child: RotationTransition(
@@ -249,4 +244,4 @@ class Sparkle {
     required this.size,
     required this.rotation,
   });
-} 
+}

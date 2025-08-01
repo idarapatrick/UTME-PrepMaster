@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:provider/provider.dart';
-import '../providers/theme_notifier.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/responsive_helper.dart';
 import '../../data/services/auth_service.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_notifier.dart';
+import '../providers/language_provider.dart';
+import '../providers/study_preferences_provider.dart';
+import 'language_selection_screen.dart';
+import 'study_preferences_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -15,43 +19,63 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  bool _isDarkMode = false;
-  bool _notificationsEnabled = true;
-  bool _soundEnabled = true;
-
   @override
   void initState() {
     super.initState();
-    _loadSettings();
-  }
-
-  Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _isDarkMode = prefs.getBool('isDarkMode') ?? false;
-      _notificationsEnabled = prefs.getBool('notificationsEnabled') ?? true;
-      _soundEnabled = prefs.getBool('soundEnabled') ?? true;
+    // Initialize preferences when screen loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ThemeNotifier>().initializeTheme();
+      context.read<LanguageProvider>().initializeLanguage();
+      context.read<StudyPreferencesProvider>().initializePreferences();
     });
   }
 
-  Future<void> _saveSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isDarkMode', _isDarkMode);
-    await prefs.setBool('notificationsEnabled', _notificationsEnabled);
-    await prefs.setBool('soundEnabled', _soundEnabled);
-  }
-
   Future<void> _logout() async {
+    // Show confirmation dialog
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.logout, color: AppColors.dominantPurple, size: 24),
+              const SizedBox(width: 8),
+              const Text('Logout'),
+            ],
+          ),
+          content: const Text(
+            'Are you sure you want to logout? You will need to sign in again to access your account.',
+            style: TextStyle(fontSize: 16),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.dominantPurple,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Yes, Logout'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldLogout != true) return;
+
     try {
       await FirebaseAuth.instance.signOut();
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
-      
+
       if (mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          '/auth',
-          (route) => false,
-        );
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil('/onboarding', (route) => false);
       }
     } catch (e) {
       if (mounted) {
@@ -72,11 +96,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return AlertDialog(
           title: Row(
             children: [
-              Icon(
-                Icons.warning,
-                color: Colors.red,
-                size: 24,
-              ),
+              Icon(Icons.warning, color: Colors.red, size: 24),
               const SizedBox(width: 8),
               const Text('Delete Account'),
             ],
@@ -102,11 +122,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(
-                          Icons.warning_amber,
-                          color: Colors.red,
-                          size: 20,
-                        ),
+                        Icon(Icons.warning_amber, color: Colors.red, size: 20),
                         const SizedBox(width: 8),
                         const Text(
                           'This action cannot be undone!',
@@ -155,7 +171,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _performDeleteAccount(BuildContext context) async {
     try {
       final authService = AuthService();
-      
+
       // Show loading dialog
       showDialog(
         context: context,
@@ -175,7 +191,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
       // Perform account deletion
       final result = await authService.deleteAccount();
-      
+
       // Close loading dialog
       if (context.mounted) {
         Navigator.of(context).pop();
@@ -191,17 +207,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           );
         }
-        
+
         // Clear SharedPreferences
         final prefs = await SharedPreferences.getInstance();
         await prefs.clear();
-        
+
         // Navigate to onboarding screen
         if (context.mounted) {
-          Navigator.of(context).pushNamedAndRemoveUntil(
-            '/onboarding',
-            (route) => false,
-          );
+          Navigator.of(
+            context,
+          ).pushNamedAndRemoveUntil('/onboarding', (route) => false);
         }
       } else {
         // Show error message
@@ -219,7 +234,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (context.mounted) {
         Navigator.of(context).pop();
       }
-      
+
       // Show error message
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -232,7 +247,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Widget _buildSection(BuildContext context, String title, List<Widget> children) {
+  Widget _buildSection(
+    BuildContext context,
+    String title,
+    List<Widget> children,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -260,18 +279,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     Color? textColor,
     Color? iconColor,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
     return Card(
       color: cardColor ?? AppColors.getCardColor(context),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        leading: Icon(
-          icon,
-          color: iconColor ?? AppColors.dominantPurple,
-        ),
+        leading: Icon(icon, color: iconColor ?? AppColors.dominantPurple),
         title: Text(
           title,
           style: TextStyle(
@@ -282,7 +294,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         subtitle: Text(
           subtitle,
           style: TextStyle(
-            color: textColor?.withValues(alpha: 0.7) ?? AppColors.getTextSecondary(context),
+            color:
+                textColor?.withValues(alpha: 0.7) ??
+                AppColors.getTextSecondary(context),
           ),
         ),
         trailing: Icon(
@@ -297,8 +311,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
@@ -314,118 +326,124 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             // App Settings Section
             _buildSection(context, 'App Settings', [
-              Card(
-                color: AppColors.getCardColor(context),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ListTile(
-                  leading: Icon(
-                    Icons.dark_mode,
-                    color: AppColors.dominantPurple,
-                  ),
-                  title: Text(
-                    'Dark Mode',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.getTextPrimary(context),
+              Consumer<ThemeNotifier>(
+                builder: (context, themeNotifier, child) {
+                  return Card(
+                    color: AppColors.getCardColor(context),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ),
-                  subtitle: Text(
-                    'Switch between light and dark themes',
-                    style: TextStyle(
-                      color: AppColors.getTextSecondary(context),
+                    child: ListTile(
+                      leading: Icon(
+                        Icons.dark_mode,
+                        color: AppColors.dominantPurple,
+                      ),
+                      title: Text(
+                        'Dark Mode',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.getTextPrimary(context),
+                        ),
+                      ),
+                      subtitle: Text(
+                        'Switch between light and dark themes',
+                        style: TextStyle(
+                          color: AppColors.getTextSecondary(context),
+                        ),
+                      ),
+                      trailing: Switch(
+                        value: themeNotifier.themeMode == ThemeMode.dark,
+                        onChanged: (value) {
+                          themeNotifier.toggleTheme(value);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Theme changed to ${value ? 'dark' : 'light'} mode.',
+                                ),
+                                backgroundColor: AppColors.dominantPurple,
+                              ),
+                            );
+                          }
+                        },
+                        activeColor: AppColors.dominantPurple,
+                      ),
                     ),
-                  ),
-                  trailing: Switch(
-                    value: _isDarkMode,
-                    onChanged: (value) async {
-                      setState(() {
-                        _isDarkMode = value;
-                      });
-                      await _saveSettings();
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Theme changed to ${value ? 'dark' : 'light'} mode. Restart app to see changes.'),
-                            backgroundColor: AppColors.dominantPurple,
+                  );
+                },
+              ),
+              Consumer<LanguageProvider>(
+                builder: (context, languageProvider, child) {
+                  return Card(
+                    color: AppColors.getCardColor(context),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ListTile(
+                      leading: Icon(
+                        Icons.language,
+                        color: AppColors.dominantPurple,
+                      ),
+                      title: Text(
+                        'Language',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.getTextPrimary(context),
+                        ),
+                      ),
+                      subtitle: Text(
+                        'Choose your preferred language',
+                        style: TextStyle(
+                          color: AppColors.getTextSecondary(context),
+                        ),
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            languageProvider.currentLanguageName,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.dominantPurple,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 16,
+                            color: AppColors.getTextSecondary(context),
+                          ),
+                        ],
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LanguageSelectionScreen(),
                           ),
                         );
-                      }
-                    },
-                    activeColor: AppColors.dominantPurple,
-                  ),
-                ),
+                      },
+                    ),
+                  );
+                },
               ),
-              Card(
-                color: AppColors.getCardColor(context),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ListTile(
-                  leading: Icon(
-                    Icons.notifications,
-                    color: AppColors.dominantPurple,
-                  ),
-                  title: Text(
-                    'Notifications',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.getTextPrimary(context),
+            ]),
+
+            // Study Preferences Section
+            _buildSection(context, 'Study Preferences', [
+              _buildSettingTile(
+                context: context,
+                icon: Icons.school,
+                title: 'Study Settings',
+                subtitle: 'Configure study reminders and session duration',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const StudyPreferencesScreen(),
                     ),
-                  ),
-                  subtitle: Text(
-                    'Enable push notifications',
-                    style: TextStyle(
-                      color: AppColors.getTextSecondary(context),
-                    ),
-                  ),
-                  trailing: Switch(
-                    value: _notificationsEnabled,
-                    onChanged: (value) async {
-                      setState(() {
-                        _notificationsEnabled = value;
-                      });
-                      await _saveSettings();
-                    },
-                    activeColor: AppColors.dominantPurple,
-                  ),
-                ),
-              ),
-              Card(
-                color: AppColors.getCardColor(context),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ListTile(
-                  leading: Icon(
-                    Icons.volume_up,
-                    color: AppColors.dominantPurple,
-                  ),
-                  title: Text(
-                    'Sound Effects',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.getTextPrimary(context),
-                    ),
-                  ),
-                  subtitle: Text(
-                    'Enable app sound effects',
-                    style: TextStyle(
-                      color: AppColors.getTextSecondary(context),
-                    ),
-                  ),
-                  trailing: Switch(
-                    value: _soundEnabled,
-                    onChanged: (value) async {
-                      setState(() {
-                        _soundEnabled = value;
-                      });
-                      await _saveSettings();
-                    },
-                    activeColor: AppColors.dominantPurple,
-                  ),
-                ),
+                  );
+                },
               ),
             ]),
 
@@ -437,7 +455,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: 'Logout',
                 subtitle: 'Sign out of your account',
                 onTap: _logout,
-                cardColor: isDark ? const Color(0xFF23243B) : Colors.white,
+                cardColor: Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xFF23243B)
+                    : Colors.white,
                 textColor: AppColors.getTextPrimary(context),
                 iconColor: AppColors.dominantPurple,
               ),
@@ -447,7 +467,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: 'Delete Account',
                 subtitle: 'Permanently delete your account and all data',
                 onTap: () => _showDeleteAccountDialog(context),
-                cardColor: isDark ? const Color(0xFF23243B) : Colors.white,
+                cardColor: Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xFF23243B)
+                    : Colors.white,
                 textColor: Colors.red,
                 iconColor: Colors.red,
               ),
@@ -474,7 +496,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Text(
                         'UTME PrepMaster is your comprehensive study companion for UTME success. '
                         'Access practice tests, AI tutoring, and track your progress.',
-                        style: TextStyle(color: AppColors.getTextSecondary(context)),
+                        style: TextStyle(
+                          color: AppColors.getTextSecondary(context),
+                        ),
                       ),
                     ],
                   );

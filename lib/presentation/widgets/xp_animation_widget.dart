@@ -23,7 +23,7 @@ class _XpAnimationWidgetState extends State<XpAnimationWidget>
   late AnimationController _controller;
   late AnimationController _scaleController;
   late AnimationController _fadeController;
-  
+
   late Animation<double> _slideAnimation;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
@@ -32,17 +32,14 @@ class _XpAnimationWidgetState extends State<XpAnimationWidget>
   @override
   void initState() {
     super.initState();
-    
-    _controller = AnimationController(
-      duration: widget.duration,
-      vsync: this,
-    );
-    
+
+    _controller = AnimationController(duration: widget.duration, vsync: this);
+
     _scaleController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    
+
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
@@ -51,34 +48,21 @@ class _XpAnimationWidgetState extends State<XpAnimationWidget>
     _slideAnimation = Tween<double>(
       begin: 0.0,
       end: -100.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutCubic,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _scaleController,
-      curve: Curves.elasticOut,
-    ));
+    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.elasticOut),
+    );
 
     _fadeAnimation = Tween<double>(
       begin: 1.0,
       end: 0.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeOut,
-    ));
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeOut));
 
     _rotationAnimation = Tween<double>(
       begin: 0.0,
       end: 2 * math.pi,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
     _startAnimation();
   }
@@ -86,17 +70,17 @@ class _XpAnimationWidgetState extends State<XpAnimationWidget>
   void _startAnimation() async {
     // Start with scale animation
     await _scaleController.forward();
-    
+
     // Wait a bit, then start slide and fade
     await Future.delayed(const Duration(milliseconds: 500));
-    
+
     // Start slide and fade animations
     _controller.forward();
     _fadeController.forward();
-    
+
     // Wait for animation to complete
     await Future.delayed(widget.duration);
-    
+
     if (mounted) {
       widget.onAnimationComplete?.call();
     }
@@ -113,7 +97,11 @@ class _XpAnimationWidgetState extends State<XpAnimationWidget>
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: Listenable.merge([_controller, _scaleController, _fadeController]),
+      animation: Listenable.merge([
+        _controller,
+        _scaleController,
+        _fadeController,
+      ]),
       builder: (context, child) {
         return Transform.translate(
           offset: Offset(0, _slideAnimation.value),
@@ -122,7 +110,10 @@ class _XpAnimationWidgetState extends State<XpAnimationWidget>
             child: Opacity(
               opacity: _fadeAnimation.value,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -146,11 +137,7 @@ class _XpAnimationWidgetState extends State<XpAnimationWidget>
                   children: [
                     Transform.rotate(
                       angle: _rotationAnimation.value,
-                      child: Icon(
-                        Icons.star,
-                        color: Colors.amber,
-                        size: 20,
-                      ),
+                      child: Icon(Icons.star, color: Colors.amber, size: 20),
                     ),
                     const SizedBox(width: 8),
                     Text(
@@ -170,4 +157,4 @@ class _XpAnimationWidgetState extends State<XpAnimationWidget>
       },
     );
   }
-} 
+}

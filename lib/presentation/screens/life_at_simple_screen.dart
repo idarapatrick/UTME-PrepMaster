@@ -8,7 +8,7 @@ class LifeAtSimpleScreen extends StatelessWidget {
   Future<void> _openLifeAt() async {
     const url = 'https://lifeat.io/';
     final Uri uri = Uri.parse(url);
-    
+
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
@@ -23,10 +23,7 @@ class LifeAtSimpleScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text(
           'LifeAt',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
         ),
         backgroundColor: AppColors.dominantPurple,
         foregroundColor: Colors.white,
@@ -69,9 +66,9 @@ class LifeAtSimpleScreen extends StatelessWidget {
                   color: Colors.white,
                 ),
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               // Title
               Text(
                 'Open LifeAt',
@@ -81,9 +78,9 @@ class LifeAtSimpleScreen extends StatelessWidget {
                   color: AppColors.textPrimary,
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Description
               Text(
                 'Access LifeAt\'s powerful study tools including:\n'
@@ -98,9 +95,9 @@ class LifeAtSimpleScreen extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              
+
               const SizedBox(height: 40),
-              
+
               // Open Button
               SizedBox(
                 width: double.infinity,
@@ -114,7 +111,10 @@ class LifeAtSimpleScreen extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.dominantPurple,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 32,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -122,9 +122,9 @@ class LifeAtSimpleScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Info Text
               Container(
                 padding: const EdgeInsets.all(16),
@@ -158,4 +158,4 @@ class LifeAtSimpleScreen extends StatelessWidget {
       ),
     );
   }
-} 
+}

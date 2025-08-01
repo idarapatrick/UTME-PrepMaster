@@ -296,12 +296,16 @@ class ResponsiveHelper {
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor,
           foregroundColor: foregroundColor,
-          padding: padding ?? EdgeInsets.symmetric(
-            horizontal: getResponsivePadding(context),
-            vertical: getResponsiveSpacing(context),
-          ),
+          padding:
+              padding ??
+              EdgeInsets.symmetric(
+                horizontal: getResponsivePadding(context),
+                vertical: getResponsiveSpacing(context),
+              ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(getResponsiveBorderRadius(context)),
+            borderRadius: BorderRadius.circular(
+              getResponsiveBorderRadius(context),
+            ),
           ),
         ),
         child: Text(
@@ -335,7 +339,9 @@ class ResponsiveHelper {
         prefixIcon: prefixIcon,
         suffixIcon: suffixIcon,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(getResponsiveBorderRadius(context)),
+          borderRadius: BorderRadius.circular(
+            getResponsiveBorderRadius(context),
+          ),
         ),
         contentPadding: EdgeInsets.symmetric(
           horizontal: getResponsivePadding(context),
@@ -344,4 +350,4 @@ class ResponsiveHelper {
       ),
     );
   }
-} 
+}

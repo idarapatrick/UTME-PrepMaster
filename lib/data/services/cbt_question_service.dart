@@ -23,13 +23,13 @@ class CbtQuestionService {
       // Check if user is admin/developer
       final userDoc = await _firestore.collection('users').doc(user.uid).get();
       final userRole = userDoc.data()?['role'] ?? 'user';
-      
+
       if (userRole != 'admin' && userRole != 'developer') {
         throw Exception('Only developers can upload questions');
       }
 
       final batch = _firestore.batch();
-      
+
       for (int i = 0; i < questions.length; i++) {
         final question = questions[i];
         final questionRef = _firestore
@@ -94,7 +94,9 @@ class CbtQuestionService {
           .collection('cbt_questions')
           .where('isActive', isEqualTo: true)
           .get();
-      return snapshot.docs.map((doc) => doc.data()['subject'] as String).toList();
+      return snapshot.docs
+          .map((doc) => doc.data()['subject'] as String)
+          .toList();
     } catch (e) {
       // Error getting available subjects
       return [];
@@ -102,7 +104,9 @@ class CbtQuestionService {
   }
 
   // Get questions for a specific subject (User access)
-  static Future<List<TestQuestion>> getQuestionsForSubject(String subject) async {
+  static Future<List<TestQuestion>> getQuestionsForSubject(
+    String subject,
+  ) async {
     try {
       final snapshot = await _firestore
           .collection('cbt_questions')
@@ -135,8 +139,8 @@ class CbtQuestionService {
 
   // Get questions by difficulty level
   static Future<List<TestQuestion>> getQuestionsByDifficulty(
-    String subject, 
-    String difficulty
+    String subject,
+    String difficulty,
   ) async {
     try {
       final snapshot = await _firestore
@@ -231,7 +235,13 @@ class CbtQuestionService {
           'description': 'Complete UTME simulation with all subjects',
           'duration': 120, // 2 hours
           'questions': 180,
-          'subjects': ['English', 'Mathematics', 'Physics', 'Chemistry', 'Biology'],
+          'subjects': [
+            'English',
+            'Mathematics',
+            'Physics',
+            'Chemistry',
+            'Biology',
+          ],
           'questionsPerSubject': 36,
         },
         'science_cbt': {
@@ -260,7 +270,9 @@ class CbtQuestionService {
         },
       };
 
-      return Map<String, dynamic>.from(defaultConfigs[testType] ?? defaultConfigs['full_cbt']!);
+      return Map<String, dynamic>.from(
+        defaultConfigs[testType] ?? defaultConfigs['full_cbt']!,
+      );
     } catch (e) {
       // Error getting CBT test config
       return {};
@@ -270,27 +282,30 @@ class CbtQuestionService {
   // ===== ADMIN FUNCTIONS =====
 
   // Verify questions (Admin only)
-  static Future<void> verifyQuestions(String subject, List<String> questionIds) async {
+  static Future<void> verifyQuestions(
+    String subject,
+    List<String> questionIds,
+  ) async {
     try {
       final user = _auth.currentUser;
       if (user == null) throw Exception('User not authenticated');
 
       final userDoc = await _firestore.collection('users').doc(user.uid).get();
       final userRole = userDoc.data()?['role'] ?? 'user';
-      
+
       if (userRole != 'admin') {
         throw Exception('Only admins can verify questions');
       }
 
       final batch = _firestore.batch();
-      
+
       for (final questionId in questionIds) {
         final questionRef = _firestore
             .collection('cbt_questions')
             .doc(subject.toLowerCase())
             .collection('questions')
             .doc(questionId);
-        
+
         batch.update(questionRef, {'isVerified': true});
       }
 
@@ -303,27 +318,30 @@ class CbtQuestionService {
   }
 
   // Delete questions (Admin only)
-  static Future<void> deleteQuestions(String subject, List<String> questionIds) async {
+  static Future<void> deleteQuestions(
+    String subject,
+    List<String> questionIds,
+  ) async {
     try {
       final user = _auth.currentUser;
       if (user == null) throw Exception('User not authenticated');
 
       final userDoc = await _firestore.collection('users').doc(user.uid).get();
       final userRole = userDoc.data()?['role'] ?? 'user';
-      
+
       if (userRole != 'admin') {
         throw Exception('Only admins can delete questions');
       }
 
       final batch = _firestore.batch();
-      
+
       for (final questionId in questionIds) {
         final questionRef = _firestore
             .collection('cbt_questions')
             .doc(subject.toLowerCase())
             .collection('questions')
             .doc(questionId);
-        
+
         batch.delete(questionRef);
       }
 
@@ -370,4 +388,4 @@ class CbtQuestionService {
       return {};
     }
   }
-} 
+}

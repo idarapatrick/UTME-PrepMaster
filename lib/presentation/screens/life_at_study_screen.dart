@@ -12,17 +12,17 @@ class _LifeAtStudyScreenState extends State<LifeAtStudyScreen>
     with TickerProviderStateMixin {
   late AnimationController _timerController;
   late AnimationController _pulseController;
-  
+
   final int _pomodoroMinutes = 25;
   final int _breakMinutes = 5;
   int _currentSeconds = 0;
   bool _isRunning = false;
   bool _isBreak = false;
   int _completedSessions = 0;
-  
+
   String _selectedMusic = 'None';
   String _selectedBackground = 'Default';
-  
+
   final List<String> _musicOptions = [
     'None',
     'Rain Sounds',
@@ -31,7 +31,7 @@ class _LifeAtStudyScreenState extends State<LifeAtStudyScreen>
     'Cafe Sounds',
     'Ocean Waves',
   ];
-  
+
   final List<String> _backgroundOptions = [
     'Default',
     'Forest',
@@ -52,7 +52,7 @@ class _LifeAtStudyScreenState extends State<LifeAtStudyScreen>
       duration: const Duration(seconds: 2),
       vsync: this,
     );
-    
+
     _timerController.addListener(() {
       if (_isRunning) {
         setState(() {
@@ -132,10 +132,7 @@ class _LifeAtStudyScreenState extends State<LifeAtStudyScreen>
       appBar: AppBar(
         title: const Text(
           'LifeAt Study',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
         ),
         backgroundColor: AppColors.dominantPurple,
         foregroundColor: Colors.white,
@@ -152,15 +149,15 @@ class _LifeAtStudyScreenState extends State<LifeAtStudyScreen>
             // Timer Section
             _buildTimerSection(),
             const SizedBox(height: 24),
-            
+
             // Controls Section
             _buildControlsSection(),
             const SizedBox(height: 24),
-            
+
             // Settings Section
             _buildSettingsSection(),
             const SizedBox(height: 24),
-            
+
             // Statistics Section
             _buildStatisticsSection(),
           ],
@@ -241,7 +238,9 @@ class _LifeAtStudyScreenState extends State<LifeAtStudyScreen>
           icon: Icon(_isRunning ? Icons.pause : Icons.play_arrow),
           label: Text(_isRunning ? 'Pause' : 'Start'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: _isRunning ? Colors.orange : AppColors.dominantPurple,
+            backgroundColor: _isRunning
+                ? Colors.orange
+                : AppColors.dominantPurple,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             shape: RoundedRectangleBorder(
@@ -286,7 +285,7 @@ class _LifeAtStudyScreenState extends State<LifeAtStudyScreen>
             ),
           ),
           const SizedBox(height: 16),
-          
+
           // Music Selection
           Row(
             children: [
@@ -300,10 +299,7 @@ class _LifeAtStudyScreenState extends State<LifeAtStudyScreen>
                     border: OutlineInputBorder(),
                   ),
                   items: _musicOptions.map((music) {
-                    return DropdownMenuItem(
-                      value: music,
-                      child: Text(music),
-                    );
+                    return DropdownMenuItem(value: music, child: Text(music));
                   }).toList(),
                   onChanged: (value) {
                     setState(() {
@@ -314,9 +310,9 @@ class _LifeAtStudyScreenState extends State<LifeAtStudyScreen>
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Background Selection
           Row(
             children: [
@@ -330,10 +326,7 @@ class _LifeAtStudyScreenState extends State<LifeAtStudyScreen>
                     border: OutlineInputBorder(),
                   ),
                   items: _backgroundOptions.map((bg) {
-                    return DropdownMenuItem(
-                      value: bg,
-                      child: Text(bg),
-                    );
+                    return DropdownMenuItem(value: bg, child: Text(bg));
                   }).toList(),
                   onChanged: (value) {
                     setState(() {
@@ -415,14 +408,11 @@ class _LifeAtStudyScreenState extends State<LifeAtStudyScreen>
           ),
           Text(
             title,
-            style: TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-            ),
+            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
             textAlign: TextAlign.center,
           ),
         ],
       ),
     );
   }
-} 
+}

@@ -32,7 +32,9 @@ class StudySession {
       subjectId: map['subjectId'] ?? '',
       subjectName: map['subjectName'] ?? '',
       startTime: (map['startTime'] as Timestamp).toDate(),
-      endTime: map['endTime'] != null ? (map['endTime'] as Timestamp).toDate() : null,
+      endTime: map['endTime'] != null
+          ? (map['endTime'] as Timestamp).toDate()
+          : null,
       durationMinutes: map['durationMinutes'] ?? 0,
       xpEarned: map['xpEarned'] ?? 0,
       activities: List<String>.from(map['activities'] ?? []),
@@ -79,4 +81,4 @@ class StudySession {
       metadata: metadata ?? this.metadata,
     );
   }
-} 
+}

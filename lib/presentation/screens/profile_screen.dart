@@ -6,6 +6,7 @@ import '../theme/app_colors.dart';
 import '../../data/services/firestore_service.dart';
 import '../../data/services/auth_service.dart';
 
+
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -18,7 +19,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? _firstName;
   String? _lastName;
   String? _email;
-  String? _phone;
+  String? _username;
+  // String? _phone;
 
   // Avatar gallery URLs (same as home screen)
   static const List<String> kAvatarGallery = [
@@ -38,10 +40,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _fetchUserProfile();
   }
 
-
-
-
-
   Future<void> _fetchUserProfile() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -53,12 +51,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _firstName = profile['firstName'];
             _lastName = profile['lastName'];
             _email = profile['email'];
-            _phone = profile['phone'];
+            _username = profile['username'];
+            // _phone = profile['phone'];
           });
         }
-          } catch (e) {
-      // Error fetching user profile
-    }
+      } catch (e) {
+        // Error fetching user profile
+      }
     }
   }
 
@@ -95,7 +94,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Container(
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: Colors.grey.shade300,
+                        color: AppColors.getBorderLight(context),
                         width: 1,
                       ),
                       borderRadius: BorderRadius.circular(8),
@@ -109,12 +108,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           return Container(
                             decoration: const BoxDecoration(
                               color: Colors.grey,
-                              borderRadius: BorderRadius.all(Radius.circular(8)),
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(8),
+                              ),
                             ),
-                            child: const Icon(
-                              Icons.person,
-                              color: Colors.grey,
-                            ),
+                            child: const Icon(Icons.person, color: Colors.grey),
                           );
                         },
                       ),
@@ -139,15 +137,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       try {
-        await FirestoreService.updateUserProfile(user.uid, {'avatarUrl': avatarUrl});
-          } catch (e) {
-      // Error saving avatar
-    }
+        await FirestoreService.updateUserProfile(user.uid, {
+          'avatarUrl': avatarUrl,
+        });
+      } catch (e) {
+        // Error saving avatar
+      }
     }
   }
 
   String _getDisplayName() {
-    if (_firstName != null && _firstName!.isNotEmpty && _lastName != null && _lastName!.isNotEmpty) {
+    if (_firstName != null &&
+        _firstName!.isNotEmpty &&
+        _lastName != null &&
+        _lastName!.isNotEmpty) {
       return '$_firstName $_lastName';
     } else if (_firstName != null && _firstName!.isNotEmpty) {
       return _firstName!;
@@ -175,7 +178,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final bgColor = isDark
         ? const Color(0xFF181A20)
         : AppColors.backgroundSecondary;
-    
+
     // Get user stats provider
     final userStatsProvider = Provider.of<UserStatsProvider>(context);
     final userStats = userStatsProvider.userStats;
@@ -190,18 +193,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           padding: EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             children: [
-              Icon(
-                Icons.person,
-                color: Colors.white,
-                size: 24,
-              ),
+              Icon(Icons.person, color: Colors.white, size: 24),
               SizedBox(width: 8),
               Text(
                 'Profile',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold, 
-                  fontSize: 20
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
               ),
             ],
           ),
@@ -211,10 +207,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             padding: const EdgeInsets.only(right: 12, left: 0),
             child: Center(
               child: IconButton(
-                icon: const Icon(
-                  Icons.settings, 
-                  size: 22
-                ),
+                icon: const Icon(Icons.settings, size: 22),
                 tooltip: 'Settings',
                 onPressed: () => Navigator.pushNamed(context, '/settings'),
                 splashRadius: 22,
@@ -228,10 +221,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             // Profile Header
             _buildProfileHeader(context, user, userStats, isDark),
-            
+
             // Stats Section
             _buildStatsSection(context, userStats, isDark),
-            
+
             // Menu Items
             _buildMenuItems(context, isDark),
           ],
@@ -264,7 +257,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         showUnselectedLabels: true,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Study Partner'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people),
+            label: 'Study Partner',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.quiz), label: 'CBT Tests'),
           BottomNavigationBarItem(
             icon: Icon(Icons.psychology),
@@ -279,13 +275,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileHeader(BuildContext context, User? user, dynamic userStats, bool isDark) {
+  Widget _buildProfileHeader(
+    BuildContext context,
+    User? user,
+    dynamic userStats,
+    bool isDark,
+  ) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
           const SizedBox(height: 16),
-          
+
           // Avatar and Name
           Row(
             children: [
@@ -296,7 +297,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     CircleAvatar(
                       radius: 32,
                       backgroundColor: Colors.white,
-                      backgroundImage: _avatarUrl != null && _avatarUrl!.isNotEmpty
+                      backgroundImage:
+                          _avatarUrl != null && _avatarUrl!.isNotEmpty
                           ? AssetImage(_avatarUrl!)
                           : null,
                       child: _avatarUrl == null || _avatarUrl!.isEmpty
@@ -364,9 +366,129 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
+          // Username Section
+          if (_username != null)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? const Color(0xFF2A2D3E)
+                    : AppColors.backgroundSecondary,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isDark
+                      ? AppColors.darkBorderMedium
+                      : AppColors.borderMedium,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.person, color: AppColors.dominantPurple, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Username',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                        Text(
+                          '@$_username',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: isDark
+                                ? Colors.white
+                                : AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => _editUsername(context),
+                    icon: const Icon(
+                      Icons.edit,
+                      color: AppColors.dominantPurple,
+                      size: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          if (_username == null)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? const Color(0xFF2A2D3E)
+                    : AppColors.backgroundSecondary,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isDark
+                      ? AppColors.darkBorderMedium
+                      : AppColors.borderMedium,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.person_add,
+                    color: AppColors.dominantPurple,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'No Username Set',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                        Text(
+                          'Add a username to appear on leaderboards',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => _editUsername(context),
+                    child: const Text(
+                      'Add Username',
+                      style: TextStyle(
+                        color: AppColors.dominantPurple,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          const SizedBox(height: 16),
+
           // Quick Stats
           Row(
             children: [
@@ -401,25 +523,61 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildQuickStat(
+                  context,
+                  'Study Time',
+                  '${userStats?.formattedStudyTime ?? '0m'}',
+                  Icons.timer,
+                  AppColors.subjectPurple,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildQuickStat(
+                  context,
+                  'Correct',
+                  '${userStats?.correctAnswers ?? 0}',
+                  Icons.check_circle,
+                  AppColors.accentGreen,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildQuickStat(
+                  context,
+                  'Streak',
+                  '${userStats?.currentStreak ?? 0}d',
+                  Icons.local_fire_department,
+                  AppColors.subjectOrange,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildQuickStat(BuildContext context, String label, String value, IconData icon, Color color) {
+  Widget _buildQuickStat(
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [
-          Icon(
-            icon,
-            color: color,
-            size: 20,
-          ),
+          Icon(icon, color: color, size: 20),
           const SizedBox(height: 8),
           Text(
             value,
@@ -441,7 +599,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildStatsSection(BuildContext context, dynamic userStats, bool isDark) {
+  Widget _buildStatsSection(
+    BuildContext context,
+    dynamic userStats,
+    bool isDark,
+  ) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -457,7 +619,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          
+
           // Stats cards
           GridView.count(
             shrinkWrap: true,
@@ -488,7 +650,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 'Correct Answers',
                 '${userStats?.correctAnswers ?? 0}',
                 Icons.check_circle,
-                AppColors.accentAmber,
+                AppColors.accentGreen,
                 isDark,
               ),
               _buildStatCard(
@@ -499,6 +661,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 AppColors.subjectGreen,
                 isDark,
               ),
+              _buildStatCard(
+                context,
+                'Current Streak',
+                '${userStats?.currentStreak ?? 0} days',
+                Icons.local_fire_department,
+                AppColors.subjectOrange,
+                isDark,
+              ),
+              _buildStatCard(
+                context,
+                'Longest Streak',
+                '${userStats?.longestStreak ?? 0} days',
+                Icons.emoji_events,
+                AppColors.accentAmber,
+                isDark,
+              ),
             ],
           ),
         ],
@@ -506,24 +684,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildStatCard(BuildContext context, String title, String value, IconData icon, Color color, bool isDark) {
+  Widget _buildStatCard(
+    BuildContext context,
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+    bool isDark,
+  ) {
     return Card(
       margin: const EdgeInsets.all(0),
       elevation: 2,
       color: isDark ? const Color(0xFF23243B) : Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              color: color,
-              size: 32,
-            ),
+            Icon(icon, color: color, size: 32),
             const SizedBox(height: 8),
             Text(
               value,
@@ -537,9 +716,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: AppColors.textSecondary,
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.textSecondary,
               ),
             ),
           ],
@@ -564,7 +745,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          
+
           // Menu items
           Column(
             children: [
@@ -623,20 +804,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildMenuItem(BuildContext context, String title, IconData icon, Color color, VoidCallback onTap, bool isDark) {
+  Widget _buildMenuItem(
+    BuildContext context,
+    String title,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+    bool isDark,
+  ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       elevation: 2,
       color: isDark ? const Color(0xFF23243B) : Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        leading: Icon(
-          icon,
-          color: color,
-          size: 24,
-        ),
+        leading: Icon(icon, color: color, size: 24),
         title: Text(
           title,
           style: TextStyle(
@@ -680,11 +862,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void _editUsername(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(_username == null ? 'Add Username' : 'Edit Username'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _username == null
+                    ? 'Choose a username to display on leaderboards'
+                    : 'Update your username',
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                decoration: const InputDecoration(
+                  labelText: 'Username',
+                  hintText: 'Enter username',
+                  border: OutlineInputBorder(),
+                ),
+                controller: TextEditingController(text: _username ?? ''),
+                onChanged: (value) {
+                  // Handle username validation here
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Handle username update here
+                Navigator.of(context).pop();
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _performLogout(BuildContext context) async {
     try {
       final authService = AuthService();
       await authService.signOut();
-      
+
       // Navigate to auth screen
       if (context.mounted) {
         Navigator.of(context).pushNamedAndRemoveUntil(
@@ -695,12 +924,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       // Even if there's an error, try to navigate to auth
       if (context.mounted) {
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          '/auth',
-          (route) => false,
-        );
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil('/auth', (route) => false);
       }
     }
   }
 }
-

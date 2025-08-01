@@ -3,7 +3,6 @@ import '../theme/app_colors.dart';
 import '../../data/services/ai_service.dart';
 import '../utils/responsive_helper.dart';
 
-
 class AiTutorScreen extends StatefulWidget {
   const AiTutorScreen({super.key});
 
@@ -43,17 +42,18 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
     super.dispose();
   }
 
- void _addWelcomeMessage() {
-  setState(() {
-    _messages.add(
-      ChatMessage(
-        text: 'Hello! I\'m your AI tutor. I can help you with any UTME subject. What would you like to learn today?',
-        isUser: false,
-        timestamp: DateTime.now(),
-      ),
-    );
-  });
-}
+  void _addWelcomeMessage() {
+    setState(() {
+      _messages.add(
+        ChatMessage(
+          text:
+              'Hello! I\'m your AI tutor. I can help you with any UTME subject. What would you like to learn today?',
+          isUser: false,
+          timestamp: DateTime.now(),
+        ),
+      );
+    });
+  }
 
   void _sendMessage() {
     if (_messageController.text.trim().isEmpty) return;
@@ -72,21 +72,20 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
 
     // Simulate AI response
     AIService.getAIResponse(message).then((aiResponse) {
-  if (mounted) {
-    setState(() {
-      _isTyping = false;
-      _messages.add(
-        ChatMessage(
-          text: aiResponse,
-          isUser: false,
-          timestamp: DateTime.now(),
-        ),
-      );
+      if (mounted) {
+        setState(() {
+          _isTyping = false;
+          _messages.add(
+            ChatMessage(
+              text: aiResponse,
+              isUser: false,
+              timestamp: DateTime.now(),
+            ),
+          );
+        });
+        _scrollToBottom();
+      }
     });
-    _scrollToBottom();
-  }
-});
-
   }
 
   void _scrollToBottom() {
@@ -100,8 +99,6 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
       }
     });
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -146,7 +143,10 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
                   child: Text(
                     subject,
                     style: TextStyle(
-                      fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
+                      fontSize: ResponsiveHelper.getResponsiveFontSize(
+                        context,
+                        14,
+                      ),
                     ),
                   ),
                 );
@@ -160,7 +160,10 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
                   Text(
                     _selectedSubject,
                     style: TextStyle(
-                      fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+                      fontSize: ResponsiveHelper.getResponsiveFontSize(
+                        context,
+                        16,
+                      ),
                     ),
                   ),
                   Icon(
@@ -177,10 +180,8 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
         context: context,
         children: [
           // Chat Messages
-          Expanded(
-            child: _buildChatMessages(context, isDark),
-          ),
-          
+          Expanded(child: _buildChatMessages(context, isDark)),
+
           // Input Section
           _buildInputSection(context, isDark),
         ],
@@ -197,20 +198,28 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
         if (index == _messages.length && _isTyping) {
           return _buildTypingIndicator(context, isDark);
         }
-        
+
         final message = _messages[index];
         return _buildMessageBubble(context, message, isDark);
       },
     );
   }
 
-  Widget _buildMessageBubble(BuildContext context, ChatMessage message, bool isDark) {
+  Widget _buildMessageBubble(
+    BuildContext context,
+    ChatMessage message,
+    bool isDark,
+  ) {
     final isUser = message.isUser;
-    
+
     return Padding(
-      padding: EdgeInsets.only(bottom: ResponsiveHelper.getResponsivePadding(context)),
+      padding: EdgeInsets.only(
+        bottom: ResponsiveHelper.getResponsivePadding(context),
+      ),
       child: Row(
-        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isUser
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isUser) ...[
@@ -225,20 +234,24 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
             ),
             SizedBox(width: ResponsiveHelper.getResponsivePadding(context) / 2),
           ],
-          
+
           Flexible(
             child: Container(
               constraints: BoxConstraints(
                 maxWidth: ResponsiveHelper.screenWidth(context) * 0.75,
               ),
-              padding: EdgeInsets.all(ResponsiveHelper.getResponsivePadding(context)),
+              padding: EdgeInsets.all(
+                ResponsiveHelper.getResponsivePadding(context),
+              ),
               decoration: BoxDecoration(
                 color: isUser
                     ? AppColors.dominantPurple
                     : isDark
-                        ? const Color(0xFF23243B)
-                        : Colors.white,
-                borderRadius: BorderRadius.circular(ResponsiveHelper.getResponsiveBorderRadius(context)),
+                    ? const Color(0xFF23243B)
+                    : Colors.white,
+                borderRadius: BorderRadius.circular(
+                  ResponsiveHelper.getResponsiveBorderRadius(context),
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.1),
@@ -253,27 +266,39 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
                   Text(
                     message.text,
                     style: TextStyle(
-                      fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
-                      color: isUser ? Colors.white : (isDark ? Colors.white : AppColors.textPrimary),
+                      fontSize: ResponsiveHelper.getResponsiveFontSize(
+                        context,
+                        16,
+                      ),
+                      color: isUser
+                          ? Colors.white
+                          : (isDark ? Colors.white : AppColors.textPrimary),
                     ),
                   ),
-                  
-                  SizedBox(height: ResponsiveHelper.getResponsivePadding(context) / 4),
-                  
+
+                  SizedBox(
+                    height: ResponsiveHelper.getResponsivePadding(context) / 4,
+                  ),
+
                   Text(
                     _formatTime(message.timestamp),
                     style: TextStyle(
-                      fontSize: ResponsiveHelper.getResponsiveFontSize(context, 12),
-                      color: isUser 
+                      fontSize: ResponsiveHelper.getResponsiveFontSize(
+                        context,
+                        12,
+                      ),
+                      color: isUser
                           ? Colors.white.withValues(alpha: 0.7)
-                          : AppColors.textSecondary,
+                          : (isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.textSecondary),
                     ),
                   ),
                 ],
               ),
             ),
           ),
-          
+
           if (isUser) ...[
             SizedBox(width: ResponsiveHelper.getResponsivePadding(context) / 2),
             CircleAvatar(
@@ -293,7 +318,9 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
 
   Widget _buildTypingIndicator(BuildContext context, bool isDark) {
     return Padding(
-      padding: EdgeInsets.only(bottom: ResponsiveHelper.getResponsivePadding(context)),
+      padding: EdgeInsets.only(
+        bottom: ResponsiveHelper.getResponsivePadding(context),
+      ),
       child: Row(
         children: [
           CircleAvatar(
@@ -305,14 +332,18 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
               size: ResponsiveHelper.getResponsiveIconSize(context, 16),
             ),
           ),
-          
+
           SizedBox(width: ResponsiveHelper.getResponsivePadding(context) / 2),
-          
+
           Container(
-            padding: EdgeInsets.all(ResponsiveHelper.getResponsivePadding(context)),
+            padding: EdgeInsets.all(
+              ResponsiveHelper.getResponsivePadding(context),
+            ),
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF23243B) : Colors.white,
-              borderRadius: BorderRadius.circular(ResponsiveHelper.getResponsiveBorderRadius(context)),
+              borderRadius: BorderRadius.circular(
+                ResponsiveHelper.getResponsiveBorderRadius(context),
+              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -359,12 +390,13 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF181A20) : AppColors.backgroundSecondary,
-                borderRadius: BorderRadius.circular(ResponsiveHelper.getResponsiveBorderRadius(context)),
-                border: Border.all(
-                  color: AppColors.textTertiary,
-                  width: 1,
+                color: isDark
+                    ? const Color(0xFF181A20)
+                    : AppColors.backgroundSecondary,
+                borderRadius: BorderRadius.circular(
+                  ResponsiveHelper.getResponsiveBorderRadius(context),
                 ),
+                border: Border.all(color: AppColors.textTertiary, width: 1),
               ),
               child: TextField(
                 controller: _messageController,
@@ -375,11 +407,16 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
                 decoration: InputDecoration(
                   hintText: 'Ask me anything about $_selectedSubject...',
                   hintStyle: TextStyle(
-                    fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+                    fontSize: ResponsiveHelper.getResponsiveFontSize(
+                      context,
+                      16,
+                    ),
                     color: AppColors.textSecondary,
                   ),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.all(ResponsiveHelper.getResponsivePadding(context)),
+                  contentPadding: EdgeInsets.all(
+                    ResponsiveHelper.getResponsivePadding(context),
+                  ),
                 ),
                 maxLines: null,
                 textInputAction: TextInputAction.send,
@@ -387,13 +424,15 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
               ),
             ),
           ),
-          
+
           SizedBox(width: ResponsiveHelper.getResponsivePadding(context)),
-          
+
           Container(
             decoration: BoxDecoration(
               color: AppColors.dominantPurple,
-              borderRadius: BorderRadius.circular(ResponsiveHelper.getResponsiveBorderRadius(context)),
+              borderRadius: BorderRadius.circular(
+                ResponsiveHelper.getResponsiveBorderRadius(context),
+              ),
             ),
             child: IconButton(
               onPressed: _sendMessage,

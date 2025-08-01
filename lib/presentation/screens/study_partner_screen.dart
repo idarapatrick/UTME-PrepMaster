@@ -7,7 +7,7 @@ class StudyPartnerScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Study Partner'),
@@ -36,14 +36,18 @@ class StudyPartnerScreen extends StatelessWidget {
             Icon(
               Icons.people_outline,
               size: 80,
-              color: AppColors.textSecondary,
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.textSecondary,
             ),
             const SizedBox(height: 24),
             Text(
               'No Study Partner Yet',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 12),
@@ -51,7 +55,9 @@ class StudyPartnerScreen extends StatelessWidget {
               'You haven\'t been matched with a study partner yet. Study partners are automatically matched based on your subjects and study schedule.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: AppColors.textSecondary,
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.textSecondary,
               ),
             ),
             const SizedBox(height: 32),
@@ -76,9 +82,8 @@ class StudyPartnerScreen extends StatelessWidget {
                         Expanded(
                           child: Text(
                             'Smart Matching',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                         ),
                       ],
@@ -87,7 +92,9 @@ class StudyPartnerScreen extends StatelessWidget {
                     Text(
                       'We match you with study partners who share similar subjects and study goals.',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -115,9 +122,8 @@ class StudyPartnerScreen extends StatelessWidget {
                         Expanded(
                           child: Text(
                             'Study Together',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                         ),
                       ],
@@ -126,7 +132,9 @@ class StudyPartnerScreen extends StatelessWidget {
                     Text(
                       'Schedule study sessions, share notes, and motivate each other to achieve your goals.',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -162,4 +170,4 @@ class StudyPartnerScreen extends StatelessWidget {
       ),
     );
   }
-} 
+}

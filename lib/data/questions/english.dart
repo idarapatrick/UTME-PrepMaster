@@ -27,24 +27,38 @@ final List<TestQuestion> englishQuestions = [
   ),
   TestQuestion(
     id: 'eng_4',
-    question: 'Choose the option that contains the correct use of the subjunctive mood:',
-    options: ['If I was the president, I would change the law', 'I wish he was here with us now', 'It is essential that he arrives on time', 'I suggest that she goes to the doctor'],
+    question:
+        'Choose the option that contains the correct use of the subjunctive mood:',
+    options: [
+      'If I was the president, I would change the law',
+      'I wish he was here with us now',
+      'It is essential that he arrives on time',
+      'I suggest that she goes to the doctor',
+    ],
     correctAnswer: 2,
     subject: 'English',
-    explanation: 'The subjunctive mood uses the base form of the verb after expressions like "essential that".',
+    explanation:
+        'The subjunctive mood uses the base form of the verb after expressions like "essential that".',
   ),
   TestQuestion(
     id: 'eng_5',
-    question: 'Identify the literary device in: "The silence was deafening in the empty hall."',
+    question:
+        'Identify the literary device in: "The silence was deafening in the empty hall."',
     options: ['Metaphor', 'Oxymoron', 'Hyperbole', 'Alliteration'],
     correctAnswer: 1,
     subject: 'English',
-    explanation: 'An oxymoron combines contradictory terms like "deafening silence".',
+    explanation:
+        'An oxymoron combines contradictory terms like "deafening silence".',
   ),
   TestQuestion(
     id: 'eng_6',
     question: 'In which sentence is the word "effect" used correctly?',
-    options: ['The rain will effect the crops positively', 'The new policy will effect changes in the system', 'The effect of the medicine was immediate', 'The teacher tried to effect the students\' behavior'],
+    options: [
+      'The rain will effect the crops positively',
+      'The new policy will effect changes in the system',
+      'The effect of the medicine was immediate',
+      'The teacher tried to effect the students\' behavior',
+    ],
     correctAnswer: 2,
     subject: 'English',
     explanation: 'Effect is a noun meaning result or consequence.',
@@ -52,58 +66,88 @@ final List<TestQuestion> englishQuestions = [
   TestQuestion(
     id: 'eng_7',
     question: 'Choose the sentence with correct parallel structure:',
-    options: ['She likes reading, writing, and to paint', 'The politician was known for his honesty, integrity, and being courageous', 'He promised to study hard, work diligently, and succeeding', 'The students were asked to read the text, analyze the content, and write a summary'],
+    options: [
+      'She likes reading, writing, and to paint',
+      'The politician was known for his honesty, integrity, and being courageous',
+      'He promised to study hard, work diligently, and succeeding',
+      'The students were asked to read the text, analyze the content, and write a summary',
+    ],
     correctAnswer: 3,
     subject: 'English',
-    explanation: 'Parallel structure requires similar grammatical forms in a series.',
+    explanation:
+        'Parallel structure requires similar grammatical forms in a series.',
   ),
   TestQuestion(
     id: 'eng_8',
     question: 'What is the meaning of "sanguine" in formal English?',
-    options: ['Pessimistic and doubtful', 'Optimistic and confident', 'Aggressive and violent', 'Sad and melancholic'],
+    options: [
+      'Pessimistic and doubtful',
+      'Optimistic and confident',
+      'Aggressive and violent',
+      'Sad and melancholic',
+    ],
     correctAnswer: 1,
     subject: 'English',
-    explanation: 'Sanguine means optimistic or positive, especially in difficult situations.',
+    explanation:
+        'Sanguine means optimistic or positive, especially in difficult situations.',
   ),
   TestQuestion(
     id: 'eng_9',
-    question: 'Choose the option that best completes the sentence: "The committee\'s decision was so _____ that it left everyone bewildered."',
+    question:
+        'Choose the option that best completes the sentence: "The committee\'s decision was so _____ that it left everyone bewildered."',
     options: ['perspicacious', 'inscrutable', 'sagacious', 'lucid'],
     correctAnswer: 1,
     subject: 'English',
-    explanation: 'Inscrutable means impossible to understand or interpret, fitting with "bewildered".',
+    explanation:
+        'Inscrutable means impossible to understand or interpret, fitting with "bewildered".',
   ),
   TestQuestion(
     id: 'eng_10',
-    question: 'Identify the type of clause in: "Although he studied hard, he failed the exam."',
-    options: ['Noun clause', 'Adjective clause', 'Adverbial clause of concession', 'Adverbial clause of result'],
+    question:
+        'Identify the type of clause in: "Although he studied hard, he failed the exam."',
+    options: [
+      'Noun clause',
+      'Adjective clause',
+      'Adverbial clause of concession',
+      'Adverbial clause of result',
+    ],
     correctAnswer: 2,
     subject: 'English',
-    explanation: 'The clause beginning with "Although" shows concession or contrast.',
+    explanation:
+        'The clause beginning with "Although" shows concession or contrast.',
   ),
   TestQuestion(
     id: 'eng_11',
-    question: 'In the sentence "The vivacious student\'s ebullience was contagious," what does "ebullience" mean?',
+    question:
+        'In the sentence "The vivacious student\'s ebullience was contagious," what does "ebullience" mean?',
     options: ['Sadness', 'Enthusiasm and energy', 'Confusion', 'Arrogance'],
     correctAnswer: 1,
     subject: 'English',
-    explanation: 'Ebullience means the quality of being cheerful and full of energy.',
+    explanation:
+        'Ebullience means the quality of being cheerful and full of energy.',
   ),
   TestQuestion(
     id: 'eng_12',
     question: 'Choose the sentence with the correct use of the gerund:',
-    options: ['I look forward to meet you', 'She is interested in to learn French', 'He succeeded in passing the examination', 'They are used to wake up early'],
+    options: [
+      'I look forward to meet you',
+      'She is interested in to learn French',
+      'He succeeded in passing the examination',
+      'They are used to wake up early',
+    ],
     correctAnswer: 2,
     subject: 'English',
     explanation: 'After "succeed in," we use the gerund form (-ing).',
   ),
   TestQuestion(
     id: 'eng_13',
-    question: 'What is the figure of speech in "The pen is mightier than the sword"?',
+    question:
+        'What is the figure of speech in "The pen is mightier than the sword"?',
     options: ['Metonymy', 'Synecdoche', 'Personification', 'Hyperbole'],
     correctAnswer: 0,
     subject: 'English',
-    explanation: 'Metonymy substitutes related concepts: pen for writing, sword for warfare.',
+    explanation:
+        'Metonymy substitutes related concepts: pen for writing, sword for warfare.',
   ),
   TestQuestion(
     id: 'eng_14',
@@ -148,7 +192,12 @@ final List<TestQuestion> englishQuestions = [
   TestQuestion(
     id: 'eng_19',
     question: 'Choose the correct sentence:',
-    options: ['Me and John went to school.', 'John and I went to school.', 'John and me went to school.', 'I and John went to school.'],
+    options: [
+      'Me and John went to school.',
+      'John and I went to school.',
+      'John and me went to school.',
+      'I and John went to school.',
+    ],
     correctAnswer: 1,
     subject: 'English',
     explanation: 'Use "I" in the subject position and put yourself last.',
@@ -156,14 +205,20 @@ final List<TestQuestion> englishQuestions = [
   TestQuestion(
     id: 'eng_20',
     question: 'What is the meaning of the idiom "break the ice"?',
-    options: ['To literally break ice', 'To start a conversation', 'To be very cold', 'To destroy something'],
+    options: [
+      'To literally break ice',
+      'To start a conversation',
+      'To be very cold',
+      'To destroy something',
+    ],
     correctAnswer: 1,
     subject: 'English',
     explanation: 'Break the ice means to initiate conversation or interaction.',
   ),
   TestQuestion(
     id: 'eng_21',
-    question: 'Choose the correct modal verb: "You _____ study hard to pass the exam."',
+    question:
+        'Choose the correct modal verb: "You _____ study hard to pass the exam."',
     options: ['can', 'may', 'must', 'will'],
     correctAnswer: 2,
     subject: 'English',
@@ -172,7 +227,12 @@ final List<TestQuestion> englishQuestions = [
   TestQuestion(
     id: 'eng_22',
     question: 'What is the superlative form of "beautiful"?',
-    options: ['more beautiful', 'most beautiful', 'beautifuler', 'beautifulest'],
+    options: [
+      'more beautiful',
+      'most beautiful',
+      'beautifuler',
+      'beautifulest',
+    ],
     correctAnswer: 1,
     subject: 'English',
     explanation: 'For long adjectives, we use "most" for superlative.',
@@ -180,7 +240,12 @@ final List<TestQuestion> englishQuestions = [
   TestQuestion(
     id: 'eng_23',
     question: 'Which sentence shows correct subject-verb agreement?',
-    options: ['The students is happy.', 'The students are happy.', 'The students am happy.', 'The students be happy.'],
+    options: [
+      'The students is happy.',
+      'The students are happy.',
+      'The students am happy.',
+      'The students be happy.',
+    ],
     correctAnswer: 1,
     subject: 'English',
     explanation: 'Plural subjects take plural verbs.',
@@ -195,7 +260,8 @@ final List<TestQuestion> englishQuestions = [
   ),
   TestQuestion(
     id: 'eng_25',
-    question: 'Choose the correct possessive form: "The _____ toys are scattered."',
+    question:
+        'Choose the correct possessive form: "The _____ toys are scattered."',
     options: ['childrens', 'children\'s', 'childrens\'', 'children'],
     correctAnswer: 1,
     subject: 'English',
@@ -204,18 +270,25 @@ final List<TestQuestion> englishQuestions = [
   TestQuestion(
     id: 'eng_26',
     question: 'What is the function of an adverb?',
-    options: ['Describes nouns', 'Connects sentences', 'Modifies verbs, adjectives, or other adverbs', 'Shows possession'],
+    options: [
+      'Describes nouns',
+      'Connects sentences',
+      'Modifies verbs, adjectives, or other adverbs',
+      'Shows possession',
+    ],
     correctAnswer: 2,
     subject: 'English',
     explanation: 'Adverbs modify verbs, adjectives, or other adverbs.',
   ),
   TestQuestion(
     id: 'eng_27',
-    question: 'Choose the correct form: "If I _____ rich, I would help the poor."',
+    question:
+        'Choose the correct form: "If I _____ rich, I would help the poor."',
     options: ['am', 'was', 'were', 'will be'],
     correctAnswer: 2,
     subject: 'English',
-    explanation: 'In unreal conditional sentences, use "were" for all subjects.',
+    explanation:
+        'In unreal conditional sentences, use "were" for all subjects.',
   ),
   TestQuestion(
     id: 'eng_28',
@@ -227,7 +300,8 @@ final List<TestQuestion> englishQuestions = [
   ),
   TestQuestion(
     id: 'eng_29',
-    question: 'Choose the correct relative pronoun: "The man _____ helped me is my uncle."',
+    question:
+        'Choose the correct relative pronoun: "The man _____ helped me is my uncle."',
     options: ['which', 'whom', 'who', 'whose'],
     correctAnswer: 2,
     subject: 'English',
@@ -236,7 +310,12 @@ final List<TestQuestion> englishQuestions = [
   TestQuestion(
     id: 'eng_30',
     question: 'What is the correct order of adjectives?',
-    options: ['A beautiful small red car', 'A small beautiful red car', 'A red small beautiful car', 'A small red beautiful car'],
+    options: [
+      'A beautiful small red car',
+      'A small beautiful red car',
+      'A red small beautiful car',
+      'A small red beautiful car',
+    ],
     correctAnswer: 1,
     subject: 'English',
     explanation: 'Opinion adjectives come before descriptive adjectives.',
@@ -244,7 +323,12 @@ final List<TestQuestion> englishQuestions = [
   TestQuestion(
     id: 'eng_31',
     question: 'Choose the correct tense: "By next year, I _____ my degree."',
-    options: ['will complete', 'will have completed', 'complete', 'am completing'],
+    options: [
+      'will complete',
+      'will have completed',
+      'complete',
+      'am completing',
+    ],
     correctAnswer: 1,
     subject: 'English',
     explanation: 'Future perfect tense shows completion before a future time.',
@@ -252,7 +336,12 @@ final List<TestQuestion> englishQuestions = [
   TestQuestion(
     id: 'eng_32',
     question: 'What is a metaphor?',
-    options: ['A comparison using like or as', 'A direct comparison without like or as', 'An exaggeration', 'A sound effect'],
+    options: [
+      'A comparison using like or as',
+      'A direct comparison without like or as',
+      'An exaggeration',
+      'A sound effect',
+    ],
     correctAnswer: 1,
     subject: 'English',
     explanation: 'A metaphor is a direct comparison between two unlike things.',
@@ -275,7 +364,8 @@ final List<TestQuestion> englishQuestions = [
   ),
   TestQuestion(
     id: 'eng_35',
-    question: 'Choose the correct preposition: "I am interested _____ learning French."',
+    question:
+        'Choose the correct preposition: "I am interested _____ learning French."',
     options: ['in', 'on', 'at', 'for'],
     correctAnswer: 0,
     subject: 'English',
@@ -284,7 +374,12 @@ final List<TestQuestion> englishQuestions = [
   TestQuestion(
     id: 'eng_36',
     question: 'What is alliteration?',
-    options: ['Repetition of vowel sounds', 'Repetition of consonant sounds', 'Rhyming words', 'Opposite meanings'],
+    options: [
+      'Repetition of vowel sounds',
+      'Repetition of consonant sounds',
+      'Rhyming words',
+      'Opposite meanings',
+    ],
     correctAnswer: 1,
     subject: 'English',
     explanation: 'Alliteration is the repetition of initial consonant sounds.',
@@ -292,7 +387,12 @@ final List<TestQuestion> englishQuestions = [
   TestQuestion(
     id: 'eng_37',
     question: 'Choose the correct sentence:',
-    options: ['Each of the students have a book.', 'Each of the students has a book.', 'Each of the students having a book.', 'Each of the students had have a book.'],
+    options: [
+      'Each of the students have a book.',
+      'Each of the students has a book.',
+      'Each of the students having a book.',
+      'Each of the students had have a book.',
+    ],
     correctAnswer: 1,
     subject: 'English',
     explanation: 'Each is singular and takes a singular verb.',
@@ -300,7 +400,12 @@ final List<TestQuestion> englishQuestions = [
   TestQuestion(
     id: 'eng_38',
     question: 'What is the meaning of "procrastinate"?',
-    options: ['To work quickly', 'To delay or postpone', 'To celebrate', 'To organize'],
+    options: [
+      'To work quickly',
+      'To delay or postpone',
+      'To celebrate',
+      'To organize',
+    ],
     correctAnswer: 1,
     subject: 'English',
     explanation: 'Procrastinate means to delay or postpone action.',
@@ -316,14 +421,21 @@ final List<TestQuestion> englishQuestions = [
   TestQuestion(
     id: 'eng_40',
     question: 'What is personification?',
-    options: ['Giving human qualities to non-human things', 'Comparing two things', 'Exaggerating', 'Using formal language'],
+    options: [
+      'Giving human qualities to non-human things',
+      'Comparing two things',
+      'Exaggerating',
+      'Using formal language',
+    ],
     correctAnswer: 0,
     subject: 'English',
-    explanation: 'Personification gives human characteristics to non-human things.',
+    explanation:
+        'Personification gives human characteristics to non-human things.',
   ),
   TestQuestion(
     id: 'eng_41',
-    question: 'Choose the correct word: "The principal gave a _____ to the students."',
+    question:
+        'Choose the correct word: "The principal gave a _____ to the students."',
     options: ['advice', 'advise', 'advices', 'advises'],
     correctAnswer: 0,
     subject: 'English',
@@ -340,7 +452,12 @@ final List<TestQuestion> englishQuestions = [
   TestQuestion(
     id: 'eng_43',
     question: 'Choose the correct sentence:',
-    options: ['Between you and I', 'Between you and me', 'Between you and myself', 'Between you and mine'],
+    options: [
+      'Between you and I',
+      'Between you and me',
+      'Between you and myself',
+      'Between you and mine',
+    ],
     correctAnswer: 1,
     subject: 'English',
     explanation: 'Use object pronouns after prepositions.',
@@ -364,7 +481,12 @@ final List<TestQuestion> englishQuestions = [
   TestQuestion(
     id: 'eng_46',
     question: 'What is a simile?',
-    options: ['A direct comparison', 'A comparison using like or as', 'An exaggeration', 'A repetition'],
+    options: [
+      'A direct comparison',
+      'A comparison using like or as',
+      'An exaggeration',
+      'A repetition',
+    ],
     correctAnswer: 1,
     subject: 'English',
     explanation: 'A simile uses like or as to compare two things.',
@@ -380,15 +502,26 @@ final List<TestQuestion> englishQuestions = [
   TestQuestion(
     id: 'eng_48',
     question: 'Which sentence demonstrates correct use of the passive voice?',
-    options: ['The students have been taught by the teacher', 'The students have taught by the teacher', 'The students have been teaching by the teacher', 'The students have been teach by the teacher'],
+    options: [
+      'The students have been taught by the teacher',
+      'The students have taught by the teacher',
+      'The students have been teaching by the teacher',
+      'The students have been teach by the teacher',
+    ],
     correctAnswer: 0,
     subject: 'English',
-    explanation: 'Present perfect passive uses "have/has been + past participle".',
+    explanation:
+        'Present perfect passive uses "have/has been + past participle".',
   ),
   TestQuestion(
     id: 'eng_49',
     question: 'What is the meaning of "ephemeral"?',
-    options: ['Permanent and lasting', 'Very expensive', 'Short-lived or temporary', 'Extremely large'],
+    options: [
+      'Permanent and lasting',
+      'Very expensive',
+      'Short-lived or temporary',
+      'Extremely large',
+    ],
     correctAnswer: 2,
     subject: 'English',
     explanation: 'Ephemeral means lasting for a very short time.',
@@ -396,23 +529,36 @@ final List<TestQuestion> englishQuestions = [
   TestQuestion(
     id: 'eng_50',
     question: 'Choose the sentence with correct use of "fewer" or "less":',
-    options: ['There are less students today', 'She has less books than him', 'There is less water in the tank', 'He made less mistakes this time'],
+    options: [
+      'There are less students today',
+      'She has less books than him',
+      'There is less water in the tank',
+      'He made less mistakes this time',
+    ],
     correctAnswer: 2,
     subject: 'English',
-    explanation: 'Use "less" with uncountable nouns; "fewer" with countable nouns.',
+    explanation:
+        'Use "less" with uncountable nouns; "fewer" with countable nouns.',
   ),
   TestQuestion(
     id: 'eng_51',
-    question: 'What is the literary term for giving advance hints about future events in a story?',
+    question:
+        'What is the literary term for giving advance hints about future events in a story?',
     options: ['Flashback', 'Foreshadowing', 'Irony', 'Allegory'],
     correctAnswer: 1,
     subject: 'English',
-    explanation: 'Foreshadowing provides clues about what will happen later in the narrative.',
+    explanation:
+        'Foreshadowing provides clues about what will happen later in the narrative.',
   ),
   TestQuestion(
     id: 'eng_52',
     question: 'Choose the option with correct apostrophe usage:',
-    options: ['The dog wagged it\'s tail', 'Its a beautiful day today', 'The book lost its cover', 'Who\'se bag is this?'],
+    options: [
+      'The dog wagged it\'s tail',
+      'Its a beautiful day today',
+      'The book lost its cover',
+      'Who\'se bag is this?',
+    ],
     correctAnswer: 2,
     subject: 'English',
     explanation: 'Its (possessive) has no apostrophe; it\'s means "it is".',
@@ -420,46 +566,77 @@ final List<TestQuestion> englishQuestions = [
   TestQuestion(
     id: 'eng_53',
     question: 'What does "magnanimous" mean?',
-    options: ['Very angry', 'Generous in forgiving', 'Extremely wealthy', 'Highly intelligent'],
+    options: [
+      'Very angry',
+      'Generous in forgiving',
+      'Extremely wealthy',
+      'Highly intelligent',
+    ],
     correctAnswer: 1,
     subject: 'English',
-    explanation: 'Magnanimous means generous or forgiving, especially toward a rival.',
+    explanation:
+        'Magnanimous means generous or forgiving, especially toward a rival.',
   ),
   TestQuestion(
     id: 'eng_54',
     question: 'Identify the correct sentence structure:',
-    options: ['Having finished his work, the computer was turned off', 'Having finished his work, he turned off the computer', 'Having finished his work, turning off the computer', 'Having finished his work, the computer turned off'],
+    options: [
+      'Having finished his work, the computer was turned off',
+      'Having finished his work, he turned off the computer',
+      'Having finished his work, turning off the computer',
+      'Having finished his work, the computer turned off',
+    ],
     correctAnswer: 1,
     subject: 'English',
-    explanation: 'Participial phrases must modify the subject that performs the action.',
+    explanation:
+        'Participial phrases must modify the subject that performs the action.',
   ),
   TestQuestion(
     id: 'eng_55',
     question: 'What is the meaning of "ostentatious"?',
-    options: ['Simple and modest', 'Showy and pretentious', 'Quiet and reserved', 'Honest and straightforward'],
+    options: [
+      'Simple and modest',
+      'Showy and pretentious',
+      'Quiet and reserved',
+      'Honest and straightforward',
+    ],
     correctAnswer: 1,
     subject: 'English',
-    explanation: 'Ostentatious means characterized by vulgar or pretentious display.',
+    explanation:
+        'Ostentatious means characterized by vulgar or pretentious display.',
   ),
   TestQuestion(
     id: 'eng_56',
     question: 'Choose the sentence with correct subject-verb agreement:',
-    options: ['Neither the manager nor the employees was satisfied', 'Neither the manager nor the employees were satisfied', 'Neither the employees nor the manager were satisfied', 'Neither the employees nor the manager are satisfied'],
+    options: [
+      'Neither the manager nor the employees was satisfied',
+      'Neither the manager nor the employees were satisfied',
+      'Neither the employees nor the manager were satisfied',
+      'Neither the employees nor the manager are satisfied',
+    ],
     correctAnswer: 1,
     subject: 'English',
-    explanation: 'With "neither...nor," the verb agrees with the subject closer to it.',
+    explanation:
+        'With "neither...nor," the verb agrees with the subject closer to it.',
   ),
   TestQuestion(
     id: 'eng_57',
     question: 'What is "chiasmus" in literature?',
-    options: ['Repetition of similar sounds', 'Reversal of grammatical structures', 'Use of contradictory terms', 'Comparison without like or as'],
+    options: [
+      'Repetition of similar sounds',
+      'Reversal of grammatical structures',
+      'Use of contradictory terms',
+      'Comparison without like or as',
+    ],
     correctAnswer: 1,
     subject: 'English',
-    explanation: 'Chiasmus is a reversal of grammatical structures in successive phrases.',
+    explanation:
+        'Chiasmus is a reversal of grammatical structures in successive phrases.',
   ),
   TestQuestion(
     id: 'eng_58',
-    question: 'Choose the correct form: "She is one of those people who _____ always complaining."',
+    question:
+        'Choose the correct form: "She is one of those people who _____ always complaining."',
     options: ['is', 'are', 'was', 'were'],
     correctAnswer: 1,
     subject: 'English',
@@ -468,17 +645,29 @@ final List<TestQuestion> englishQuestions = [
   TestQuestion(
     id: 'eng_59',
     question: 'What does "vicarious" mean?',
-    options: ['Direct and personal', 'Experienced through another person', 'Very dangerous', 'Extremely funny'],
+    options: [
+      'Direct and personal',
+      'Experienced through another person',
+      'Very dangerous',
+      'Extremely funny',
+    ],
     correctAnswer: 1,
     subject: 'English',
-    explanation: 'Vicarious means experienced in the imagination through another person.',
+    explanation:
+        'Vicarious means experienced in the imagination through another person.',
   ),
   TestQuestion(
     id: 'eng_60',
     question: 'Identify the correct use of the semicolon:',
-    options: ['I went to the store; and bought milk', 'The weather was terrible; however, we went hiking', 'She studied hard; because she wanted to pass', 'They arrived late; but they still enjoyed the party'],
+    options: [
+      'I went to the store; and bought milk',
+      'The weather was terrible; however, we went hiking',
+      'She studied hard; because she wanted to pass',
+      'They arrived late; but they still enjoyed the party',
+    ],
     correctAnswer: 1,
     subject: 'English',
-    explanation: 'Semicolons are used before conjunctive adverbs like "however" that connect independent clauses.',
+    explanation:
+        'Semicolons are used before conjunctive adverbs like "however" that connect independent clauses.',
   ),
-]; 
+];

@@ -61,8 +61,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             _university1 = userData['university1'] ?? '';
             _university2 = userData['university2'] ?? '';
             _university3 = userData['university3'] ?? '';
-            _avatarAsset = userData['avatarUrl'] ?? 'assets/avatars/avatar1.png';
-            
+            _avatarAsset =
+                userData['avatarUrl'] ?? 'assets/avatars/avatar1.png';
+
             // Update controllers with loaded data
             _firstNameController.text = _firstName ?? '';
             _lastNameController.text = _lastName ?? '';
@@ -70,9 +71,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             _phoneController.text = _phone ?? '';
           });
         }
-          } catch (e) {
-      // Error loading user data
-    }
+      } catch (e) {
+        // Error loading user data
+      }
     }
   }
 
@@ -92,8 +93,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             child: GridView.builder(
               shrinkWrap: true,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: ResponsiveHelper.getResponsiveGridCrossAxisCount(context),
-                crossAxisSpacing: ResponsiveHelper.getResponsiveSpacing(context),
+                crossAxisCount:
+                    ResponsiveHelper.getResponsiveGridCrossAxisCount(context),
+                crossAxisSpacing: ResponsiveHelper.getResponsiveSpacing(
+                  context,
+                ),
                 mainAxisSpacing: ResponsiveHelper.getResponsiveSpacing(context),
               ),
               itemCount: kAvatars.length,
@@ -111,13 +115,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       border: Border.all(
                         color: _avatarAsset == kAvatars[index]['asset']
                             ? AppColors.dominantPurple
-                            : Colors.grey.shade300,
+                            : AppColors.getBorderLight(context),
                         width: _avatarAsset == kAvatars[index]['asset'] ? 2 : 1,
                       ),
-                      borderRadius: BorderRadius.circular(ResponsiveHelper.getResponsiveBorderRadius(context)),
+                      borderRadius: BorderRadius.circular(
+                        ResponsiveHelper.getResponsiveBorderRadius(context),
+                      ),
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(ResponsiveHelper.getResponsiveBorderRadius(context)),
+                      borderRadius: BorderRadius.circular(
+                        ResponsiveHelper.getResponsiveBorderRadius(context),
+                      ),
                       child: Image.asset(
                         kAvatars[index]['asset']!,
                         fit: BoxFit.cover,
@@ -148,10 +156,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       try {
-        await FirestoreService.updateUserProfile(user.uid, {'avatarUrl': avatarPath});
-          } catch (e) {
-      // Error saving avatar
-    }
+        await FirestoreService.updateUserProfile(user.uid, {
+          'avatarUrl': avatarPath,
+        });
+      } catch (e) {
+        // Error saving avatar
+      }
     }
   }
 
@@ -164,17 +174,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
-
-
-
-
   Future<void> _saveProfile() async {
     // Get values from controllers
     _firstName = _firstNameController.text.trim();
     _lastName = _lastNameController.text.trim();
     _email = _emailController.text.trim();
     _phone = _phoneController.text.trim();
-    
+
     if (!_formKey.currentState!.validate()) {
       if (_university1 == null || _university1!.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -191,7 +197,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
       return;
     }
-    
+
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       try {
@@ -211,7 +217,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
         // Save to Firestore
         await FirestoreService.saveFullUserProfile(user.uid, profileData);
-        
+
         // Also update using the model method for consistency
         final userProfile = {
           'firstName': _firstName,
@@ -225,7 +231,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           'lastUpdated': FieldValue.serverTimestamp(),
           'isAnonymous': user.isAnonymous,
         };
-        
+
         await FirestoreService.updateUserProfile(user.uid, userProfile);
 
         if (mounted) {
@@ -289,23 +295,31 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               children: [
                 // Avatar Section
                 _buildAvatarSection(context, isDark),
-                
-                SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
-                
+
+                SizedBox(
+                  height: ResponsiveHelper.getResponsivePadding(context),
+                ),
+
                 // Personal Information Section
                 _buildPersonalInfoSection(context, isDark),
-                
-                SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
-                
+
+                SizedBox(
+                  height: ResponsiveHelper.getResponsivePadding(context),
+                ),
+
                 // University Choices Section
                 _buildUniversitySection(context, isDark),
-                
-                SizedBox(height: ResponsiveHelper.getResponsivePadding(context) * 2),
-                
+
+                SizedBox(
+                  height: ResponsiveHelper.getResponsivePadding(context) * 2,
+                ),
+
                 // Save Button
                 _buildSaveButton(context),
-                
-                SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
+
+                SizedBox(
+                  height: ResponsiveHelper.getResponsivePadding(context),
+                ),
               ],
             ),
           ),
@@ -375,7 +389,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
           ),
           SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
-          
+
           // First Name
           ResponsiveHelper.responsiveTextField(
             context: context,
@@ -388,9 +402,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               return null;
             },
           ),
-          
+
           SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
-          
+
           // Last Name
           ResponsiveHelper.responsiveTextField(
             context: context,
@@ -403,9 +417,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               return null;
             },
           ),
-          
+
           SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
-          
+
           // Email
           ResponsiveHelper.responsiveTextField(
             context: context,
@@ -422,9 +436,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               return null;
             },
           ),
-          
+
           SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
-          
+
           // Phone
           ResponsiveHelper.responsiveTextField(
             context: context,
@@ -453,44 +467,113 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
           ),
           SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
-          
+
           // 1st Choice
-          SearchableDropdown(
-            options: nigerianUniversities,
-            value: _university1,
-            onChanged: (value) {
-              setState(() => _university1 = value);
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                _formKey.currentState?.validate();
-              });
-            },
-            label: '1st Choice University *',
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please select your 1st choice university';
-              }
-              return null;
-            },
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.dominantPurple.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  '1st Choice',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.dominantPurple,
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: ResponsiveHelper.getResponsivePadding(context) * 0.5,
+              ),
+              SearchableDropdown(
+                options: nigerianUniversities,
+                value: _university1,
+                onChanged: (value) {
+                  setState(() => _university1 = value);
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    _formKey.currentState?.validate();
+                  });
+                },
+                label: 'Select your 1st choice university *',
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please select your 1st choice university';
+                  }
+                  return null;
+                },
+              ),
+            ],
           ),
-          
+
           SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
-          
+
           // 2nd Choice
-          SearchableDropdown(
-            options: nigerianUniversities,
-            value: _university2,
-            onChanged: (value) => setState(() => _university2 = value),
-            label: '2nd Choice University',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  '2nd Choice',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: ResponsiveHelper.getResponsivePadding(context) * 0.5,
+              ),
+              SearchableDropdown(
+                options: nigerianUniversities,
+                value: _university2,
+                onChanged: (value) => setState(() => _university2 = value),
+                label: 'Select your 2nd choice university',
+              ),
+            ],
           ),
-          
+
           SizedBox(height: ResponsiveHelper.getResponsivePadding(context)),
-          
+
           // 3rd Choice
-          SearchableDropdown(
-            options: nigerianUniversities,
-            value: _university3,
-            onChanged: (value) => setState(() => _university3 = value),
-            label: '3rd Choice University',
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  '3rd Choice',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: ResponsiveHelper.getResponsivePadding(context) * 0.5,
+              ),
+              SearchableDropdown(
+                options: nigerianUniversities,
+                value: _university3,
+                onChanged: (value) => setState(() => _university3 = value),
+                label: 'Select your 3rd choice university',
+              ),
+            ],
           ),
         ],
       ),

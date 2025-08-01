@@ -91,7 +91,7 @@ class SubjectCard extends StatelessWidget {
                         progressText!,
                         style: TextStyle(
                           color: isDark
-                              ? Colors.white70
+                              ? AppColors.textSecondary
                               : AppColors.textSecondary,
                           fontSize: 9,
                         ),

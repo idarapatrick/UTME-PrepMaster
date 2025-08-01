@@ -5,11 +5,7 @@ class RankBadge extends StatelessWidget {
   final int rank;
   final double size;
 
-  const RankBadge({
-    super.key,
-    required this.rank,
-    this.size = 36,
-  });
+  const RankBadge({super.key, required this.rank, this.size = 36});
 
   @override
   Widget build(BuildContext context) {

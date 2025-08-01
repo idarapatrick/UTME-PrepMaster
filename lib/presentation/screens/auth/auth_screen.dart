@@ -14,12 +14,12 @@ class _AuthScreenState extends State<AuthScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
-  
+
   bool _isSignUp = false;
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _showPasswordRequirements = false;
-  
+
   final AuthService _authService = AuthService();
 
   @override
@@ -47,12 +47,12 @@ class _AuthScreenState extends State<AuthScreen> {
         );
 
         if (result.isSuccess) {
-          // Navigate to email verification screen immediately
+          // For new sign-ups, navigate to username setup first
           Navigator.pushNamedAndRemoveUntil(
-            context, 
-            '/email-verification', 
+            context,
+            '/username-setup',
             (route) => false,
-            arguments: _emailController.text.trim(),
+            arguments: {'user': result.user},
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -76,19 +76,21 @@ class _AuthScreenState extends State<AuthScreen> {
               backgroundColor: Colors.green,
             ),
           );
-          // Navigate to home screen
+          // Navigate to home screen - allow access even if not verified
           Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
         } else if (result.needsEmailVerification) {
-          // Navigate to email verification screen
-          Navigator.pushNamedAndRemoveUntil(
-            context, 
-            '/email-verification', 
-            (route) => false,
-            arguments: {
-              'email': _emailController.text.trim(),
-              'isNewUser': true,
-            },
+          // For existing users who need verification, show message but allow access
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Please check your email for verification. You can still use the app.',
+              ),
+              backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 4),
+            ),
           );
+          // Navigate to home screen anyway
+          Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -119,13 +121,13 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       final result = await _authService.signInWithGoogle();
-      
+
       if (result.isSuccess) {
         if (result.isNewUser) {
           // For new Google users, navigate to completion screen
           Navigator.pushNamedAndRemoveUntil(
-            context, 
-            '/google-signup-completion', 
+            context,
+            '/google-signup-completion',
             (route) => false,
             arguments: result.user,
           );
@@ -139,20 +141,9 @@ class _AuthScreenState extends State<AuthScreen> {
           // Navigate to home screen
           Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
         }
-      } else if (result.needsEmailVerification) {
-        // Navigate to email verification screen
-        Navigator.pushNamedAndRemoveUntil(
-          context, 
-          '/email-verification', 
-          (route) => false,
-          arguments: result.user?.email,
-        );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result.message),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(result.message), backgroundColor: Colors.red),
         );
       }
     } catch (e) {
@@ -172,7 +163,7 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-              backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: AppColors.backgroundPrimary,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -182,7 +173,7 @@ class _AuthScreenState extends State<AuthScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 60),
-                
+
                 // Logo/Title
                 Text(
                   'UTME PrepMaster',
@@ -193,20 +184,17 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                
+
                 const SizedBox(height: 8),
-                
+
                 Text(
                   _isSignUp ? 'Create your account' : 'Welcome back',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                   textAlign: TextAlign.center,
                 ),
-                
+
                 const SizedBox(height: 40),
-                
+
                 // Name field (only for sign up)
                 if (_isSignUp) ...[
                   TextFormField(
@@ -219,7 +207,8 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                     ),
                     validator: (value) {
-                      if (_isSignUp && (value == null || value.trim().isEmpty)) {
+                      if (_isSignUp &&
+                          (value == null || value.trim().isEmpty)) {
                         return 'Please enter your full name';
                       }
                       return null;
@@ -227,7 +216,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                   const SizedBox(height: 16),
                 ],
-                
+
                 // Email field
                 TextFormField(
                   controller: _emailController,
@@ -243,15 +232,17 @@ class _AuthScreenState extends State<AuthScreen> {
                     if (value == null || value.trim().isEmpty) {
                       return 'Please enter your email';
                     }
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                    if (!RegExp(
+                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                    ).hasMatch(value)) {
                       return 'Please enter a valid email';
                     }
                     return null;
                   },
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Password field
                 TextFormField(
                   controller: _passwordController,
@@ -268,7 +259,9 @@ class _AuthScreenState extends State<AuthScreen> {
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                        _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                       ),
                       onPressed: () {
                         setState(() {
@@ -285,7 +278,9 @@ class _AuthScreenState extends State<AuthScreen> {
                       return 'Please enter your password';
                     }
                     if (_isSignUp) {
-                      final passwordError = _authService.validatePassword(value);
+                      final passwordError = _authService.validatePassword(
+                        value,
+                      );
                       if (passwordError != null) {
                         return passwordError;
                       }
@@ -293,7 +288,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     return null;
                   },
                 ),
-                
+
                 // Password requirements (only show for sign up)
                 if (_isSignUp && _showPasswordRequirements) ...[
                   const SizedBox(height: 8),
@@ -302,7 +297,9 @@ class _AuthScreenState extends State<AuthScreen> {
                     decoration: BoxDecoration(
                       color: Colors.blue.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: Colors.blue.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -344,15 +341,17 @@ class _AuthScreenState extends State<AuthScreen> {
                         ),
                         _buildRequirementItem(
                           'One special character (@\$!%*?&)',
-                          RegExp(r'[@$!%*?&]').hasMatch(_passwordController.text),
+                          RegExp(
+                            r'[@$!%*?&]',
+                          ).hasMatch(_passwordController.text),
                         ),
                       ],
                     ),
                   ),
                 ],
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Submit button
                 ElevatedButton(
                   onPressed: _isLoading ? null : _submit,
@@ -374,9 +373,9 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                         ),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Google Sign In button
                 OutlinedButton.icon(
                   onPressed: _isLoading ? null : _signInWithGoogle,
@@ -392,15 +391,17 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Toggle between sign in and sign up
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      _isSignUp ? 'Already have an account?' : 'Don\'t have an account?',
+                      _isSignUp
+                          ? 'Already have an account?'
+                          : 'Don\'t have an account?',
                       style: TextStyle(color: Colors.grey[600]),
                     ),
                     TextButton(

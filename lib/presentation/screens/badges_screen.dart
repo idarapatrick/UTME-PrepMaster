@@ -144,7 +144,6 @@ class BadgesScreen extends StatelessWidget {
               progress: 0.7,
               totalRequired: 1,
             ),
-
           ]),
 
           const SizedBox(height: 24),

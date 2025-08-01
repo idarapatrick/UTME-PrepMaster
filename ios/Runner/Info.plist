@@ -47,8 +47,18 @@
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<true/>
+			<key>NSAllowsArbitraryLoads</key>
+	<true/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>http</string>
+		<string>https</string>
+		<string>youtube</string>
+		<string>youtube.com</string>
+		<string>www.youtube.com</string>
+		<string>khanacademy.org</string>
+		<string>www.khanacademy.org</string>
+	</array>
 	</dict>
 </dict>
 </plist>

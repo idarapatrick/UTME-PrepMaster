@@ -17,7 +17,7 @@ class _QuestionUploadScreenState extends State<QuestionUploadScreen> {
   final _subjectController = TextEditingController();
   final _examYearController = TextEditingController();
   final _descriptionController = TextEditingController();
-  
+
   File? _selectedFile;
   List<TestQuestion> _parsedQuestions = [];
   bool _isLoading = false;
@@ -66,26 +66,38 @@ class _QuestionUploadScreenState extends State<QuestionUploadScreen> {
   Future<void> _extractTextFromPdf() async {
     try {
       if (_selectedFile == null) return;
-      
+
       // Extract text from PDF
-      final extractedText = await PdfTextExtractionService.extractTextFromPdf(_selectedFile!);
-      
+      final extractedText = await PdfTextExtractionService.extractTextFromPdf(
+        _selectedFile!,
+      );
+
       // Parse questions from extracted text
-      _parsedQuestions = PdfTextExtractionService.parseQuestionsFromText(extractedText, _subjectController.text);
-      
+      _parsedQuestions = PdfTextExtractionService.parseQuestionsFromText(
+        extractedText,
+        _subjectController.text,
+      );
+
       // If no questions were parsed, try enhanced parsing
       if (_parsedQuestions.isEmpty) {
-        _parsedQuestions = PdfTextExtractionService.parseQuestionsEnhanced(extractedText, _subjectController.text);
+        _parsedQuestions = PdfTextExtractionService.parseQuestionsEnhanced(
+          extractedText,
+          _subjectController.text,
+        );
       }
-      
+
       // If still no questions, generate sample questions
       if (_parsedQuestions.isEmpty) {
-        _parsedQuestions = PdfTextExtractionService.generateSampleQuestions(_subjectController.text);
+        _parsedQuestions = PdfTextExtractionService.generateSampleQuestions(
+          _subjectController.text,
+        );
       }
-      
+
       // Validate questions
-      _parsedQuestions = PdfTextExtractionService.validateQuestions(_parsedQuestions);
-      
+      _parsedQuestions = PdfTextExtractionService.validateQuestions(
+        _parsedQuestions,
+      );
+
       setState(() {
         _isLoading = false;
       });
@@ -118,7 +130,7 @@ class _QuestionUploadScreenState extends State<QuestionUploadScreen> {
     try {
       // Upload logic here
       await Future.delayed(const Duration(seconds: 2)); // Simulate upload
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -173,15 +185,16 @@ class _QuestionUploadScreenState extends State<QuestionUploadScreen> {
                     children: [
                       Text(
                         'Step 1: Select PDF File',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 12),
                       ElevatedButton.icon(
                         onPressed: _isLoading ? null : _pickPdfFile,
                         icon: const Icon(Icons.upload_file),
-                        label: Text(_isLoading ? 'Processing...' : 'Pick PDF File'),
+                        label: Text(
+                          _isLoading ? 'Processing...' : 'Pick PDF File',
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.dominantPurple,
                           foregroundColor: Colors.white,
@@ -213,15 +226,16 @@ class _QuestionUploadScreenState extends State<QuestionUploadScreen> {
                     children: [
                       Text(
                         'Step 2: Question Details',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 16),
-                      
+
                       // Subject Dropdown
                       DropdownButtonFormField<String>(
-                        value: _subjectController.text.isEmpty ? null : _subjectController.text,
+                        value: _subjectController.text.isEmpty
+                            ? null
+                            : _subjectController.text,
                         decoration: const InputDecoration(
                           labelText: 'Subject',
                           border: OutlineInputBorder(),
@@ -292,9 +306,8 @@ class _QuestionUploadScreenState extends State<QuestionUploadScreen> {
                       children: [
                         Text(
                           'Step 3: Preview Questions (${_parsedQuestions.length} found)',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 12),
                         SizedBox(
@@ -353,7 +366,9 @@ class _QuestionUploadScreenState extends State<QuestionUploadScreen> {
                                 height: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
                                 ),
                               ),
                               SizedBox(width: 12),
@@ -387,4 +402,4 @@ class _QuestionUploadScreenState extends State<QuestionUploadScreen> {
       ),
     );
   }
-} 
+}

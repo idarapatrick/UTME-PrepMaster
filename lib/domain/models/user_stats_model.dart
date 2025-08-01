@@ -43,8 +43,8 @@ class UserStats {
       totalXp: map['totalXp'] ?? 0,
       currentStreak: map['currentStreak'] ?? 0,
       longestStreak: map['longestStreak'] ?? 0,
-      lastStudyDate: map['lastStudyDate'] != null 
-          ? (map['lastStudyDate'] as Timestamp).toDate() 
+      lastStudyDate: map['lastStudyDate'] != null
+          ? (map['lastStudyDate'] as Timestamp).toDate()
           : DateTime.now(),
       totalStudyTimeMinutes: map['totalStudyTimeMinutes'] ?? 0,
       totalSessions: map['totalSessions'] ?? 0,
@@ -55,11 +55,11 @@ class UserStats {
       subjectStudyTime: Map<String, int>.from(map['subjectStudyTime'] ?? {}),
       earnedBadges: List<String>.from(map['earnedBadges'] ?? []),
       availableBadges: List<String>.from(map['availableBadges'] ?? []),
-      createdAt: map['createdAt'] != null 
-          ? (map['createdAt'] as Timestamp).toDate() 
+      createdAt: map['createdAt'] != null
+          ? (map['createdAt'] as Timestamp).toDate()
           : DateTime.now(),
-      updatedAt: map['updatedAt'] != null 
-          ? (map['updatedAt'] as Timestamp).toDate() 
+      updatedAt: map['updatedAt'] != null
+          ? (map['updatedAt'] as Timestamp).toDate()
           : DateTime.now(),
     );
   }
@@ -108,7 +108,8 @@ class UserStats {
       currentStreak: currentStreak ?? this.currentStreak,
       longestStreak: longestStreak ?? this.longestStreak,
       lastStudyDate: lastStudyDate ?? this.lastStudyDate,
-      totalStudyTimeMinutes: totalStudyTimeMinutes ?? this.totalStudyTimeMinutes,
+      totalStudyTimeMinutes:
+          totalStudyTimeMinutes ?? this.totalStudyTimeMinutes,
       totalSessions: totalSessions ?? this.totalSessions,
       quizzesCompleted: quizzesCompleted ?? this.quizzesCompleted,
       questionsAnswered: questionsAnswered ?? this.questionsAnswered,
@@ -123,12 +124,13 @@ class UserStats {
   }
 
   // Helper methods
-  double get accuracyRate => questionsAnswered > 0 ? correctAnswers / questionsAnswered : 0.0;
-  
+  double get accuracyRate =>
+      questionsAnswered > 0 ? correctAnswers / questionsAnswered : 0.0;
+
   int get totalStudyHours => totalStudyTimeMinutes ~/ 60;
-  
+
   int get totalStudyMinutes => totalStudyTimeMinutes % 60;
-  
+
   String get formattedStudyTime {
     if (totalStudyHours > 0) {
       return '${totalStudyHours}h ${totalStudyMinutes}m';
@@ -137,8 +139,9 @@ class UserStats {
   }
 
   int getXpForSubject(String subjectId) => subjectXp[subjectId] ?? 0;
-  
-  int getStudyTimeForSubject(String subjectId) => subjectStudyTime[subjectId] ?? 0;
-  
+
+  int getStudyTimeForSubject(String subjectId) =>
+      subjectStudyTime[subjectId] ?? 0;
+
   bool hasBadge(String badgeId) => earnedBadges.contains(badgeId);
-} 
+}

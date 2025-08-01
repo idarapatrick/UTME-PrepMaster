@@ -8,7 +8,7 @@ class LifeAtInfoScreen extends StatelessWidget {
   Future<void> _openLifeAtInBrowser() async {
     const url = 'https://lifeat.io/';
     final Uri uri = Uri.parse(url);
-    
+
     try {
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -28,10 +28,7 @@ class LifeAtInfoScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text(
           'LifeAt',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
         ),
         backgroundColor: AppColors.dominantPurple,
         foregroundColor: Colors.white,
@@ -70,11 +67,7 @@ class LifeAtInfoScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  Icon(
-                    Icons.psychology,
-                    size: 60,
-                    color: Colors.white,
-                  ),
+                  Icon(Icons.psychology, size: 60, color: Colors.white),
                   const SizedBox(height: 16),
                   const Text(
                     'What is LifeAt?',
@@ -96,9 +89,9 @@ class LifeAtInfoScreen extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Features Section
             Text(
               'Study Features',
@@ -109,55 +102,55 @@ class LifeAtInfoScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             _buildFeatureCard(
               Icons.timer,
               'Pomodoro Timer',
               'Stay focused with 25-minute work sessions followed by 5-minute breaks. Perfect for maintaining concentration during long study sessions.',
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             _buildFeatureCard(
               Icons.music_note,
               'Background Music',
               'Curated playlists designed for concentration. Choose from rain sounds, white noise, cafe ambience, and more.',
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             _buildFeatureCard(
               Icons.people,
               'Virtual Study Rooms',
               'Study with others worldwide in virtual rooms. Join existing rooms or create your own study space.',
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             _buildFeatureCard(
               Icons.palette,
               'Customizable Environments',
               'Choose from various study backgrounds like forest, mountain, ocean, cafe, or library settings.',
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             _buildFeatureCard(
               Icons.analytics,
               'Progress Tracking',
               'Monitor your study sessions and track your productivity over time with detailed analytics.',
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             _buildFeatureCard(
               Icons.notifications,
               'Study Reminders',
               'Set up notifications to never miss your scheduled study time and maintain consistency.',
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // How it works section
             Container(
               padding: const EdgeInsets.all(20),
@@ -202,9 +195,9 @@ class LifeAtInfoScreen extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Open Button
             SizedBox(
               width: double.infinity,
@@ -218,7 +211,10 @@ class LifeAtInfoScreen extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.dominantPurple,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 32,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -226,9 +222,9 @@ class LifeAtInfoScreen extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Additional Info
             Container(
               padding: const EdgeInsets.all(16),
@@ -239,11 +235,7 @@ class LifeAtInfoScreen extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.check_circle,
-                    color: Colors.green,
-                    size: 20,
-                  ),
+                  Icon(Icons.check_circle, color: Colors.green, size: 20),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -280,11 +272,7 @@ class LifeAtInfoScreen extends StatelessWidget {
               color: AppColors.dominantPurple.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              icon,
-              color: AppColors.dominantPurple,
-              size: 20,
-            ),
+            child: Icon(icon, color: AppColors.dominantPurple, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -315,4 +303,4 @@ class LifeAtInfoScreen extends StatelessWidget {
       ),
     );
   }
-} 
+}
