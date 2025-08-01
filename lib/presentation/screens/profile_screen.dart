@@ -86,10 +86,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 return GestureDetector(
                   onTap: () async {
                     await _saveAvatarToFirestore(url);
-                    setState(() {
-                      _avatarUrl = url;
-                    });
-                    Navigator.pop(context);
+                    if (mounted) {
+                      setState(() {
+                        _avatarUrl = url;
+                      });
+                    }
+                    if (mounted) {
+                      Navigator.pop(context);
+                    }
                   },
                   child: Container(
                     decoration: BoxDecoration(
@@ -837,7 +841,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _logout(BuildContext context) async {
+  void _logout(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {

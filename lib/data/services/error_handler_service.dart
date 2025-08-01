@@ -366,22 +366,24 @@ class ErrorHandlerService {
 
       await operation();
 
-      if (showLoadingDialog) {
+      if (context.mounted && showLoadingDialog) {
         ErrorHandlerService.hideLoadingDialog(context);
       }
 
-      if (showSuccessMessage && successMessage != null) {
+      if (context.mounted && showSuccessMessage && successMessage != null) {
         showSuccessSnackBar(context, successMessage);
       }
 
       onSuccess?.call();
     } catch (e) {
-      if (showLoadingDialog) {
+      if (context.mounted && showLoadingDialog) {
         ErrorHandlerService.hideLoadingDialog(context);
       }
 
-      final errorMessage = handleException(e);
-      showErrorSnackBar(context, errorMessage);
+      if (context.mounted) {
+        final errorMessage = handleException(e);
+        showErrorSnackBar(context, errorMessage);
+      }
 
       onError?.call();
     }

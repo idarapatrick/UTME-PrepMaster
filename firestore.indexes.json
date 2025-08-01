@@ -1,12 +1,12 @@
 {
   "indexes": [
     {
-      "collectionGroup": "user_stats",
+      "collectionGroup": "leaderboard",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "userId",
-          "order": "ASCENDING"
+          "fieldPath": "score",
+          "order": "DESCENDING"
         },
         {
           "fieldPath": "createdAt",
@@ -29,12 +29,12 @@
       ]
     },
     {
-      "collectionGroup": "leaderboard",
+      "collectionGroup": "user_stats",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "score",
-          "order": "DESCENDING"
+          "fieldPath": "userId",
+          "order": "ASCENDING"
         },
         {
           "fieldPath": "createdAt",
@@ -58,4 +58,4 @@
     }
   ],
   "fieldOverrides": []
-} 
+}

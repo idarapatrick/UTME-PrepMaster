@@ -48,19 +48,23 @@ class _AuthScreenState extends State<AuthScreen> {
 
         if (result.isSuccess) {
           // For new sign-ups, navigate to username setup first
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/username-setup',
-            (route) => false,
-            arguments: {'user': result.user},
-          );
+          if (mounted) {
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/username-setup',
+              (route) => false,
+              arguments: {'user': result.user},
+            );
+          }
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result.message),
-              backgroundColor: Colors.red,
-            ),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(result.message),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
         }
       } else {
         // Sign in
@@ -70,43 +74,51 @@ class _AuthScreenState extends State<AuthScreen> {
         );
 
         if (result.isSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result.message),
-              backgroundColor: Colors.green,
-            ),
-          );
-          // Navigate to home screen - allow access even if not verified
-          Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(result.message),
+                backgroundColor: Colors.green,
+              ),
+            );
+            // Navigate to home screen - allow access even if not verified
+            Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+          }
         } else if (result.needsEmailVerification) {
           // For existing users who need verification, show message but allow access
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Please check your email for verification. You can still use the app.',
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Please check your email for verification. You can still use the app.',
+                ),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 4),
               ),
-              backgroundColor: Colors.orange,
-              duration: const Duration(seconds: 4),
-            ),
-          );
-          // Navigate to home screen anyway
-          Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+            );
+            // Navigate to home screen anyway
+            Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+          }
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result.message),
-              backgroundColor: Colors.red,
-            ),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(result.message),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('An error occurred: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('An error occurred: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
       setState(() {
         _isLoading = false;
@@ -122,41 +134,47 @@ class _AuthScreenState extends State<AuthScreen> {
     try {
       final result = await _authService.signInWithGoogle();
 
-      if (result.isSuccess) {
-        if (result.isNewUser) {
-          // For new Google users, navigate to completion screen
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/google-signup-completion',
-            (route) => false,
-            arguments: result.user,
-          );
+      if (mounted) {
+        if (result.isSuccess) {
+          if (result.isNewUser) {
+            // For new Google users, navigate to completion screen
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/google-signup-completion',
+              (route) => false,
+              arguments: result.user,
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(result.message),
+                backgroundColor: Colors.green,
+              ),
+            );
+            // Navigate to home screen
+            Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+          }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result.message),
-              backgroundColor: Colors.green,
-            ),
+            SnackBar(content: Text(result.message), backgroundColor: Colors.red),
           );
-          // Navigate to home screen
-          Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
         }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result.message), backgroundColor: Colors.red),
-        );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Google sign-in failed: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Google sign-in failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 

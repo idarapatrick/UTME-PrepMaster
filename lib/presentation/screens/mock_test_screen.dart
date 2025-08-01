@@ -414,7 +414,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
     if (user != null) {
       try {
         if (isCbt) {
-          print('Saving CBT result for user: ${user.uid}'); // Debug print
+      
 
           // Save to leaderboard
           leaderboardResult = await FirestoreService.saveCbtResult(
@@ -425,23 +425,23 @@ class _MockTestScreenState extends State<MockTestScreen> {
             _questions.length,
             120 * 60 - _timeRemaining,
           );
-          print(
-            'Leaderboard result received: $leaderboardResult',
-          ); // Debug print
+
 
           // Update user stats with new comprehensive tracking and show XP popup
-          final userStatsProvider = Provider.of<UserStatsProvider>(
-            context,
-            listen: false,
-          );
-          await userStatsProvider.completeCbtTestWithPopup(
-            subjectId: _currentSubject,
-            totalQuestions: _questions.length,
-            correctAnswers: correctAnswers,
-            timeSpentMinutes:
-                (120 * 60 - _timeRemaining) ~/ 60, // Convert seconds to minutes
-            score: score.toInt(),
-          );
+          if (mounted) {
+            final userStatsProvider = Provider.of<UserStatsProvider>(
+              context,
+              listen: false,
+            );
+            await userStatsProvider.completeCbtTestWithPopup(
+              subjectId: _currentSubject,
+              totalQuestions: _questions.length,
+              correctAnswers: correctAnswers,
+              timeSpentMinutes:
+                  (120 * 60 - _timeRemaining) ~/ 60, // Convert seconds to minutes
+              score: score.toInt(),
+            );
+          }
         } else {
           await FirestoreService.saveQuizResult(
             user.uid,
@@ -452,20 +452,22 @@ class _MockTestScreenState extends State<MockTestScreen> {
           );
 
           // Update user stats for quiz completion
-          final userStatsProvider = Provider.of<UserStatsProvider>(
-            context,
-            listen: false,
-          );
-          await userStatsProvider.completeQuizWithNewSystem(
-            subjectId: _currentSubject,
-            totalQuestions: _questions.length,
-            correctAnswers: correctAnswers,
-            timeSpentMinutes:
-                (20 * 60 - _timeRemaining) ~/ 60, // Convert seconds to minutes
-          );
+          if (mounted) {
+            final userStatsProvider = Provider.of<UserStatsProvider>(
+              context,
+              listen: false,
+            );
+            await userStatsProvider.completeQuizWithNewSystem(
+              subjectId: _currentSubject,
+              totalQuestions: _questions.length,
+              correctAnswers: correctAnswers,
+              timeSpentMinutes:
+                  (20 * 60 - _timeRemaining) ~/ 60, // Convert seconds to minutes
+            );
+          }
         }
       } catch (e) {
-        print('Error saving results: $e'); // Debug print
+
         // Error saving results
       }
     }
@@ -543,17 +545,13 @@ class _MockTestScreenState extends State<MockTestScreen> {
     if (mounted &&
         leaderboardResult != null &&
         leaderboardResult['inTop20'] == true) {
-      print(
-        'Showing leaderboard notification for rank: ${leaderboardResult['rank']}',
-      ); // Debug print
+
       _showLeaderboardNotification(
         leaderboardResult['rank'] as int,
         leaderboardResult['score'] as int,
       );
     } else {
-      print(
-        'No leaderboard notification - result: $leaderboardResult',
-      ); // Debug print
+
     }
 
     // Navigate to results screen

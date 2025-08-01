@@ -80,7 +80,7 @@ class UsernameService {
 
       return querySnapshot.docs.isEmpty;
     } catch (e) {
-      print('Error checking username availability: $e');
+
       return false;
     }
   }
@@ -113,7 +113,7 @@ class UsernameService {
       }
       return null;
     } catch (e) {
-      print('Error getting username: $e');
+
       return null;
     }
   }
@@ -134,7 +134,7 @@ class UsernameService {
 
       return true;
     } catch (e) {
-      print('Error updating username: $e');
+
       return false;
     }
   }

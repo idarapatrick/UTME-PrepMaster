@@ -445,10 +445,10 @@ class _LinksScreenState extends State<LinksScreen> {
 
   Future<void> _openLink(String url) async {
     try {
-      print('Opening link: $url'); // Debug print
+      
       final uri = Uri.parse(url);
       final canLaunch = await canLaunchUrl(uri);
-      print('Can launch URL: $canLaunch'); // Debug print
+      
 
       if (canLaunch) {
         final launched = await launchUrl(
@@ -456,10 +456,10 @@ class _LinksScreenState extends State<LinksScreen> {
           mode: LaunchMode.externalApplication,
         );
 
-        print('URL launched successfully: $launched'); // Debug print
+        
 
         if (!launched) {
-          print('Failed to launch URL: $url'); // Debug print
+
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -470,7 +470,7 @@ class _LinksScreenState extends State<LinksScreen> {
           }
         }
       } else {
-        print('Cannot launch URL: $url'); // Debug print
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

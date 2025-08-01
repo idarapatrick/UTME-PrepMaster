@@ -179,7 +179,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return false;
 
-      print('User email verified (before reload): ${user.emailVerified}');
+
 
       // Force refresh the ID token to get latest verification status
       await user.reload();
@@ -190,13 +190,10 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
       // Get the refreshed user instance
       final refreshedUser = FirebaseAuth.instance.currentUser;
-      print(
-        'User email verified (after reload): ${refreshedUser?.emailVerified}',
-      );
 
       return refreshedUser?.emailVerified ?? false;
     } catch (e) {
-      print('Error refreshing token: $e');
+      
       return false;
     }
   }
@@ -219,10 +216,6 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
       // If still not verified, try with AuthService methods as fallback
       if (!isVerified) {
-        print(
-          'Token refresh verification failed, trying AuthService methods...',
-        );
-
         isVerified = await _authService.checkEmailVerifiedSimple();
 
         if (!isVerified) {
@@ -728,6 +721,8 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                             backgroundColor: Colors.blue,
                           ),
                         );
+                      }
+                      if (mounted) {
                         Navigator.of(
                           context,
                         ).pushNamedAndRemoveUntil('/auth', (route) => false);

@@ -162,7 +162,7 @@ class NotificationService {
           .doc(notificationId)
           .update({'isRead': true});
     } catch (e) {
-      print('Error marking notification as read: $e');
+      // Ignore notification update errors
     }
   }
 
@@ -190,7 +190,7 @@ class NotificationService {
           .doc(notificationId)
           .delete();
     } catch (e) {
-      print('Error deleting notification: $e');
+      // Ignore notification deletion errors
     }
   }
 
@@ -209,7 +209,7 @@ class NotificationService {
       }
       await batch.commit();
     } catch (e) {
-      print('Error clearing notifications: $e');
+      // Ignore notification clearing errors
     }
   }
 }

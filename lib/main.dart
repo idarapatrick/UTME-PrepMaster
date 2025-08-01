@@ -1,16 +1,3 @@
-/// UTME PrepMaster - Main Application Entry Point
-/// 
-/// This file serves as the main entry point for the UTME PrepMaster application.
-/// It handles Firebase initialization, provider setup, theme management, and
-/// authentication state management.
-/// 
-/// Key Responsibilities:
-/// - Initialize Firebase services
-/// - Set up Provider state management
-/// - Configure app theme and preferences
-/// - Handle authentication flow
-/// - Define app routes and navigation
-
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';

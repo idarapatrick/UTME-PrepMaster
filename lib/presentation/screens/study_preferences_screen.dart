@@ -260,9 +260,9 @@ class _StudyPreferencesScreenState extends State<StudyPreferencesScreen> {
           child: child!,
         );
       },
-    ).then((time) {
+    ).then((time) async {
       if (time != null) {
-        studyPrefs.updateDailyReminderTime(time);
+        await studyPrefs.updateDailyReminderTime(time);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

@@ -558,7 +558,9 @@ class _HomeScreenState extends State<HomeScreen> {
       if (value == 'edit_profile') {
         Navigator.pushNamed(context, '/profile').then((_) {
           // Reload user profile when returning from profile
-          _loadUserProfile();
+          if (mounted) {
+            _loadUserProfile();
+          }
         });
       } else if (value == 'logout') {
         _logout();

@@ -205,7 +205,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
     }
   }
 
-  void _selectLanguage(BuildContext context, LanguageProvider languageProvider, String languageCode) async {
+  Future<void> _selectLanguage(BuildContext context, LanguageProvider languageProvider, String languageCode) async {
     await languageProvider.changeLanguage(languageCode);
     
     if (mounted) {

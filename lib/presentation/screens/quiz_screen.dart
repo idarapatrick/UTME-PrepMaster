@@ -235,24 +235,28 @@ class _QuizScreenState extends State<QuizScreen> {
         );
 
         // Update user stats with new XP system
-        final userStatsProvider = Provider.of<UserStatsProvider>(
-          context,
-          listen: false,
-        );
-        await userStatsProvider.completeQuizWithNewSystem(
-          subjectId: widget.subject,
-          totalQuestions: _questions.length,
-          correctAnswers: correctAnswers,
-          timeSpentMinutes: _timeElapsed ~/ 60, // Convert seconds to minutes
-        );
+        if (mounted) {
+          final userStatsProvider = Provider.of<UserStatsProvider>(
+            context,
+            listen: false,
+          );
+          await userStatsProvider.completeQuizWithNewSystem(
+            subjectId: widget.subject,
+            totalQuestions: _questions.length,
+            correctAnswers: correctAnswers,
+            timeSpentMinutes: _timeElapsed ~/ 60, // Convert seconds to minutes
+          );
+        }
       } catch (e) {
         // Error saving quiz results
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error saving results: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error saving results: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }

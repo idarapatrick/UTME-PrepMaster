@@ -95,7 +95,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
       final data = doc.data();
       await doc.reference.delete();
       _loadLibrary();
-      if (data != null) {
+      if (data != null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('PDF deleted'),
@@ -108,7 +108,9 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                     .collection('library_pdfs')
                     .doc(docId)
                     .set(data);
-                _loadLibrary();
+                if (mounted) {
+                  _loadLibrary();
+                }
               },
             ),
           ),
@@ -147,7 +149,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
       final data = doc.data();
       await doc.reference.delete();
       _loadLibrary();
-      if (data != null) {
+      if (data != null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Note deleted'),
@@ -160,7 +162,9 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                     .collection('library_notes')
                     .doc(docId)
                     .set(data);
-                _loadLibrary();
+                if (mounted) {
+                  _loadLibrary();
+                }
               },
             ),
           ),
@@ -269,7 +273,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
       final data = doc.data();
       await doc.reference.delete();
       _loadLibrary();
-      if (data != null) {
+      if (data != null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Link deleted'),
@@ -282,7 +286,9 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
                     .collection('library_links')
                     .doc(docId)
                     .set(data);
-                _loadLibrary();
+                if (mounted) {
+                  _loadLibrary();
+                }
               },
             ),
           ),
@@ -1017,9 +1023,11 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not open: $url')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Could not open: $url')));
+      }
     }
   }
 
@@ -1144,7 +1152,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
 
   Future<void> _openPdf(String assetPath) async {
     try {
-      print('Opening PDF with path: $assetPath'); // Debug print
+      
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -1155,7 +1163,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
         ),
       );
     } catch (e) {
-      print('Error in _openPdf: $e'); // Debug print
+      
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Error opening PDF: $e')));

@@ -115,20 +115,26 @@ class _CourseContentScreenState extends State<CourseContentScreen>
       // First try with external application mode
       try {
         launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } catch (e) {}
+      } catch (e) {
+        // Ignore external application launch errors
+      }
 
       // If external failed, try with platform default
       if (!launched) {
         try {
           launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
-        } catch (e) {}
+        } catch (e) {
+          // Ignore platform default launch errors
+        }
       }
 
       // If still failed, try with in-app web view
       if (!launched) {
         try {
           launched = await launchUrl(uri, mode: LaunchMode.inAppWebView);
-        } catch (e) {}
+        } catch (e) {
+          // Ignore in-app web view launch errors
+        }
       }
 
       if (!launched && mounted) {
@@ -152,14 +158,18 @@ class _CourseContentScreenState extends State<CourseContentScreen>
                   onPressed: () async {
                     // Copy URL to clipboard
                     await Clipboard.setData(ClipboardData(text: validUrl));
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('URL copied to clipboard: $validUrl'),
-                        backgroundColor: Colors.green,
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
+                    if (mounted) {
+                      Navigator.of(context).pop();
+                    }
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('URL copied to clipboard: $validUrl'),
+                          backgroundColor: Colors.green,
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
                   },
                   child: const Text('Copy URL'),
                 ),

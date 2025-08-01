@@ -33,23 +33,20 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   }
 
   void _setupRealtimeUpdates() {
-    print('Setting up real-time updates...'); // Debug print
+
     // Listen to changes in user documents for real-time updates
     _leaderboardSubscription = FirebaseFirestore.instance
         .collection('users')
         .snapshots()
         .listen((snapshot) {
-          print(
-            'Firestore update detected, refreshing leaderboard...',
-          ); // Debug print
+ // Debug print
           // Refresh leaderboard when data changes
           _loadLeaderboard();
         });
   }
 
   Future<void> _loadLeaderboard() async {
-    print('=== LOADING LEADERBOARD ==='); // Debug print
-    print('Filter: $_selectedFilter'); // Debug print
+
 
     setState(() {
       _loading = true;
@@ -59,15 +56,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
       final leaderboard = await FirestoreService.getCbtLeaderboard(
         _selectedFilter,
       );
-      print('Leaderboard loaded: ${leaderboard.length} entries'); // Debug print
-      print('Leaderboard data: $leaderboard'); // Debug print
+      
 
       setState(() {
         _leaderboard = leaderboard;
         _loading = false;
       });
     } catch (e) {
-      print('Error loading leaderboard: $e'); // Debug print
+      
       setState(() {
         _loading = false;
       });

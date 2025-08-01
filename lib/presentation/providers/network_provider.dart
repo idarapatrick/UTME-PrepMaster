@@ -107,9 +107,5 @@ class NetworkProvider extends ChangeNotifier {
     return Colors.yellow;
   }
 
-  // Dispose
-  @override
-  void dispose() {
-    super.dispose();
-  }
+
 } 

@@ -7,7 +7,12 @@ import 'package:utme_prep_master/presentation/screens/auth/auth_screen.dart';
 import 'package:utme_prep_master/data/services/auth_service.dart';
 import 'package:utme_prep_master/presentation/providers/network_provider.dart';
 import 'package:utme_prep_master/presentation/providers/theme_notifier.dart';
+import 'package:utme_prep_master/presentation/providers/user_state.dart';
+import 'package:utme_prep_master/presentation/providers/user_stats_provider.dart';
+import 'package:utme_prep_master/presentation/providers/language_provider.dart';
+import 'package:utme_prep_master/presentation/providers/study_preferences_provider.dart';
 import 'package:utme_prep_master/presentation/theme/app_theme.dart';
+import '../setup.dart';
 
 @GenerateMocks([AuthService, NetworkProvider])
 import 'auth_screen_test.mocks.dart';
@@ -16,10 +21,16 @@ void main() {
   group('Auth Screen Widget Tests', () {
     late MockAuthService mockAuthService;
     late MockNetworkProvider mockNetworkProvider;
+    late MockThemeNotifier mockThemeNotifier;
+
+    setUpAll(() async {
+      await setupFirebaseForTesting();
+    });
 
     setUp(() {
       mockAuthService = MockAuthService();
       mockNetworkProvider = MockNetworkProvider();
+      mockThemeNotifier = MockThemeNotifier();
     });
 
     Widget createTestWidget() {
@@ -28,7 +39,7 @@ void main() {
         home: MultiProvider(
           providers: [
             ChangeNotifierProvider<ThemeNotifier>.value(
-              value: ThemeNotifier(),
+              value: mockThemeNotifier,
             ),
             ChangeNotifierProvider<NetworkProvider>.value(
               value: mockNetworkProvider,

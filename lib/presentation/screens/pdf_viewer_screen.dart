@@ -30,8 +30,6 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
       final pdfPath =
           widget.pdfPath ?? 'assets/pdfs/last_days_at_forcados_high_school.pdf';
 
-      print('PDF Viewer: Loading document with path: $pdfPath'); // Debug print
-
       // Validate the PDF path and determine the appropriate viewer
       if (pdfPath.isEmpty) {
         throw Exception('PDF path is empty');
@@ -45,15 +43,11 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
           canShowScrollHead: true,
           canShowScrollStatus: true,
           onDocumentLoaded: (PdfDocumentLoadedDetails details) {
-            print(
-              'PDF loaded successfully: ${details.document.pages.count} pages',
-            );
             setState(() {
               _isLoading = false;
             });
           },
           onDocumentLoadFailed: (PdfDocumentLoadFailedDetails details) {
-            print('PDF load failed: ${details.error}'); // Debug print
             setState(() {
               _errorMessage = 'Failed to load PDF: ${details.error}';
               _isLoading = false;
@@ -69,15 +63,11 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
           canShowScrollHead: true,
           canShowScrollStatus: true,
           onDocumentLoaded: (PdfDocumentLoadedDetails details) {
-            print(
-              'PDF loaded successfully: ${details.document.pages.count} pages',
-            );
             setState(() {
               _isLoading = false;
             });
           },
           onDocumentLoadFailed: (PdfDocumentLoadFailedDetails details) {
-            print('PDF load failed: ${details.error}'); // Debug print
             setState(() {
               _errorMessage = 'Failed to load PDF: ${details.error}';
               _isLoading = false;
@@ -98,15 +88,11 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
           canShowScrollHead: true,
           canShowScrollStatus: true,
           onDocumentLoaded: (PdfDocumentLoadedDetails details) {
-            print(
-              'PDF loaded successfully: ${details.document.pages.count} pages',
-            );
             setState(() {
               _isLoading = false;
             });
           },
           onDocumentLoadFailed: (PdfDocumentLoadFailedDetails details) {
-            print('PDF load failed: ${details.error}'); // Debug print
             setState(() {
               _errorMessage = 'Failed to load PDF: ${details.error}';
               _isLoading = false;
@@ -145,72 +131,53 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(displayTitle, style: const TextStyle(fontSize: 16)),
+        title: Text(displayTitle),
         backgroundColor: AppColors.dominantPurple,
         foregroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          if (_errorMessage != null)
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _retryLoading,
+              tooltip: 'Retry',
+            ),
+        ],
       ),
       body: _isLoading
           ? const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      AppColors.dominantPurple,
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'Loading PDF...',
-                    style: TextStyle(color: AppColors.textSecondary),
-                  ),
-                ],
-              ),
+              child: CircularProgressIndicator(),
             )
           : _errorMessage != null
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      color: AppColors.textSecondary,
-                      size: 48,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Failed to load PDF',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.red,
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _errorMessage!,
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 14,
+                      const SizedBox(height: 16),
+                      Text(
+                        'Error Loading PDF',
+                        style: Theme.of(context).textTheme.headlineSmall,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: _retryLoading,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.dominantPurple,
-                        foregroundColor: Colors.white,
+                      const SizedBox(height: 8),
+                      Text(
+                        _errorMessage!,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          : _pdfViewer,
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _retryLoading,
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
+              : _pdfViewer,
     );
   }
 }
