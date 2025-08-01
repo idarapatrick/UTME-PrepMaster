@@ -362,9 +362,9 @@ class FirestoreService {
       final List<Map<String, dynamic>> leaderboard = [];
 
       for (final doc in querySnapshot.docs) {
-        final data = doc.data()!;
+        final data = doc.data();
         final userId = doc.id;
-        final dataMap = data as Map<String, dynamic>;
+        final dataMap = data;
         final cbtHighScore = dataMap['cbtHighScore'] ?? 0;
         final lastCbtTest = dataMap['lastCbtTest'];
 

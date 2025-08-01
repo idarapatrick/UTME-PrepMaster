@@ -12,6 +12,12 @@ class ThemeNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Synchronous initialization for app startup
+  void initializeThemeSync(bool isDark) {
+    _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
+    notifyListeners();
+  }
+
   void toggleTheme(bool isDark) async {
     _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
     // Save theme preference

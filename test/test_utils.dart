@@ -7,11 +7,10 @@ import 'package:utme_prep_master/data/services/ai_service.dart';
 import 'package:utme_prep_master/presentation/providers/user_state.dart';
 import 'package:utme_prep_master/presentation/providers/theme_notifier.dart';
 import 'package:utme_prep_master/presentation/providers/user_stats_provider.dart';
+import 'widget/ai_tutor_screen_test.mocks.dart';
 
 // Mock classes
 class MockAuthService extends Mock implements AuthService {}
-
-class MockAIService extends Mock implements AIService {}
 
 class MockUserState extends Mock implements UserState {}
 

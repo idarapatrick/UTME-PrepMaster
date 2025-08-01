@@ -171,6 +171,8 @@ class UserStatsProvider extends ChangeNotifier {
     }
   }
 
+  // Demo method removed - XP popup now shows automatically when CBT tests are completed
+
   // Study Session Management
   Future<void> startStudySession({
     required String subjectId,
@@ -296,6 +298,60 @@ class UserStatsProvider extends ChangeNotifier {
         timeSpentMinutes: timeSpentMinutes,
         score: score,
       );
+    } catch (e) {
+      _setError('Failed to complete CBT test: $e');
+    }
+  }
+
+  // CBT Test Completion with XP popup
+  Future<void> completeCbtTestWithPopup({
+    required String subjectId,
+    required int totalQuestions,
+    required int correctAnswers,
+    required int timeSpentMinutes,
+    required int score,
+  }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      // Fixed XP reward for completing a CBT test
+      int totalXp = 260; // +260 XP for completing a CBT test
+
+      // Complete the CBT test (this will add XP to Firebase)
+      await _repository.completeCbtTest(
+        user.uid,
+        subjectId,
+        correctAnswers: correctAnswers,
+        totalQuestions: totalQuestions,
+        timeSpentMinutes: timeSpentMinutes,
+        score: score,
+      );
+
+      // Update local stats and trigger popup
+      if (_userStats != null) {
+        final updatedStats = _userStats!.copyWith(
+          totalXp: _userStats!.totalXp + totalXp,
+          updatedAt: DateTime.now(),
+        );
+        
+        // Update subject XP
+        final updatedSubjectXp = Map<String, int>.from(_userStats!.subjectXp);
+        updatedSubjectXp[subjectId] = (updatedSubjectXp[subjectId] ?? 0) + totalXp;
+        
+        _userStats = updatedStats.copyWith(subjectXp: updatedSubjectXp);
+        
+        // Trigger XP popup animation
+        _lastXpEarned = totalXp;
+        _showXpAnimation = true;
+        notifyListeners();
+
+        // Hide animation after 4 seconds
+        Future.delayed(const Duration(seconds: 4), () {
+          _showXpAnimation = false;
+          notifyListeners();
+        });
+      }
     } catch (e) {
       _setError('Failed to complete CBT test: $e');
     }

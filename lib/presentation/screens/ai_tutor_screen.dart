@@ -71,7 +71,7 @@ class _AiTutorScreenState extends State<AiTutorScreen> {
     _scrollToBottom();
 
     // Simulate AI response
-    AIService.getAIResponse(message).then((aiResponse) {
+    AIService().getAIResponse(message).then((aiResponse) {
       if (mounted) {
         setState(() {
           _isTyping = false;

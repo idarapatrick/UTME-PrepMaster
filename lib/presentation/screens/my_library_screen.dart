@@ -986,42 +986,7 @@ class _MyLibraryScreenState extends State<MyLibraryScreen> {
     );
   }
 
-  Widget _buildEmptyState(
-    BuildContext context,
-    IconData icon,
-    String title,
-    String subtitle,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: AppColors.getCardColor(context),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.getBorderLight(context), width: 1),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, size: 48, color: AppColors.getTextSecondary(context)),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppColors.getTextPrimary(context),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            subtitle,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.getTextSecondary(context),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   String _extractDomain(String url) {
     try {

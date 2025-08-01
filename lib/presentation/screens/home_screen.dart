@@ -5,9 +5,14 @@ import '../theme/app_colors.dart';
 import '../providers/user_stats_provider.dart';
 import '../../data/services/firestore_service.dart';
 import '../../data/services/notification_service.dart';
+import '../../data/services/error_handler_service.dart';
 import '../utils/responsive_helper.dart';
-import '../widgets/xp_animation_widget.dart';
+
+import '../widgets/xp_popup_widget.dart';
 import '../widgets/streak_animation_widget.dart';
+import '../widgets/loading_widget.dart';
+import '../widgets/network_status_widget.dart';
+// Demo widgets removed - XP popup now shows automatically when CBT tests are completed
 import 'study_partner_screen.dart';
 import 'notifications_screen.dart';
 
@@ -75,15 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _showXpAnimation = true;
           _lastXpEarned = userStatsProvider.lastXpEarned;
         });
-
-        Future.delayed(const Duration(seconds: 3), () {
-          if (mounted) {
-            setState(() {
-              _showXpAnimation = false;
-            });
-            userStatsProvider.hideXpAnimation();
-          }
-        });
+        // Don't auto-hide - let the XpPopupWidget handle dismissal with OK button
       }
 
       if (userStatsProvider.showStreakAnimation) {
@@ -126,7 +123,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       try {
-        final subjects = await FirestoreService.loadUserSubjects(user.uid);
+        final subjects = await ErrorHandlerService.executeWithRetry(
+          () => FirestoreService.loadUserSubjects(user.uid),
+          maxRetries: 3,
+        );
         if (subjects.isNotEmpty) {
           final subjectData = subjects.map((subjectName) {
             return {
@@ -155,6 +155,13 @@ class _HomeScreenState extends State<HomeScreen> {
           _userSubjects = [];
           _loadingSubjects = false;
         });
+        if (mounted) {
+          ErrorHandlerService.showErrorSnackBar(
+            context,
+            ErrorHandlerService.handleException(e),
+            onRetry: _loadUserSubjects,
+          );
+        }
       }
     } else {
       setState(() {
@@ -346,62 +353,86 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: isDark
           ? const Color(0xFF181A20)
           : AppColors.backgroundSecondary,
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              _buildHeader(context),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildSearchBar(context),
-                      SizedBox(
-                        height: ResponsiveHelper.getResponsivePadding(context),
-                      ),
-                      _buildWelcomeCard(context),
-                      SizedBox(
-                        height: ResponsiveHelper.getResponsivePadding(context),
-                      ),
-                      _buildQuickActionsSection(context),
-                      SizedBox(
-                        height: ResponsiveHelper.getResponsivePadding(context),
-                      ),
-                      _buildStatsSection(context),
-                      SizedBox(
-                        height: ResponsiveHelper.getResponsivePadding(context),
-                      ),
-                      _buildSubjectsSection(context),
-                      SizedBox(
-                        height:
-                            ResponsiveHelper.getResponsivePadding(context) * 2,
-                      ),
-                    ],
+      body: NetworkAwareWidget(
+        onRetry: () {
+          _loadUserSubjects();
+          _loadUserAvatar();
+          _loadUserProfile();
+          _loadUserStats();
+        },
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                _buildHeader(context),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSearchBar(context),
+                        SizedBox(
+                          height: ResponsiveHelper.getResponsivePadding(context),
+                        ),
+                        _buildWelcomeCard(context),
+                        SizedBox(
+                          height: ResponsiveHelper.getResponsivePadding(context),
+                        ),
+                        _buildQuickActionsSection(context),
+                        SizedBox(
+                          height: ResponsiveHelper.getResponsivePadding(context),
+                        ),
+                        _buildStatsSection(context),
+                        SizedBox(
+                          height: ResponsiveHelper.getResponsivePadding(context),
+                        ),
+                        // Demo section removed - XP popup now shows automatically when CBT tests are completed
+                        SizedBox(
+                          height: ResponsiveHelper.getResponsivePadding(context),
+                        ),
+                        _buildSubjectsSection(context),
+                        SizedBox(
+                          height:
+                              ResponsiveHelper.getResponsivePadding(context) * 2,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
+              ],
+            ),
+            if (_showXpAnimation)
+              Positioned(
+                top: 100,
+                left: 0,
+                right: 0,
+                child: XpPopupWidget(
+                  xpEarned: _lastXpEarned,
+                  reason: 'cbt_completion',
+                  onDismiss: () {
+                    setState(() {
+                      _showXpAnimation = false;
+                    });
+                    // Hide the animation in the UserStatsProvider
+                    final userStatsProvider = Provider.of<UserStatsProvider>(
+                      context,
+                      listen: false,
+                    );
+                    userStatsProvider.hideXpAnimation();
+                  },
+                ),
               ),
-            ],
-          ),
-          if (_showXpAnimation)
-            XpAnimationWidget(
-              xpEarned: _lastXpEarned,
-              onAnimationComplete: () {
-                setState(() {
-                  _showXpAnimation = false;
-                });
-              },
-            ),
-          if (_showStreakAnimation)
-            StreakAnimationWidget(
-              streakCount: _lastStreakCount,
-              onAnimationComplete: () {
-                setState(() {
-                  _showStreakAnimation = false;
-                });
-              },
-            ),
-        ],
+            if (_showStreakAnimation)
+              StreakAnimationWidget(
+                streakCount: _lastStreakCount,
+                onAnimationComplete: () {
+                  setState(() {
+                    _showStreakAnimation = false;
+                  });
+                },
+              ),
+          ],
+        ),
       ),
       bottomNavigationBar: _buildBottomNavigationBar(context),
     );
@@ -781,6 +812,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Demo section removed - XP popup now shows automatically when CBT tests are completed
+
   Widget _buildSubjectsSection(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
@@ -817,24 +850,9 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 16),
 
           _loadingSubjects
-              ? Center(
-                  child: Column(
-                    children: [
-                      CircularProgressIndicator(
-                        color: AppColors.dominantPurple,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Loading your subjects...',
-                        style: TextStyle(
-                          color: isDark
-                              ? Colors.grey.shade300
-                              : Colors.grey.shade600,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
+              ? const LoadingCard(
+                  message: 'Loading your subjects...',
+                  size: 32,
                 )
               : _userSubjects.isEmpty
               ? _buildEmptySubjectsState(context)

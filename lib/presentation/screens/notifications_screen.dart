@@ -47,7 +47,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       body: _user == null
           ? const Center(child: CircularProgressIndicator())
           : StreamBuilder<QuerySnapshot>(
-              stream: NotificationService.getUserNotifications(_user!.uid),
+              stream: NotificationService.getUserNotifications(_user.uid),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -304,7 +304,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Future<void> _markNotificationAsRead(String notificationId) async {
     if (_user != null) {
       await NotificationService.markNotificationAsRead(
-        _user!.uid,
+        _user.uid,
         notificationId,
       );
     }
@@ -312,7 +312,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Future<void> _deleteNotification(String notificationId) async {
     if (_user != null) {
-      await NotificationService.deleteNotification(_user!.uid, notificationId);
+      await NotificationService.deleteNotification(_user.uid, notificationId);
     }
   }
 
@@ -348,7 +348,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Future<void> _clearAllNotifications() async {
     if (_user != null) {
-      await NotificationService.clearAllNotifications(_user!.uid);
+      await NotificationService.clearAllNotifications(_user.uid);
     }
   }
 }

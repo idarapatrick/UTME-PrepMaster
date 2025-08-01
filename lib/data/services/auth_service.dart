@@ -128,14 +128,14 @@ class AuthService {
 
           // Allow access but indicate verification is needed
           return AuthResult.success(
-            user: reloadedUser ?? user,
+            user: reloadedUser,
             message: 'Welcome back! Please check your email for verification.',
             needsEmailVerification: true,
           );
         }
 
         return AuthResult.success(
-          user: reloadedUser ?? user,
+          user: reloadedUser,
           message: 'Welcome back!',
         );
       }

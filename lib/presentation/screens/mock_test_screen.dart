@@ -46,6 +46,8 @@ class _MockTestScreenState extends State<MockTestScreen> {
   List<TestQuestion> _questions = [];
   bool _isCbt = false; // Added to track if it's a CBT test
   Map<String, List<int>> _subjectQuestionRanges = {};
+  // NEW: Track which questions belong to which subject
+  List<String> _questionSubjects = [];
 
   @override
   void initState() {
@@ -183,6 +185,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
   void _loadCbtQuestions() {
     final allQuestions = <TestQuestion>[];
     final subjectQuestionRanges = <String, List<int>>{};
+    final questionSubjects = <String>[]; // Track subject for each question
     int currentIndex = 0;
 
     for (final subject in _selectedSubjects) {
@@ -208,6 +211,12 @@ class _MockTestScreenState extends State<MockTestScreen> {
           (i) => currentIndex + i,
         );
         subjectQuestionRanges[subject] = subjectIndices;
+        
+        // Track which subject each question belongs to
+        for (int i = 0; i < questionCount; i++) {
+          questionSubjects.add(subject);
+        }
+        
         currentIndex += questionCount;
       }
     }
@@ -217,6 +226,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
       _selectedAnswers = List.filled(allQuestions.length, '');
       _answeredQuestions = List.filled(allQuestions.length, false);
       _subjectQuestionRanges = subjectQuestionRanges;
+      _questionSubjects = questionSubjects; // Store the subject mapping
     });
 
     _startTimer();
@@ -248,6 +258,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
       _answeredQuestions = List.filled(quizQuestions.length, false);
       _currentSubject = subject;
       _isCbt = false; // Set to false for quiz
+      _questionSubjects = List.filled(quizQuestions.length, subject); // All questions are from the same subject
     });
 
     _startTimer();
@@ -293,18 +304,16 @@ class _MockTestScreenState extends State<MockTestScreen> {
 
   // Get current subject for the current question
   String _getCurrentSubject() {
-    for (final entry in _subjectQuestionRanges.entries) {
-      if (entry.value.contains(_currentQuestionIndex)) {
-        return entry.key;
-      }
+    if (_questionSubjects.isNotEmpty && _currentQuestionIndex < _questionSubjects.length) {
+      return _questionSubjects[_currentQuestionIndex];
     }
-    return '';
+    return _currentSubject;
   }
 
   // Get current question number within the current subject
   int _getCurrentQuestionInSubject() {
     final currentSubject = _getCurrentSubject();
-    if (currentSubject.isNotEmpty) {
+    if (currentSubject.isNotEmpty && _subjectQuestionRanges.containsKey(currentSubject)) {
       final subjectQuestions = _subjectQuestionRanges[currentSubject]!;
       final currentIndexInSubject = subjectQuestions.indexOf(
         _currentQuestionIndex,
@@ -317,7 +326,7 @@ class _MockTestScreenState extends State<MockTestScreen> {
   // Get total questions in the current subject
   int _getTotalQuestionsInSubject() {
     final currentSubject = _getCurrentSubject();
-    if (currentSubject.isNotEmpty) {
+    if (currentSubject.isNotEmpty && _subjectQuestionRanges.containsKey(currentSubject)) {
       return _subjectQuestionRanges[currentSubject]!.length;
     }
     return _questions.length;
@@ -420,12 +429,12 @@ class _MockTestScreenState extends State<MockTestScreen> {
             'Leaderboard result received: $leaderboardResult',
           ); // Debug print
 
-          // Update user stats with new comprehensive tracking
+          // Update user stats with new comprehensive tracking and show XP popup
           final userStatsProvider = Provider.of<UserStatsProvider>(
             context,
             listen: false,
           );
-          await userStatsProvider.completeCbtTest(
+          await userStatsProvider.completeCbtTestWithPopup(
             subjectId: _currentSubject,
             totalQuestions: _questions.length,
             correctAnswers: correctAnswers,
@@ -614,14 +623,10 @@ class _MockTestScreenState extends State<MockTestScreen> {
   }
 
   String? _getQuestionSubject(int questionIndex) {
-    // This is a simplified mapping - in a real app, questions would have subject tags
-    if (questionIndex < 60) return 'English';
-    if (questionIndex < 100)
-      return _selectedSubjects.length > 1 ? _selectedSubjects[1] : null;
-    if (questionIndex < 140)
-      return _selectedSubjects.length > 2 ? _selectedSubjects[2] : null;
-    if (questionIndex < 180)
-      return _selectedSubjects.length > 3 ? _selectedSubjects[3] : null;
+    // Use the stored subject mapping instead of the faulty calculation
+    if (questionIndex < _questionSubjects.length) {
+      return _questionSubjects[questionIndex];
+    }
     return null;
   }
 

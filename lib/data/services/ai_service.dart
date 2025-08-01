@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 class AIService {
   static const String _baseUrl = 'https://gemini-api.up.railway.app/ai';
 
-  static Future<String> getAIResponse(String message) async {
+  Future<String> getAIResponse(String message) async {
     try {
       final response = await http.post(
         Uri.parse(_baseUrl),
