@@ -276,15 +276,7 @@ class ErrorHandlerService {
 ## 📱 Platform Support
 
 - ✅ Android (API 21+)
-- ✅ iOS (12.0+)
-- ✅ Web
-- ✅ Windows
-- ✅ macOS
 
-## 🐛 Known Issues
-
-1. **BuildContext Usage**: Some async operations need context handling
-2. **Print Statements**: Remove debug prints from production code
 
 ## 📈 Performance
 
