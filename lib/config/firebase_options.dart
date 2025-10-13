@@ -30,45 +30,45 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAAONZbhfELy4FB2ncbz23iiyAVnEQzC7A',
-    appId: '1:997858029975:web:ab63d15df44bc4720914d2',
-    messagingSenderId: '997858029975',
+    apiKey: '',
+    appId: '',
+    messagingSenderId: '',
     projectId: 'utme-prepmaster',
     authDomain: 'utme-prepmaster.firebaseapp.com',
     storageBucket: 'utme-prepmaster.firebasestorage.app',
-    measurementId: null, // Set to null if Google Analytics not enabled
+    measurementId: null, // Set to null when Google Analytics not enabled
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyC6lKUP-geQzkyhsYZPyWRrZ9L2Ub_FFpw',
-    appId: '1:997858029975:android:f1f3405c19d969b70914d2',
-    messagingSenderId: '997858029975',
+    apiKey: '',
+    appId: '',
+    messagingSenderId: '',
     projectId: 'utme-prepmaster',
     storageBucket: 'utme-prepmaster.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'your-ios-api-key',
-    appId: 'your-ios-app-id',
-    messagingSenderId: 'your-sender-id',
+    apiKey: '',
+    appId: 'ios-app-id',
+    messagingSenderId: 'sender-id',
     projectId: 'utme-prep-master',
     storageBucket: 'utme-prep-master.appspot.com',
     iosBundleId: 'com.example.utmePrepMaster',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'your-macos-api-key',
-    appId: 'your-macos-app-id',
-    messagingSenderId: 'your-sender-id',
+    apiKey: 'macos-api-key',
+    appId: 'macos-app-id',
+    messagingSenderId: 'sender-id',
     projectId: 'utme-prep-master',
     storageBucket: 'utme-prep-master.appspot.com',
     iosBundleId: 'com.example.utmePrepMaster',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'your-windows-api-key',
-    appId: 'your-windows-app-id',
-    messagingSenderId: 'your-sender-id',
+    apiKey: 'windows-api-key',
+    appId: 'windows-app-id',
+    messagingSenderId: 'sender-id',
     projectId: 'utme-prep-master',
     storageBucket: 'utme-prep-master.appspot.com',
   );
